@@ -22,5 +22,6 @@
 #include <stdlib.h>
 #include <utility>
 #include <thread>
+#include <immintrin.h>
 
 #endif //CPPCH_H

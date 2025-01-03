@@ -2,7 +2,9 @@
 #include "cppch.h"
 #include "cpsig.h"
 #include "cpPath.h"
+#include "cpVectorFuncs.h"
 
+#define AVX
 #define ALIGNMENT 64
 
 #if ALIGNMENT>0
@@ -153,6 +155,14 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 				}
 
 				//Multiply
+#ifdef AVX
+				double leftOverLevel;
+				resultPtr = hornerStep + levelIndex[leftLevel + 2UL] - levelIndex[leftLevel + 1UL] - dimension;
+				for (double* leftPtr = hornerStep + leftLevelSize - 1UL; leftPtr != hornerStep - 1UL; --leftPtr, resultPtr -= dimension) {
+					leftOverLevel = (*leftPtr) * oneOverLevel;
+					vecMultAssign(resultPtr, increments, leftOverLevel, dimension);
+				}
+#else
 				double leftOverLevel;
 				resultPtr = hornerStep + levelIndex[leftLevel + 2UL] - levelIndex[leftLevel + 1UL];
 				for (double* leftPtr = hornerStep + leftLevelSize - 1UL; leftPtr != hornerStep - 1UL; --leftPtr) {
@@ -161,6 +171,7 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 						*(--resultPtr) = leftOverLevel * (*rightPtr);
 					}
 				}
+#endif
 			}
 
 			//======================= Do last iteration (leftLevel = targetLevel - 1) separately for speed, and add result straight into out
@@ -175,6 +186,17 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 			}
 
 			//Multiply and add, writing straight into out
+#ifdef AVX
+			double leftOverLevel;
+			resultPtr = out + levelIndex[targetLevel + 1] - dimension;
+			for (double* leftPtr = hornerStep + leftLevelSize - 1UL; leftPtr != hornerStep - 1UL; --leftPtr, resultPtr -= dimension) {
+				leftOverLevel = (*leftPtr);
+				//for (double* rightPtr = increments + dimension - 1UL; rightPtr != increments - 1UL; --rightPtr) {
+				//	*(--resultPtr) += (*leftPtr) * (*rightPtr); //no oneOverLevel here, as rightLevel = 1
+				//}
+				vecMultAdd(resultPtr, increments, *leftPtr, dimension);
+			}
+#else
 			double leftOverLevel;
 			resultPtr = out + levelIndex[targetLevel + 1];
 			for (double* leftPtr = hornerStep + leftLevelSize - 1UL; leftPtr != hornerStep - 1UL; --leftPtr) {
@@ -183,6 +205,7 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 					*(--resultPtr) += (*leftPtr) * (*rightPtr); //no oneOverLevel here, as rightLevel = 1
 				}
 			}
+#endif
 		}
 		//Update targetLevel == 1
 		for (uint64_t i = 0; i < dimension; ++i)

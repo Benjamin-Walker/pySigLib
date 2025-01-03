@@ -110,8 +110,8 @@ if __name__ == '__main__':
     #plt.yscale("log")
     plt.grid(True, linestyle='--')
     plt.tight_layout()
-    plt.savefig("signature_times_linear_avx_" + str(AVX) + ".png", dpi=300)
-    plt.savefig("signature_times_linear_avx_" + str(AVX) + ".pdf", dpi=300)
+    # plt.savefig("signature_times_linear_avx_" + str(AVX) + ".png", dpi=300)
+    # plt.savefig("signature_times_linear_avx_" + str(AVX) + ".pdf", dpi=300)
     plt.show()
 
     plt.figure(figsize=(4, 3))
@@ -127,9 +127,9 @@ if __name__ == '__main__':
     plt.yscale("log")
     plt.grid(True, linestyle='--')
     plt.tight_layout()
-    plt.savefig("signature_times_log_avx_" + str(AVX) + ".png", dpi=300)
-    plt.savefig("signature_times_log_avx_" + str(AVX) + ".pdf", dpi=300)
+    #plt.savefig("signature_times_log_avx_" + str(AVX) + ".png", dpi=300)
+    #plt.savefig("signature_times_log_avx_" + str(AVX) + ".pdf", dpi=300)
     plt.show()
 
-    with open('times_avx_' + str(AVX) + '.pickle', 'wb') as handle:
-        pickle.dump((iisigtime, mysigtime, mysigtimehorner), handle)
+    # with open('times_avx_' + str(AVX) + '.pickle', 'wb') as handle:
+    #     pickle.dump((iisigtime, mysigtime, mysigtimehorner), handle)

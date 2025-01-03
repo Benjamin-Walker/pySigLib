@@ -166,6 +166,7 @@
     <ClInclude Include="cppch.h" />
     <ClInclude Include="cpSignature.h" />
     <ClInclude Include="cpTensorPoly.h" />
+    <ClInclude Include="cpVectorFuncs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cpPathTransforms.cpp" />
