@@ -71,9 +71,9 @@ void signatureNaive_(Path<T>& path, double* out, uint64_t degree)
 
 		linearSignature_(prevPt, nextPt, linearSignature, dimension, degree, levelIndex);
 
-		for (int64_t targetLevel = degree; targetLevel > 0UL; --targetLevel) {
-			for (int64_t leftLevel = targetLevel - 1UL, rightLevel = 1UL;
-				leftLevel > 0UL;
+		for (int64_t targetLevel = degree; targetLevel > 0L; --targetLevel) {
+			for (int64_t leftLevel = targetLevel - 1L, rightLevel = 1L;
+				leftLevel > 0L;
 				--leftLevel, ++rightLevel) {
 
 				double* resultPtr = out + levelIndex[targetLevel];
@@ -128,7 +128,7 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 		for (uint64_t i = 0UL; i < dimension; ++i)
 			increments[i] = nextPt[i] - prevPt[i];
 
-		for (int64_t targetLevel = degree; targetLevel > 1UL; --targetLevel) {
+		for (int64_t targetLevel = degree; targetLevel > 1L; --targetLevel) {
 
 			double oneOverLevel = 1. / targetLevel;
 			const uint64_t targetLevelSize = levelIndex[targetLevel + 1UL] - levelIndex[targetLevel];
@@ -138,8 +138,8 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 			for (uint64_t i = 0UL; i < dimension; ++i)
 				hornerStep[i] = increments[i] * oneOverLevel;
 
-			for (int64_t leftLevel = 1UL, rightLevel = targetLevel - 1UL;
-				leftLevel < targetLevel - 1UL; 
+			for (int64_t leftLevel = 1L, rightLevel = targetLevel - 1L;
+				leftLevel < targetLevel - 1L; 
 				++leftLevel, --rightLevel) { //for each, add current leftLevel and times by z / rightLevel
 
 				const uint64_t leftLevelSize = levelIndex[leftLevel + 1UL] - levelIndex[leftLevel];

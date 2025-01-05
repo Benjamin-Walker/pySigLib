@@ -8,3 +8,4 @@
 /examples/signature_times_linear_avx_2.png
 /examples/signature_times_log_avx_2.pdf
 /examples/signature_times_log_avx_2.png
+/unit_tests/__pycache__
