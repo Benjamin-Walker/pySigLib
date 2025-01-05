@@ -235,7 +235,7 @@ int main()
     // Example Batch Signature
     //////////////////////////////////////////////
 
-    printExample("Batch Signature");
+    /*printExample("Batch Signature");
 
     uint64_t dimension3 = 10, length3 = 100, degree3 = 5, batch3 = 100;
     std::vector<double> data3;
@@ -253,31 +253,31 @@ int main()
 
     timeFunction(10, batchSignature, data3.data(), result3.data(), batch3, dimension3, length3, degree3, false, false, true, false);
 
-    std::cout << "done\n";
+    std::cout << "done\n";*/
 
     ////////////////////////////////////////////////
     //// Example Batch Signature Parallel
     ////////////////////////////////////////////////
 
-    //printExample("Batch Signature Parallel");
+    printExample("Batch Signature Parallel");
 
-    //uint64_t dimension5 = 3, length5 = 10000, degree5 = 5, batch5 = 100;
-    //std::vector<double> data5;
-    //uint64_t sz5 = batch5 * dimension5 * length5;
-    //for (uint64_t i = 0; i < sz5; ++i) data5.push_back((double)i);
+    uint64_t dimension5 = 10, length5 = 10000, degree5 = 5, batch5 = 100;
+    std::vector<double> data5;
+    uint64_t sz5 = batch5 * dimension5 * length5;
+    for (uint64_t i = 0; i < sz5; ++i) data5.push_back((double)i);
 
 
-    //std::vector<double> result5;
-    //uint64_t data_size5 = polyLength(dimension5, degree5) * batch5;
-    //result3.reserve(data_size5);
+    std::vector<double> result5;
+    uint64_t data_size5 = polyLength(dimension5, degree5) * batch5;
+    result5.reserve(data_size5);
 
-    //for (int i = 0; i < data_size5; i++) {
-    //    result5.push_back(0.);
-    //}
+    for (int i = 0; i < data_size5; i++) {
+        result5.push_back(0.);
+    }
 
-    //timeFunction(10, batchSignature, data5.data(), result5.data(), batch5, dimension5, length5, degree5, false, false, true, true);
+    timeFunction(10, batchSignature, data5.data(), result5.data(), batch5, dimension5, length5, degree5, false, false, true, true);
 
-    //std::cout << "done\n";
+    std::cout << "done\n";
 
     ////////////////////////////////////////////////
     //// Example Batch Signature Int

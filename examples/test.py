@@ -34,11 +34,11 @@ if __name__ == '__main__':
                 best_time = time_
         return best_time
 
-    def timemysig(degree, horner):
+    def timemysig(degree, horner, parallel):
         best_time = float('inf')
         for i in range(N):
             start = timeit.default_timer()
-            sig.signature(X, degree, horner = horner, parallel = False)
+            sig.signature(X, degree, horner = horner, parallel = parallel)
             end = timeit.default_timer()
             time_ = end - start
             if time_ < best_time:
@@ -83,19 +83,22 @@ if __name__ == '__main__':
     #esigtime = []
     mysigtime = []
     mysigtimehorner = []
+    mysigtimehornerparallel = []
 
     for degree in tqdm(degreeArr):
         iisigtime.append(timeiisig(degree))
         #signatorytime.append(timesignatory(degree))
         #esigtime.append(timeesig(degree))
-        mysigtime.append(timemysig(degree, False))
-        mysigtimehorner.append(timemysig(degree, True))
+        mysigtime.append(timemysig(degree, False, False))
+        mysigtimehorner.append(timemysig(degree, True, False))
+        mysigtimehornerparallel.append(timemysig(degree, True, True))
 
     print(iisigtime)
     #print(signatorytime)
     #print(esigtime)
     print(mysigtime)
     print(mysigtimehorner)
+    print(mysigtimehornerparallel)
 
     plt.figure(figsize=(4, 3))
     plt.title("AVX " + str(AVX))
@@ -106,6 +109,7 @@ if __name__ == '__main__':
     #plt.plot(degreeArr, esigtime)
     plt.plot(degreeArr, mysigtime, linestyle="--")
     plt.plot(degreeArr, mysigtimehorner, linestyle="--")
+    plt.plot(degreeArr, mysigtimehornerparallel, linestyle="--")
     plt.legend(["iisignature", "pySigLib", "pySigLib (Horner)"])
     #plt.yscale("log")
     plt.grid(True, linestyle='--')
@@ -123,6 +127,7 @@ if __name__ == '__main__':
     #plt.plot(degreeArr, esigtime)
     plt.plot(degreeArr, mysigtime, linestyle="--")
     plt.plot(degreeArr, mysigtimehorner, linestyle="--")
+    plt.plot(degreeArr, mysigtimehornerparallel, linestyle="--")
     plt.legend(["iisignature", "pySigLib", "pySigLib (Horner)"])
     plt.yscale("log")
     plt.grid(True, linestyle='--')

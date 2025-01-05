@@ -11,15 +11,15 @@ def esigbatch(X_, deg):
     for i in range(X_.shape[0]):
         esig.stream2sig(X_[i], deg)
 
-length = 1024
-dimension = 16
-degree = 4
-batch_size = 32
-
-# length = 128
-# dimension = 4
-# degree = 7
+# length = 1024
+# dimension = 16
+# degree = 4
 # batch_size = 32
+
+length = 128
+dimension = 4
+degree = 7
+batch_size = 32
 
 numRuns = 50
 
@@ -37,10 +37,10 @@ def timeFunction(f, *args, **kwargs):
     return best_time
 
 if __name__ == '__main__':
-    print("\nesig (serial): ", timeFunction(esigbatch, X, degree))
+    #print("\nesig (serial): ", timeFunction(esigbatch, X, degree))
     # print("\niisignature (serial): ", timeFunction(iisignature.sig, X, degree))
-    # print("\npysiglib (serial): ", timeFunction(pysiglib.signature, X, degree, parallel = False, vector = True))
+    # print("\npysiglib (serial): ", timeFunction(pysiglib.signature, X, degree, parallel = False))
     #
     #
     # print("\nsignatory (parallel): ", timeFunction(signatory.signature, torch.tensor(X), degree))
-    # print("\npysiglib (parallel): ", timeFunction(pysiglib.signature, X, degree, parallel=True, vector = True))
+    print("\npysiglib (parallel): ", timeFunction(pysiglib.signature, X, degree, parallel=True))

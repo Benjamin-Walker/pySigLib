@@ -167,10 +167,7 @@
     <ClInclude Include="cpSignature.h" />
     <ClInclude Include="cpTensorPoly.h" />
     <ClInclude Include="cpVectorFuncs.h" />
-    <ClInclude Include="thread_pool.h" />
-    <ClInclude Include="thread_pool_base.h" />
-    <ClInclude Include="thread_pool_worker.h" />
-    <ClInclude Include="thread_safe_queue.h" />
+    <ClInclude Include="multithreading.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cpPathTransforms.cpp" />

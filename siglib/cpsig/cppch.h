@@ -23,5 +23,6 @@
 #include <utility>
 #include <thread>
 #include <immintrin.h>
+#include <functional>
 
 #endif //CPPCH_H

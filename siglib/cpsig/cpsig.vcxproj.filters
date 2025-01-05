@@ -36,16 +36,7 @@
     <ClInclude Include="cpVectorFuncs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="thread_pool.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="thread_pool_base.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="thread_pool_worker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="thread_safe_queue.h">
+    <ClInclude Include="multithreading.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
