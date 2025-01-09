@@ -1,10 +1,9 @@
 import numpy as np
+import torch
 import ctypes
-from ctypes import c_double, c_int64, c_bool, POINTER
+from ctypes import c_float, c_double, c_int32, c_int64, c_bool, POINTER, cast
 import os
 import sys
-import time
-import dataHandling
 
 dir_ = os.path.dirname(sys.modules['pysiglib'].__file__)
 print(dir_)
@@ -22,77 +21,119 @@ def cpsig_hello_world(x):
 def cusig_hello_world(x):
     cusig.cusig_hello_world(x)
 
-def getPathElement(numpyArray, lengthIndex, dimIndex):
-    dataLength = numpyArray.shape[0]
-    dataDimension = numpyArray.shape[1]
-    dataPtr = numpyArray.ctypes.data_as(POINTER(c_double))
-
-    cpsig.getPathElement.argtypes = (POINTER(c_double), c_int64, c_int64, c_int64, c_int64)
-    cpsig.getPathElement.restype = c_double
-
-    return cpsig.getPathElement(dataPtr, dataLength, dataDimension, lengthIndex, dimIndex)
-
 def polyLength(degree, dimension):
     cpsig.polyLength.argtypes = (c_int64, c_int64)
     cpsig.polyLength.restype = c_int64
     return cpsig.polyLength(degree, dimension)
 
-def signature_(path, degree, timeAug = False, leadLag = False, horner = True):
-    length = path.shape[0]
-    dimension = path.shape[1]
-    out = np.empty(shape=polyLength(dimension, degree), dtype=np.float64)
+class dataHandler:
+    def __init__(self, path, degree):
+        self.degree = degree
 
-    if np.issubdtype(path.dtype, np.integer):
-        dataPtr = path.ctypes.data_as(POINTER(c_int64))
-        outPtr = out.ctypes.data_as(POINTER(c_int64))
+        self.getDims(path)
 
-        cpsig.signatureInt.argtypes = (POINTER(c_int64), POINTER(c_int64), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
-        cpsig.signatureInt(dataPtr, outPtr, dimension, length, degree, timeAug, leadLag, horner)
+        if isinstance(path, np.ndarray):
+            self.initNumpy(path)
 
-    elif np.issubdtype(path.dtype, np.floating):
-        dataPtr = path.ctypes.data_as(POINTER(c_double))
-        outPtr = out.ctypes.data_as(POINTER(c_double))
+        if isinstance(path, torch.Tensor):
+            self.initTorch(path)
 
-        cpsig.signature.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
-        cpsig.signature(dataPtr, outPtr, dimension, length, degree, timeAug, leadLag, horner)
+    def initNumpy(self, path):
+        if path.dtype == np.int32:
+            self.dtype = "int32"
+            self.dataPtr = path.ctypes.data_as(POINTER(c_int32))
+        elif path.dtype == np.int64:
+            self.dtype = "int64"
+            self.dataPtr = path.ctypes.data_as(POINTER(c_int64))
+        elif path.dtype == np.float32:
+            self.dtype = "float32"
+            self.dataPtr = path.ctypes.data_as(POINTER(c_float))
+        elif path.dtype == np.float64:
+            self.dtype = "float64"
+            self.dataPtr = path.ctypes.data_as(POINTER(c_double))
+        else:
+            raise ValueError("path.dtype must be int32, int64, float32 or float64. Got " + str(path.dtype) + " instead.")
 
-    else:
-        raise ValueError("path.dtype must be integer or float, got " + str(path.dtype) + " instead.")
+        if self.isBatch:
+            self.out = np.empty(shape=(self.batchSize, polyLength(self.dimension, self.degree)), dtype=np.float64)
+        else:
+            self.out = np.empty(shape=polyLength(self.dimension, self.degree), dtype=np.float64)
+        self.outPtr = self.out.ctypes.data_as(POINTER(c_double))
 
-    return out
+    def initTorch(self, path):
+        if path.dtype == torch.int32:
+            self.dtype = "int32"
+            self.dataPtr = cast(path.data_ptr(), POINTER(c_int32))
+        if path.dtype == torch.int64:
+            self.dtype = "int64"
+            self.dataPtr = cast(path.data_ptr(), POINTER(c_int64))
+        elif path.dtype == torch.float32:
+            self.dtype = "float32"
+            self.dataPtr = cast(path.data_ptr(), POINTER(c_float))
+        elif path.dtype == torch.float64:
+            self.dtype = "float64"
+            self.dataPtr = cast(path.data_ptr(), POINTER(c_double))
+        else:
+            raise ValueError("path.dtype must be int32, int64, float32 or float64. Got " + str(path.dtype) + " instead.")
 
-def batchSignature_(path, degree, timeAug = False, leadLag = False, horner = True, parallel = True):
-    batchSize = path.shape[0]
-    length = path.shape[1]
-    dimension = path.shape[2]
-    out = np.empty(shape=(batchSize, polyLength(dimension, degree)), dtype=np.float64)
+        if self.isBatch:
+            self.out = torch.empty(size=(self.batchSize, polyLength(self.dimension, self.degree)), dtype=torch.float64)
+        else:
+            self.out = torch.empty(size=polyLength(self.dimension, self.degree), dtype=torch.float64)
+        self.outPtr = cast(self.out.data_ptr(), POINTER(c_double))
 
-    if np.issubdtype(path.dtype, np.integer):
-        dataPtr = path.ctypes.data_as(POINTER(c_int64))
-        outPtr = out.ctypes.data_as(POINTER(c_int64))
+    def getDims(self, path):
+        if len(path.shape) == 2:
+            self.isBatch = False
+            self.length = path.shape[0]
+            self.dimension = path.shape[1]
 
-        cpsig.batchSignatureInt.argtypes = (POINTER(c_int64), POINTER(c_int64), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
-        cpsig.batchSignatureInt(dataPtr, outPtr, batchSize, dimension, length, degree, timeAug, leadLag, horner, parallel)
+        elif len(path.shape) == 3:
+            self.isBatch = True
+            self.batchSize = path.shape[0]
+            self.length = path.shape[1]
+            self.dimension = path.shape[2]
 
-    elif np.issubdtype(path.dtype, np.floating):
-        dataPtr = path.ctypes.data_as(POINTER(c_double))
-        outPtr = out.ctypes.data_as(POINTER(c_double))
+        else:
+            raise ValueError("path.shape must have length 2 or 3, got length " + str(path.shape) + " instead.")
 
-        cpsig.batchSignature.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
-        cpsig.batchSignature(dataPtr, outPtr, batchSize, dimension, length, degree, timeAug, leadLag, horner, parallel)
 
-    else:
-        raise ValueError("path.dtype must be integer or float, got " + str(path.dtype) + " instead.")
+def signature_(data, timeAug = False, leadLag = False, horner = True):
+    if data.dtype == "int32":
+        cpsig.signatureInt32.argtypes = (POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
+        cpsig.signatureInt32(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+    elif data.dtype == "int64":
+        cpsig.signatureInt64.argtypes = (POINTER(c_int64), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
+        cpsig.signatureInt64(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+    elif data.dtype == "float32":
+        cpsig.signatureFloat.argtypes = (POINTER(c_float), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
+        cpsig.signatureFloat(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+    elif data.dtype == "float64":
+        cpsig.signatureDouble.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
+        cpsig.signatureDouble(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+    return data.out
 
-    return out
+def batchSignature_(data, timeAug = False, leadLag = False, horner = True, parallel = True):
+    if data.dtype == "int32":
+        cpsig.batchSignatureInt32.argtypes = (POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
+        cpsig.batchSignatureInt32(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+    if data.dtype == "int64":
+        cpsig.batchSignatureInt64.argtypes = (POINTER(c_int64), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
+        cpsig.batchSignatureInt64(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+    elif data.dtype == "float32":
+        cpsig.batchSignatureFloat.argtypes = (POINTER(c_float), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
+        cpsig.batchSignatureFloat(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+    elif data.dtype == "float64":
+        cpsig.batchSignatureDouble.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
+        cpsig.batchSignatureDouble(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+    return data.out
 
 def signature(path, degree, timeAug = False, leadLag = False, horner = True, parallel = True):
-    if len(path.shape) == 2:
-        return signature_(path, degree, timeAug, leadLag, horner)
-    elif len(path.shape) == 3:
-        return batchSignature_(path, degree, timeAug, leadLag, horner, parallel)
+    data = dataHandler(path, degree)
+    if data.isBatch:
+        return batchSignature_(data, timeAug, leadLag, horner, parallel)
     else:
-        raise ValueError("path.shape must have length 2 or 3, got length " + str(path.shape) + " instead.")
+        return signature_(data, timeAug, leadLag, horner)
 
 
 #https://stackoverflow.com/questions/64478880/how-to-pass-this-numpy-array-to-c-with-ctypes

@@ -352,11 +352,11 @@ namespace cpSigTests
 #endif
     };
 
-    TEST_CLASS(signatureTest)
+    TEST_CLASS(signatureDoubleTest)
     {
     public:
         TEST_METHOD(TrivialCases) {
-            auto f = signature;
+            auto f = signatureDouble;
             std::vector<double> path;
             std::vector<double> trueSig;
             try { checkResult(f, path, trueSig, 0, 0, 0, false, false, true); Assert::Fail(); }
@@ -378,7 +378,7 @@ namespace cpSigTests
             checkResult(f, path, trueSig, 1, 2, 1, false, false, true);
         }
         TEST_METHOD(LinearPathTest) {
-            auto f = signature;
+            auto f = signatureDouble;
             uint64_t dimension = 2, length = 3, degree = 3;
             uint64_t level3Start = polyLength(dimension, 2);
             uint64_t level4Start = polyLength(dimension, 3);
@@ -393,7 +393,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(LinearPathTest2) {
-            auto f = signature;
+            auto f = signatureDouble;
             uint64_t dimension = 2, length = 4, degree = 3;
             uint64_t level3Start = polyLength(dimension, 2);
             uint64_t level4Start = polyLength(dimension, 3);
@@ -408,14 +408,14 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualSigTest) {
-            auto f = signature;
+            auto f = signatureDouble;
             uint64_t dimension = 2, length = 4, degree = 2;
             std::vector<double> path = { 0., 0., 1., 0.5, 4., 0., 0., 1. };
             std::vector<double> trueSig = { 1., 0., 1., 0., 1., -1., 0.5 };
             checkResult(f, path, trueSig, dimension, length, degree, false, false, true);
         }
         TEST_METHOD(ManualSigTest2) {
-            auto f = signatureInt;
+            auto f = signatureInt32;
             uint64_t dimension = 3, length = 4, degree = 3;
             std::vector<int> path = { 9, 5, 8, 5, 3, 0, 0, 2, 6, 4, 0, 2 };
             std::vector<double> trueSig = { 1., -5., - 5., - 6., 12.5, 24.5,
@@ -430,7 +430,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(BatchSigTest) {
-            auto f = batchSignature;
+            auto f = batchSignatureDouble;
             uint64_t dimension = 2, length = 4, degree = 2;
             std::vector<double> path = { 0., 0., 0.25, 0.25, 0.5, 0.5, 1., 1.,
                 0., 0., 0.4, 0.4, 0.6, 0.6, 1., 1.,
@@ -445,7 +445,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(BatchSigTestDegree1) {
-            auto f = batchSignature;
+            auto f = batchSignatureDouble;
             uint64_t dimension = 2, length = 4, degree = 1;
             std::vector<double> path = { 0., 0., 0.25, 0.25, 0.5, 0.5, 1., 1.,
                 0., 0., 0.4, 0.4, 0.6, 0.6, 1., 1.,
@@ -460,7 +460,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTimeAugTest) {
-            auto f = signatureInt;
+            auto f = signatureInt32;
             uint64_t dimension = 1, length = 5, degree = 3;
             std::vector<int> path = { 0, 5, 2, 4, 9 };
             std::vector<double> trueSig = { 1., 9., 4., 40.5, 15.5, 20.5, 8., 121.5, 37.5,
@@ -469,7 +469,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualLeadLagTest) {
-            auto f = signatureInt;
+            auto f = signatureInt32;
             uint64_t dimension = 1, length = 5, degree = 3;
             std::vector<int> path = { 0, 5, 2, 4, 9 };
             std::vector<double> trueSig = { 1., 4., 4., 8., 20., -4., 8., 10. + 2./3, 35., 10., 85., -13., -90., 37., 10. + 2./3};

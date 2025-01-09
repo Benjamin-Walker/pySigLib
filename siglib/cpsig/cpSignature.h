@@ -13,7 +13,7 @@
 	#define ALIGNED_FREE(P) _aligned_free(P)
 #else
 	#define ALIGNED_MALLOC(SZ) malloc(SZ)
-	#define ALIGNED_FREE(P) free(P)
+	#define ALIGNED_FREE(P) free(P)	
 #endif
 
 
@@ -126,7 +126,7 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 
 	for (; nextPt != lastPt; ++prevPt, ++nextPt) {
 		for (uint64_t i = 0UL; i < dimension; ++i)
-			increments[i] = nextPt[i] - prevPt[i];
+			increments[i] = static_cast<double>(nextPt[i] - prevPt[i]);
 
 		for (int64_t targetLevel = degree; targetLevel > 1L; --targetLevel) {
 
@@ -229,7 +229,7 @@ void signature_(T* path, double* out, uint64_t dimension, uint64_t length, uint6
 		out[0] = 1.;
 		uint64_t dimension_ = pathObj.dimension();
 		for (uint64_t i = 0; i < dimension_; ++i)
-			out[i + 1] = lastPt[i] - firstPt[i];
+			out[i + 1] = static_cast<double>(lastPt[i] - firstPt[i]);
 		return; 
 	}
 
