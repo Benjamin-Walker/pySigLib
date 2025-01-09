@@ -4,7 +4,7 @@
 __forceinline void vecMultAdd(double* out, double* other, double scalar, uint64_t size)
 {
 	uint64_t firstLoopItrs = size / 4;
-	uint64_t secondLoopItrs = size % 4;
+	uint64_t firstLoopRemainder = size % 4;
 
 	__m256d a, b;
 	__m256d scalar_256 = _mm256_set1_pd(scalar);
@@ -15,7 +15,7 @@ __forceinline void vecMultAdd(double* out, double* other, double scalar, uint64_
 	double* otherPtr = other, * outPtr = out;
 	double* outEnd = out + size;
 
-	double* firstLoopEnd = outEnd - secondLoopItrs;
+	double* firstLoopEnd = outEnd - firstLoopRemainder;
 
 	for (; outPtr != firstLoopEnd; otherPtr += 4, outPtr += 4) {
 		a = _mm256_loadu_pd(otherPtr);
@@ -24,7 +24,16 @@ __forceinline void vecMultAdd(double* out, double* other, double scalar, uint64_
 		b = _mm256_add_pd(a, b);
 		_mm256_storeu_pd(outPtr, b);
 	}
-	for (; outPtr != outEnd; ++otherPtr, ++outPtr) { //For some reason intrinsics are quicker than a normal loop here
+	if (size & 2UL) {
+		c = _mm_loadu_pd(otherPtr);
+		c = _mm_mul_pd(c, scalar_128);
+		d = _mm_load_pd(outPtr);
+		d = _mm_add_pd(c, d);
+		_mm_storeu_pd(outPtr, d);
+		otherPtr += 2;
+		outPtr += 2;
+	}
+	if (size & 1UL) { //For some reason intrinsics are quicker than a normal loop here
 		c = _mm_load_sd(otherPtr);
 		c = _mm_mul_sd(c, scalar_128);
 		d = _mm_load_sd(outPtr);
@@ -35,7 +44,7 @@ __forceinline void vecMultAdd(double* out, double* other, double scalar, uint64_
 
 __forceinline void vecMultAssign(double* out, double* other, double scalar, uint64_t size) {
 	uint64_t firstLoopItrs = size / 4;
-	uint64_t secondLoopItrs = size % 4;
+	uint64_t firstLoopRemainder = size % 4;
 
 	__m256d a;
 	__m256d scalar_ = _mm256_set1_pd(scalar);
@@ -46,14 +55,21 @@ __forceinline void vecMultAssign(double* out, double* other, double scalar, uint
 	double* otherPtr = other, * outPtr = out;
 	double* outEnd = out + size;
 
-	double* firstLoopEnd = outEnd - secondLoopItrs;
+	double* firstLoopEnd = outEnd - firstLoopRemainder;
 
 	for (; outPtr != firstLoopEnd; otherPtr += 4, outPtr += 4) {
 		a = _mm256_loadu_pd(otherPtr);
 		a = _mm256_mul_pd(a, scalar_);
 		_mm256_storeu_pd(outPtr, a);
 	}
-	for (; outPtr != outEnd; ++otherPtr, ++outPtr) { //For some reason intrinsics are quicker than a normal loop here
+	if(size & 2UL) {
+		c = _mm_loadu_pd(otherPtr);
+		c = _mm_mul_pd(c, scalar_128);
+		_mm_storeu_pd(outPtr, c);
+		otherPtr += 2;
+		outPtr += 2;
+	}
+	if (size & 1UL) { //For some reason intrinsics are quicker than a normal loop here
 		c = _mm_load_sd(otherPtr);
 		c = _mm_mul_sd(c, scalar_128);
 		_mm_store_sd(outPtr, c);
