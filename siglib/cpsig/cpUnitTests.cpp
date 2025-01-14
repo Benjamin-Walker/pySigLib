@@ -13,8 +13,6 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-void cpsig_hello_world(const long x);
-
 
 std::vector<int> intTestData(uint64_t dimension, uint64_t length) {
     std::vector<int> data;

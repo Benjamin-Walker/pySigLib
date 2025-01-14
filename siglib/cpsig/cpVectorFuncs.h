@@ -3,8 +3,7 @@
 
 __forceinline void vecMultAdd(double* out, double* other, double scalar, uint64_t size)
 {
-	uint64_t firstLoopItrs = size / 4;
-	uint64_t firstLoopRemainder = size % 4;
+	uint64_t firstLoopRemainder = size % 4UL;
 
 	__m256d a, b;
 	__m256d scalar_256 = _mm256_set1_pd(scalar);
@@ -43,8 +42,7 @@ __forceinline void vecMultAdd(double* out, double* other, double scalar, uint64_
 }
 
 __forceinline void vecMultAssign(double* out, double* other, double scalar, uint64_t size) {
-	uint64_t firstLoopItrs = size / 4;
-	uint64_t firstLoopRemainder = size % 4;
+	uint64_t firstLoopRemainder = size % 4UL;
 
 	__m256d a;
 	__m256d scalar_ = _mm256_set1_pd(scalar);

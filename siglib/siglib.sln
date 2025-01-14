@@ -8,6 +8,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cusig", "cusig\cusig.vcxproj", "{D2A0A6C1-91DA-4A4F-8B90-0007DD46E44B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_app", "test_app\test_app.vcxproj", "{48410B0D-907B-4ADA-8FBF-5D0EC24EA2C0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B1DE1A99-C7BF-4D59-8335-F61EEEB80423} = {B1DE1A99-C7BF-4D59-8335-F61EEEB80423}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cpsig_unit_testing", "cpsig_unit_testing\cpsig_unit_testing.vcxproj", "{B1BE4BBD-269F-4BE0-8D9D-1098604B0F3F}"
 EndProject

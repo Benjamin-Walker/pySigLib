@@ -30,7 +30,7 @@ __forceinline void linearSignature_(Point<T>& startPt, Point<T>& endPt, double* 
 	double leftOverLevel;
 
 	for (uint64_t level = 2UL; level <= degree; ++level) {
-		oneOverLevel = 1. / level;
+		oneOverLevel = 1. / static_cast<double>(level);
 		double* resultPtr = out + levelIndex[level];
 
 		for (double* leftPtr = out + levelIndex[level - 1]; leftPtr != out + levelIndex[level]; ++leftPtr) {
@@ -63,7 +63,7 @@ void signatureNaive_(Path<T>& path, double* out, uint64_t degree)
 	++prevPt;
 	++nextPt;
 
-	double* linearSignature = (double*)malloc(sizeof(double) * polyLength(dimension, degree));
+	double* linearSignature = (double*)malloc(sizeof(double) * ::polyLength(dimension, degree));
 
 	Point<T> lastPt(path.end());
 
@@ -71,7 +71,7 @@ void signatureNaive_(Path<T>& path, double* out, uint64_t degree)
 
 		linearSignature_(prevPt, nextPt, linearSignature, dimension, degree, levelIndex);
 
-		for (int64_t targetLevel = degree; targetLevel > 0L; --targetLevel) {
+		for (int64_t targetLevel = static_cast<int64_t>(degree); targetLevel > 0L; --targetLevel) {
 			for (int64_t leftLevel = targetLevel - 1L, rightLevel = 1L;
 				leftLevel > 0L;
 				--leftLevel, ++rightLevel) {
@@ -103,8 +103,8 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 {
 	const uint64_t dimension = path.dimension();
 
-	Point<T> prevPt(path.begin());
-	Point<T> nextPt(path.begin());
+	Point<T> prevPt = path.begin();
+	Point<T> nextPt = path.begin();
 	++nextPt;
 
 	uint64_t* levelIndex = (uint64_t*)ALIGNED_MALLOC(sizeof(uint64_t) * (degree + 2));
@@ -128,10 +128,9 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 		for (uint64_t i = 0UL; i < dimension; ++i)
 			increments[i] = static_cast<double>(nextPt[i] - prevPt[i]);
 
-		for (int64_t targetLevel = degree; targetLevel > 1L; --targetLevel) {
+		for (int64_t targetLevel = static_cast<int64_t>(degree); targetLevel > 1L; --targetLevel) {
 
-			double oneOverLevel = 1. / targetLevel;
-			const uint64_t targetLevelSize = levelIndex[targetLevel + 1UL] - levelIndex[targetLevel];
+			double oneOverLevel = 1. / static_cast<double>(targetLevel);
 
 			//leftLevel = 0
 			//assign z / targetLevel to hornerStep
@@ -143,13 +142,13 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 				++leftLevel, --rightLevel) { //for each, add current leftLevel and times by z / rightLevel
 
 				const uint64_t leftLevelSize = levelIndex[leftLevel + 1UL] - levelIndex[leftLevel];
-				oneOverLevel = 1. / rightLevel;
+				oneOverLevel = 1. / static_cast<double>(rightLevel);
 
 				//Horner stuff
 				//Add
-				double* leftPtr = out + levelIndex[leftLevel];
+				double* leftPtr1 = out + levelIndex[leftLevel];
 				for (uint64_t i = 0UL; i < leftLevelSize; ++i) {
-					hornerStep[i] += *(leftPtr++);
+					hornerStep[i] += *(leftPtr1++);
 				}
 
 				//Multiply
@@ -178,9 +177,9 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 
 			//Horner stuff
 			//Add
-			double* leftPtr = out + levelIndex[targetLevel - 1UL];
+			double* leftPtr1 = out + levelIndex[targetLevel - 1UL];
 			for (uint64_t i = 0UL; i < leftLevelSize; ++i) {
-				hornerStep[i] += *(leftPtr++);
+				hornerStep[i] += *(leftPtr1++);
 			}
 
 			//Multiply and add, writing straight into out
@@ -218,7 +217,7 @@ void signature_(T* path, double* out, uint64_t dimension, uint64_t length, uint6
 
 	if (pathObj.length() <= 1) {
 		out[0] = 1.;
-		uint64_t resultLength = polyLength(pathObj.dimension(), degree);
+		uint64_t resultLength = ::polyLength(pathObj.dimension(), degree);
 		std::fill(out + 1, out + resultLength, 0.);
 		return;
 	}
@@ -247,7 +246,7 @@ void batchSignature_(T* path, double* out, uint64_t batchSize, uint64_t dimensio
 
 	Path<T> dummyPathObj(nullptr, dimension, length, timeAug, leadLag); //Work with pathObj to capture timeAug, leadLag transformations
 
-	const uint64_t resultLength = polyLength(dummyPathObj.dimension(), degree);
+	const uint64_t resultLength = ::polyLength(dummyPathObj.dimension(), degree);
 
 	if (dummyPathObj.length() <= 1) {
 		double* const outEnd = out + resultLength * batchSize;

@@ -9,3 +9,8 @@
 /examples/signature_times_log_avx_2.pdf
 /examples/signature_times_log_avx_2.png
 /unit_tests/__pycache__
+/pysiglib.egg-info
+/build/lib/pysiglib
+/examples/fbm_test.py
+/examples/fbm_test2.py
+/dist
