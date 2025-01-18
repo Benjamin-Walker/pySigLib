@@ -1,7 +1,7 @@
 
 lib cpsig : cpsig.cpp cpPathTransforms.cpp cpSignature.cpp cpTensorPoly.cpp cppch.cpp
 	: <define>CPSIG_EXPORTS <cxxstd>20 <threading>multi 
-	<toolset>gcc:<cxxflags>"-march=x86-64-v3"
+#	<toolset>gcc:<cxxflags>"-march=x86-64-v3"
 	<toolset>msvc:<cxxflags>"/arch:AVX2"
 	;
 
