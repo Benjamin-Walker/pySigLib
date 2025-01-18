@@ -101,10 +101,10 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 	++nextPt;
 
 	uint64_t* levelIndex = (uint64_t*)ALIGNED_MALLOC(sizeof(uint64_t) * (degree + 2));
-	if (!levelIndex) {
-		//std::cerr << "Failed to allocate memory for levelIndex." << std::endl;
+	/*if (!levelIndex) {
+		raise std::cerr << "Failed to allocate memory for levelIndex." << std::endl;
 		return;
-	}
+	}*/
 	levelIndex[0] = 0UL;
 	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
 		levelIndex[i] = levelIndex[i - 1UL] * dimension + 1UL;

@@ -2,16 +2,19 @@
 
 #ifndef __APPLE__
 	#define AVX
-#endif
-#define ALIGNMENT 64
+	#define ALIGNMENT 64
 
-#if ALIGNMENT>0
-	#ifdef _MSC_VER
-		#define ALIGNED_MALLOC(SZ) std::assume_aligned<ALIGNMENT>(_aligned_malloc(SZ, ALIGNMENT))
-		#define ALIGNED_FREE(P) _aligned_free(P)
+	#if ALIGNMENT>0
+		#ifdef _MSC_VER
+			#define ALIGNED_MALLOC(SZ) std::assume_aligned<ALIGNMENT>(_aligned_malloc(SZ, ALIGNMENT))
+			#define ALIGNED_FREE(P) _aligned_free(P)
+		#else
+			#define ALIGNED_MALLOC(SZ) std::assume_aligned<ALIGNMENT>(std::aligned_alloc(ALIGNMENT, SZ))
+			#define ALIGNED_FREE(P) std::free(P)
+		#endif
 	#else
-		#define ALIGNED_MALLOC(SZ) std::assume_aligned<ALIGNMENT>(std::aligned_alloc(ALIGNMENT, SZ))
-		#define ALIGNED_FREE(P) std::free(P)
+		#define ALIGNED_MALLOC(SZ) malloc(SZ)
+		#define ALIGNED_FREE(P) free(P)	
 	#endif
 #else
 	#define ALIGNED_MALLOC(SZ) malloc(SZ)
