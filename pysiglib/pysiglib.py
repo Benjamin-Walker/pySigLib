@@ -7,37 +7,35 @@ import sys
 import platform
 
 SYSTEM = platform.system()
+USE_CUDA = False
 
 dir_ = os.path.dirname(sys.modules['pysiglib'].__file__)
 print(dir_)
 
 if SYSTEM == 'Windows':
     cpsig_path = os.path.join(dir_, 'cpsig.dll')
-    cusig_path = os.path.join(dir_, 'cusig.dll')
-
     #https://github.com/NVIDIA/warp/issues/24
     cpsig = ctypes.CDLL(cpsig_path, winmode = 0)
-    cusig = ctypes.CDLL(cusig_path, winmode = 0)
+
+    if USE_CUDA:
+        cusig_path = os.path.join(dir_, 'cusig.dll')
+        cusig = ctypes.CDLL(cusig_path, winmode=0)
 elif SYSTEM == 'Darwin':
     cpsig_path = os.path.join(dir_, 'libcpsig.dylib')
     cpsig = ctypes.CDLL(cpsig_path)
 else:
     raise Exception("Unsupported OS during pysiglib.py")
 
-def cpsig_hello_world(x):
-    cpsig.cpsig_hello_world(x)
-
-def cusig_hello_world(x):
-    cusig.cusig_hello_world(x)
-
-def polyLength(degree, dimension):
+def polyLength(dimension, degree):
     cpsig.polyLength.argtypes = (c_int64, c_int64)
     cpsig.polyLength.restype = c_int64
-    return cpsig.polyLength(degree, dimension)
+    return cpsig.polyLength(dimension, degree)
 
-class dataHandler:
-    def __init__(self, path, degree):
+class sigDataHandler:
+    def __init__(self, path, degree, timeAug, leadLag):
         self.degree = degree
+        self.timeAug = timeAug
+        self.leadLag = leadLag
 
         self.getDims(path)
 
@@ -63,10 +61,11 @@ class dataHandler:
         else:
             raise ValueError("path.dtype must be int32, int64, float32 or float64. Got " + str(path.dtype) + " instead.")
 
+        length_, dimension_ = self.transformedDims()
         if self.isBatch:
-            self.out = np.empty(shape=(self.batchSize, polyLength(self.dimension, self.degree)), dtype=np.float64)
+            self.out = np.empty(shape=(self.batchSize, polyLength(dimension_, self.degree)), dtype=np.float64)
         else:
-            self.out = np.empty(shape=polyLength(self.dimension, self.degree), dtype=np.float64)
+            self.out = np.empty(shape=polyLength(dimension_, self.degree), dtype=np.float64)
         self.outPtr = self.out.ctypes.data_as(POINTER(c_double))
 
     def initTorch(self, path):
@@ -85,10 +84,11 @@ class dataHandler:
         else:
             raise ValueError("path.dtype must be int32, int64, float32 or float64. Got " + str(path.dtype) + " instead.")
 
+        length_, dimension_ = self.transformedDims()
         if self.isBatch:
-            self.out = torch.empty(size=(self.batchSize, polyLength(self.dimension, self.degree)), dtype=torch.float64)
+            self.out = torch.empty(size=(self.batchSize, polyLength(dimension_, self.degree)), dtype=torch.float64)
         else:
-            self.out = torch.empty(size=polyLength(self.dimension, self.degree), dtype=torch.float64)
+            self.out = torch.empty(size=(polyLength(dimension_, self.degree),), dtype=torch.float64)
         self.outPtr = cast(self.out.data_ptr(), POINTER(c_double))
 
     def getDims(self, path):
@@ -96,6 +96,7 @@ class dataHandler:
             self.isBatch = False
             self.length = path.shape[0]
             self.dimension = path.shape[1]
+
 
         elif len(path.shape) == 3:
             self.isBatch = True
@@ -105,6 +106,17 @@ class dataHandler:
 
         else:
             raise ValueError("path.shape must have length 2 or 3, got length " + str(path.shape) + " instead.")
+
+    def transformedDims(self):
+        length_ = self.length
+        dimension_ = self.dimension
+        if self.leadLag:
+            length_ *= 2
+            length_ -= 3
+            dimension_ *= 2
+        if self.timeAug:
+            dimension_ += 1
+        return (length_, dimension_)
 
 
 def signature_(data, timeAug = False, leadLag = False, horner = True):
@@ -138,7 +150,7 @@ def batchSignature_(data, timeAug = False, leadLag = False, horner = True, paral
     return data.out
 
 def signature(path, degree, timeAug = False, leadLag = False, horner = True, parallel = True):
-    data = dataHandler(path, degree)
+    data = sigDataHandler(path, degree, timeAug, leadLag)
     if data.isBatch:
         return batchSignature_(data, timeAug, leadLag, horner, parallel)
     else:

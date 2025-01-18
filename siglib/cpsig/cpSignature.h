@@ -258,7 +258,7 @@ void batchSignature_(T* path, double* out, uint64_t batchSize, uint64_t dimensio
 		return; }
 
 	//General case and degree = 1 case
-	const uint64_t flatPathLength = dummyPathObj.dimension() * dummyPathObj.length();
+	const uint64_t flatPathLength = dimension * length;
 	T* const dataEnd = path + flatPathLength * batchSize;
 
 	std::function<void(T*, double*)> sigFunc;

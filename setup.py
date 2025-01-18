@@ -5,10 +5,16 @@ import shutil
 import os
 import platform
 
-GETDLL = False
+GETDLL = True
+USE_CUDA = False
 
 SYSTEM = platform.system()
-DATA = ['libcpsig.dylib'] if SYSTEM == "Darwin" else ['cpsig.dll', 'cusig.dll']
+if SYSTEM == 'Darwin':
+    DATA = ['libcpsig.dylib']
+else:
+    DATA = ['cpsig.dll']
+    if USE_CUDA:
+        DATA += ['cusig.dll']
 
 class CustomInstall(install):
     def run(self):
@@ -17,10 +23,11 @@ class CustomInstall(install):
             dir_ = parent_dir / 'pysiglib'
 
             if SYSTEM == "Windows":
-                cusig_dll_path = parent_dir / 'siglib' / 'x64' / 'Release' / 'cusig.dll'
                 cpsig_dll_path = parent_dir / 'siglib' / 'x64' / 'Release' / 'cpsig.dll'
                 shutil.copy(cpsig_dll_path, dir_)
-                shutil.copy(cusig_dll_path, dir_)
+                if USE_CUDA:
+                    cusig_dll_path = parent_dir / 'siglib' / 'x64' / 'Release' / 'cusig.dll'
+                    shutil.copy(cusig_dll_path, dir_)
             elif SYSTEM == "Darwin":
                 cpsig_dll_path = parent_dir / 'siglib' / 'x64' / 'Release' / 'libcpsig.dylib'
                 shutil.copy(cpsig_dll_path, dir_)
