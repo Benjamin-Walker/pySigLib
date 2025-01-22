@@ -357,9 +357,7 @@ namespace cpSigTests
             auto f = signatureDouble;
             std::vector<double> path;
             std::vector<double> trueSig;
-            try { checkResult(f, path, trueSig, 0, 0, 0, false, false, true); Assert::Fail(); }
-            catch (const std::invalid_argument& e) { Assert::AreEqual("signature received path of dimension 0", e.what()); }
-            catch (...) { Assert::Fail(); }
+            Assert::AreEqual(2, f(path.data(), trueSig.data(), 0, 0, 0, false, false, true));
 
             trueSig.push_back(1.);
             checkResult(f, path, trueSig, 1, 0, 0, false, false, true);
@@ -472,6 +470,16 @@ namespace cpSigTests
             std::vector<int> path = { 0, 5, 2, 4, 9 };
             std::vector<double> trueSig = { 1., 4., 4., 8., 20., -4., 8., 10. + 2./3, 35., 10., 85., -13., -90., 37., 10. + 2./3};
             checkResult(f, path, trueSig, dimension, length, degree, false, true, true);
+        }
+
+        TEST_METHOD(BigLeadLagTest) {
+            auto f = batchSignatureDouble;
+            uint64_t dimension = 2, length = 10, degree = 2, batch = 1;
+            std::vector<double> path;
+            path.resize(batch * length * dimension);
+            std::vector<double> out;
+            out.resize(batch * polyLength(dimension * 2, degree));
+            f(path.data(), out.data(), batch, dimension, length, degree, false, true, true, false);
         }
     };
 }

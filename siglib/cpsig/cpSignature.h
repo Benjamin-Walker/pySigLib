@@ -45,6 +45,10 @@ void signatureNaive_(Path<T>& path, double* out, uint64_t degree)
 	++nextPt;
 
 	uint64_t* levelIndex = (uint64_t*)malloc(sizeof(uint64_t) * (degree + 2));
+	if (!levelIndex) {
+		throw std::bad_alloc();
+		return;
+	}
 	levelIndex[0] = 0UL;
 	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
 		levelIndex[i] = levelIndex[i - 1UL] * dimension + 1;
@@ -57,6 +61,10 @@ void signatureNaive_(Path<T>& path, double* out, uint64_t degree)
 	++nextPt;
 
 	double* linearSignature = (double*)malloc(sizeof(double) * ::polyLength(dimension, degree));
+	if (!linearSignature) {
+		throw std::bad_alloc();
+		return;
+	}
 
 	Point<T> lastPt(path.end());
 
@@ -101,10 +109,10 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 	++nextPt;
 
 	uint64_t* levelIndex = (uint64_t*)ALIGNED_MALLOC(sizeof(uint64_t) * (degree + 2));
-	/*if (!levelIndex) {
-		raise std::cerr << "Failed to allocate memory for levelIndex." << std::endl;
+	if (!levelIndex) {
+		throw std::bad_alloc();
 		return;
-	}*/
+	}
 	levelIndex[0] = 0UL;
 	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
 		levelIndex[i] = levelIndex[i - 1UL] * dimension + 1UL;
@@ -117,7 +125,15 @@ void signatureHorner_(Path<T>& path, double* out, uint64_t degree)
 	++nextPt;
 
 	double* hornerStep = (double*)ALIGNED_MALLOC(sizeof(double) * (levelIndex[degree + 1UL] - levelIndex[degree])); //This will hold intermediary computations
+	if (!hornerStep) {
+		throw std::bad_alloc();
+		return;
+	}
 	double* increments = (double*)ALIGNED_MALLOC(sizeof(double) * dimension);
+	if (!increments) {
+		throw std::bad_alloc();
+		return;
+	}
 
 	Point<T> lastPt(path.end());
 

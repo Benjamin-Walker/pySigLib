@@ -5,6 +5,7 @@ from ctypes import c_float, c_double, c_int32, c_int64, c_bool, POINTER, cast
 import os
 import sys
 import platform
+from .errorCodes import errMsg
 
 SYSTEM = platform.system()
 USE_CUDA = False
@@ -29,7 +30,10 @@ else:
 def polyLength(dimension, degree):
     cpsig.polyLength.argtypes = (c_int64, c_int64)
     cpsig.polyLength.restype = c_int64
-    return cpsig.polyLength(dimension, degree)
+    out = cpsig.polyLength(dimension, degree)
+    if out == 0:
+        raise Exception("Integer overflow encountered in polyLength")
+    return out
 
 class sigDataHandler:
     def __init__(self, path, degree, timeAug, leadLag):
@@ -120,33 +124,49 @@ class sigDataHandler:
 
 
 def signature_(data, timeAug = False, leadLag = False, horner = True):
+    errCode = 0
     if data.dtype == "int32":
         cpsig.signatureInt32.argtypes = (POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
-        cpsig.signatureInt32(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+        cpsig.signatureInt32.restype = c_int64
+        errCode = cpsig.signatureInt32(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
     elif data.dtype == "int64":
         cpsig.signatureInt64.argtypes = (POINTER(c_int64), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
-        cpsig.signatureInt64(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+        cpsig.signatureInt64.restype = c_int64
+        errCode = cpsig.signatureInt64(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
     elif data.dtype == "float32":
         cpsig.signatureFloat.argtypes = (POINTER(c_float), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
-        cpsig.signatureFloat(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+        cpsig.signatureFloat.restype = c_int64
+        errCode = cpsig.signatureFloat(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
     elif data.dtype == "float64":
         cpsig.signatureDouble.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
-        cpsig.signatureDouble(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+        cpsig.signatureDouble.restype = c_int64
+        errCode = cpsig.signatureDouble(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+
+    if errCode:
+        raise Exception(errMsg[errCode] + " in signature")
     return data.out
 
 def batchSignature_(data, timeAug = False, leadLag = False, horner = True, parallel = True):
+    errCode = 0
     if data.dtype == "int32":
         cpsig.batchSignatureInt32.argtypes = (POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
-        cpsig.batchSignatureInt32(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
-    if data.dtype == "int64":
+        cpsig.batchSignatureInt32.restype = c_int64
+        errCode = cpsig.batchSignatureInt32(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+    elif data.dtype == "int64":
         cpsig.batchSignatureInt64.argtypes = (POINTER(c_int64), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
-        cpsig.batchSignatureInt64(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+        cpsig.batchSignatureInt64.restype = c_int64
+        errCode = cpsig.batchSignatureInt64(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
     elif data.dtype == "float32":
         cpsig.batchSignatureFloat.argtypes = (POINTER(c_float), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
-        cpsig.batchSignatureFloat(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+        cpsig.batchSignatureFloat.restype = c_int64
+        errCode = cpsig.batchSignatureFloat(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
     elif data.dtype == "float64":
         cpsig.batchSignatureDouble.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
-        cpsig.batchSignatureDouble(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+        cpsig.batchSignatureDouble.restype = c_int64
+        errCode = cpsig.batchSignatureDouble(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+
+    if errCode:
+        raise Exception(errMsg[errCode] + " in signature")
     return data.out
 
 def signature(path, degree, timeAug = False, leadLag = False, horner = True, parallel = True):

@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 
 #ifndef __APPLE__
 	#define AVX
@@ -27,3 +28,25 @@
 #else
     #define FORCE_INLINE inline __attribute__((always_inline))
 #endif
+
+#define SAFE_CALL(function_call)                 \
+    try {                                        \
+        function_call;                           \
+    }                                            \
+    catch (std::bad_alloc&) {					 \
+		std::cerr << "Failed to allocate memory";\
+        return 1;                                \
+    }                                            \
+    catch (std::invalid_argument& e) {           \
+		std::cerr << e.what();					 \
+        return 2;                                \
+    }                                            \
+	catch (std::out_of_range& e) {			     \
+		std::cerr << e.what();					 \
+		return 3;                                \
+	}  											 \
+    catch (...) {                                \
+		std::cerr << "Unknown exception";		 \
+        return 4;                                \
+    }                                            \
+    return 0;
