@@ -2,6 +2,12 @@
 #include "cusig.h"
 #include "cuSigKernel.h"
 
+__constant__ uint64_t dimension;
+__constant__ uint64_t length1;
+__constant__ uint64_t length2;
+__constant__ uint64_t dyadicOrder1;
+__constant__ uint64_t dyadicOrder2;
+
 __constant__ double twelth;
 __constant__ uint64_t dyadicLength1;
 __constant__ uint64_t dyadicLength2;

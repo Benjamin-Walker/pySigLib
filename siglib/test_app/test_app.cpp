@@ -338,7 +338,7 @@ int main(int argc, char* argv[])
 
     printExample("Batch Signature Kernel");
 
-    uint64_t dimension4 = 5, length4 = 1000, batch4 = 100;
+    uint64_t dimension4 = 5, length4 = 100, batch4 = 1000;
     std::vector<double> data4;
 	data4.resize(dimension4* length4 * batch4);
     for (uint64_t i = 0; i < dimension4 * length4 * batch4; ++i) data4[i] = (i % 2 ? 0.1 : 0.5);
@@ -346,7 +346,7 @@ int main(int argc, char* argv[])
     double* res = (double*)malloc(batch4 * sizeof(double));
     //batchSigKernelDouble(data4.data(), data4.data(), res, batch4, dimension4, length4, length4, 2, 2);
 
-    timeFunction(1, batchSigKernelDouble, data4.data(), data4.data(), res, batch4, dimension4, length4, length4, 0,0);
+    //timeFunction(10, batchSigKernelDouble, data4.data(), data4.data(), res, batch4, dimension4, length4, length4, 0,0);
 
     /*for (int i = 0; i < batch4; ++i)
         std::cout << res[i] << " done\n";*/
