@@ -53,7 +53,7 @@ void multiThreadedBatch2(FN& threadFunc, T* path1, T* path2, double* out, uint64
 
 	auto batchThreadFunc = [&](T* pathPtr1, T* pathPtr2, double* outPtr) {
 		double* outPtr_ = outPtr;
-		for (T* path1Ptr_ = pathPtr1, path2Ptr_ = pathPtr2;
+		for (T* path1Ptr_ = pathPtr1, *path2Ptr_ = pathPtr2;
 			path1Ptr_ < dataEnd1;
 			path1Ptr_ += threadPathStep1, path2Ptr_ += threadPathStep2, outPtr_ += threadResultStep) {
 
@@ -63,7 +63,7 @@ void multiThreadedBatch2(FN& threadFunc, T* path1, T* path2, double* out, uint64
 
 	unsigned int numThreads = 0;
 	double* outPtr = out;
-	for (T* path1Ptr = path1, path2Ptr = path2;
+	for (T* path1Ptr = path1, *path2Ptr = path2;
 		(numThreads < maxThreads) && (path1Ptr < dataEnd1);
 		path1Ptr += flatPathLength1, path2Ptr += flatPathLength2, outPtr += resultLength) {
 

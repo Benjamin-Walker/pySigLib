@@ -14,3 +14,5 @@
 /examples/fbm_test.py
 /examples/fbm_test2.py
 /dist
+/siglib/cuSigKernel.h
+/profile.ncu-rep

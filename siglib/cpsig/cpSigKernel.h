@@ -151,9 +151,9 @@ void batchSigKernel_(
 	const uint64_t flatPathLength2 = dimension * length2;
 	T* const dataEnd1 = path1 + flatPathLength1 * batchSize;
 
-	auto sigKernelFunc = [&](T* pathPtr, double* outPtr) {
-		Path<T> pathObj1(path1, dimension, length1, timeAug, leadLag);
-		Path<T> pathObj2(path2, dimension, length2, timeAug, leadLag);
+	auto sigKernelFunc = [&](T* path1Ptr, T* path2Ptr, double* outPtr) {
+		Path<T> pathObj1(path1Ptr, dimension, length1, timeAug, leadLag);
+		Path<T> pathObj2(path2Ptr, dimension, length2, timeAug, leadLag);
 		getSigKernel_(pathObj1, pathObj2, outPtr, dyadicOrder1, dyadicOrder2);
 		};
 
@@ -161,7 +161,10 @@ void batchSigKernel_(
 		multiThreadedBatch2(sigKernelFunc, path1, path2, out, batchSize, flatPathLength1, flatPathLength2, 1);
 	}
 	else {
-		for (T* path1Ptr = path1, path2Ptr = path2, outPtr = out;
+		T* path1Ptr = path1;
+		T* path2Ptr = path2;
+		double* outPtr = out;
+		for (;
 			path1Ptr < dataEnd1;
 			path1Ptr += flatPathLength1, path2Ptr += flatPathLength2, ++outPtr) {
 

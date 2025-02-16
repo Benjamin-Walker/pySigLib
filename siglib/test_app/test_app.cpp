@@ -194,8 +194,10 @@ int main(int argc, char* argv[])
     using batchSignatureDoubleFN    = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, bool, bool);
     using batchSignatureInt32FN     = void(CDECL_*)(int*, double*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, bool, bool);
 
-    using sigKernelDoubleFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool);
-    using sigKernelDoubleCUDAFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool);
+    using sigKernelDoubleFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+    using batchSigKernelDoubleFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+    using sigKernelDoubleCUDAFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+    using batchSigKernelDoubleCUDAFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
 
 #if defined(_WIN32)
 #define GET_FN_PTR ::GetProcAddress
@@ -212,8 +214,10 @@ int main(int argc, char* argv[])
     GET_FN(batchSignatureDouble, cpsig);
     GET_FN(batchSignatureInt32, cpsig);
     GET_FN(sigKernelDouble, cpsig);
+    GET_FN(batchSigKernelDouble, cpsig);
 
     GET_FN(sigKernelDoubleCUDA, cusig);
+    GET_FN(batchSigKernelDoubleCUDA, cusig);
 
     ////////////////////////////////////////////////
     //// Example Signature
@@ -334,17 +338,20 @@ int main(int argc, char* argv[])
 
     printExample("Batch Signature Kernel");
 
-    uint64_t dimension4 = 5, length4 = 1000;
+    uint64_t dimension4 = 5, length4 = 1000, batch4 = 100;
     std::vector<double> data4;
-	data4.resize(dimension4* length4);
-    for (uint64_t i = 0; i < dimension4 * length4; ++i) data4[i] = (i % 2 ? 0.1 : 0.5);
+	data4.resize(dimension4* length4 * batch4);
+    for (uint64_t i = 0; i < dimension4 * length4 * batch4; ++i) data4[i] = (i % 2 ? 0.1 : 0.5);
 
-    double res;
-    //sigKernelDouble(data4.data(), data4.data(), &res, dimension4, length4, length4, 2, 2, false, false);
+    double* res = (double*)malloc(batch4 * sizeof(double));
+    //batchSigKernelDouble(data4.data(), data4.data(), res, batch4, dimension4, length4, length4, 2, 2);
 
-    timeFunction(10, sigKernelDouble, data4.data(), data4.data(), &res, dimension4, length4, length4, 0, 0, false, false);
+    timeFunction(1, batchSigKernelDouble, data4.data(), data4.data(), res, batch4, dimension4, length4, length4, 0,0);
 
-    std::cout << res << " done\n";
+    /*for (int i = 0; i < batch4; ++i)
+        std::cout << res[i] << " done\n";*/
+
+    free(res);
 
     //////////////////////////////////////////////
     // Example Signature Kernel
@@ -362,19 +369,24 @@ int main(int argc, char* argv[])
     double* d_a;
     double* d_out;
     cudaMalloc(&d_a, sizeof(double) * data4.size());
-    cudaMalloc(&d_out, sizeof(double));
+    cudaMalloc(&d_out, sizeof(double) * batch4);
+
+    double* res2 = (double*)malloc(batch4 * sizeof(double));
 
     // Copy data from the host to the device (CPU -> GPU)
     cudaMemcpy(d_a, data4.data(), sizeof(double) * data4.size(), cudaMemcpyHostToDevice);
 
-    timeFunction(10, sigKernelDoubleCUDA, d_a, d_a, d_out, dimension4, length4, length4, 0, 0, false, false);
+    timeFunction(1, batchSigKernelDoubleCUDA, d_a, d_a, d_out, batch4, dimension4, length4, length4, 0,0);
 
-    cudaMemcpy(&res, d_out, sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(res2, d_out, sizeof(double) * batch4, cudaMemcpyDeviceToHost);
 
     cudaFree(d_a);
     cudaFree(d_out);
 
-    std::cout << res << " done\n";
+    /*for (int i = 0; i < batch4; ++i)
+        std::cout << res2[i] << " done\n";*/
+
+    free(res2);
 
     return 0;
 }

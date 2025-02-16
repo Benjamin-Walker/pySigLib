@@ -74,7 +74,7 @@ public:
         uint64_t dimension = 2, length = 3;
         std::vector<double> path = { 0., 0., 0.5, 0.5, 1.,1. };
         std::vector<double> trueSig = { 4.256702149748847 };
-        checkResult2(f, path, path, trueSig, dimension, length, length, 2, 2, false, false);
+        checkResult2(f, path, path, trueSig, dimension, length, length, 2, 2);
     }
 
     TEST_METHOD(ManualTest) {
@@ -82,7 +82,7 @@ public:
         uint64_t dimension = 3, length = 4;
         std::vector<double> path = { .9, .5, .8, .5, .3, .0, .0, .2, .6, .4, .0, .2 };
         std::vector<double> trueSig = { 2.1529809076880486 };
-        checkResult2(f, path, path, trueSig, dimension, length, length, 2, 2, false, false);
+        checkResult2(f, path, path, trueSig, dimension, length, length, 2, 2);
     }
     };
 }
