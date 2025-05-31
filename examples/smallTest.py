@@ -3,9 +3,6 @@ import numpy as np
 import iisignature
 
 if __name__ == '__main__':
-    sig.cpsig_hello_world(5)
-    sig.cusig_hello_world(5)
-    print("\n")
     X = np.random.randint(low=0, high=10, size=(1000, 2)).astype("double")
 
     iisigres = iisignature.sig(X, 3)

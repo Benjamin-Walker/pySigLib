@@ -19,6 +19,52 @@
 
 #include "cuda_runtime.h"
 
+double dot_product_(double* a, double* b, int n) {
+    double res = 0;
+    for (int i = 0; i < n; ++i) {
+        res += *(a + i) * *(b + i);
+    }
+    return res;
+}
+
+void gram_(
+    double* path1,
+    double* path2,
+    double* out,
+    uint64_t batchSize,
+    uint64_t dimension,
+    uint64_t length1,
+    uint64_t length2
+) {
+    double* outPtr = out;
+
+    uint64_t flatPath1Length = length1 * dimension;
+    uint64_t flatPath2Length = length2 * dimension;
+
+    double* path1Start = path1;
+    double* path1End = path1 + flatPath1Length;
+
+    double* path2Start = path2;
+    double* path2End = path2 + flatPath2Length;
+
+    for (uint64_t b = 0; b < batchSize; ++b) {
+
+        for (double* path1Ptr = path1Start; path1Ptr < path1End - dimension; path1Ptr += dimension) {
+            for (double* path2Ptr = path2Start; path2Ptr < path2End - dimension; path2Ptr += dimension) {
+                *(outPtr++) = dot_product_(path1Ptr + dimension, path2Ptr + dimension, dimension)
+                    - dot_product_(path1Ptr + dimension, path2Ptr, dimension)
+                    - dot_product_(path1Ptr, path2Ptr + dimension, dimension)
+                    + dot_product_(path1Ptr, path2Ptr, dimension);
+            }
+        }
+
+        path1Start += flatPath1Length;
+        path1End += flatPath1Length;
+        path2Start += flatPath2Length;
+        path2End += flatPath2Length;
+    }
+}
+
 std::vector<double> testData(uint64_t dimension, uint64_t length) {
     std::vector<double> data;
     uint64_t data_size = dimension * length;
@@ -194,10 +240,10 @@ int main(int argc, char* argv[])
     using batchSignatureDoubleFN    = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, bool, bool);
     using batchSignatureInt32FN     = void(CDECL_*)(int*, double*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, bool, bool);
 
-    using sigKernelDoubleFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
-    using batchSigKernelDoubleFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool);
-    using sigKernelDoubleCUDAFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
-    using batchSigKernelDoubleCUDAFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+    using sigKernelFN = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
+    using batchSigKernelFN = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
+    //using sigKernelDoubleCUDAFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+    //using batchSigKernelDoubleCUDAFN = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
 
 #if defined(_WIN32)
 #define GET_FN_PTR ::GetProcAddress
@@ -213,11 +259,12 @@ int main(int argc, char* argv[])
     GET_FN(signatureInt32, cpsig);
     GET_FN(batchSignatureDouble, cpsig);
     GET_FN(batchSignatureInt32, cpsig);
-    GET_FN(sigKernelDouble, cpsig);
-    GET_FN(batchSigKernelDouble, cpsig);
+    GET_FN(sigKernel, cpsig);
+    GET_FN(batchSigKernel, cpsig);
+    /*GET_FN(batchSigKernelDouble, cpsig);
 
     GET_FN(sigKernelDoubleCUDA, cusig);
-    GET_FN(batchSigKernelDoubleCUDA, cusig);
+    GET_FN(batchSigKernelDoubleCUDA, cusig);*/
 
     ////////////////////////////////////////////////
     //// Example Signature
@@ -338,7 +385,7 @@ int main(int argc, char* argv[])
 
     printExample("Batch Signature Kernel");
 
-    uint64_t dimension4 = 5000, length4 = 100, batch4 = 120;
+    uint64_t dimension4 = 1000, length4 = 10000, batch4 = 1;
     std::vector<double> data4;
 	data4.resize(dimension4* length4 * batch4);
     for (uint64_t i = 0; i < dimension4 * length4 * batch4; ++i) data4[i] = (i % 2 ? 0.1 : 0.5);
@@ -346,7 +393,11 @@ int main(int argc, char* argv[])
     double* res = (double*)malloc(batch4 * sizeof(double));
     //batchSigKernelDouble(data4.data(), data4.data(), res, batch4, dimension4, length4, length4, 2, 2);
 
-    timeFunction(1, batchSigKernelDouble, data4.data(), data4.data(), res, batch4, dimension4, length4, length4, 0,0, true, true);
+    std::vector<double> gram(length4 * length4);
+
+    //gram_(data4.data(), data4.data(), gram.data(), batch4, dimension4, length4, length4);
+
+    timeFunction(1, batchSigKernel, gram.data(), res, batch4, dimension4, length4, length4, 0,0, true);
 
     /*for (int i = 0; i < batch4; ++i)
         std::cout << res[i] << " done\n";*/

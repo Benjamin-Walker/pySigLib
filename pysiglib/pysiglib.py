@@ -8,6 +8,8 @@ import platform
 from .errorCodes import errMsg
 import warnings
 
+# from line_profiler_pycharm import profile
+
 SYSTEM = platform.system()
 USE_CUDA = True
 
@@ -286,32 +288,43 @@ class sigKernelDataHandler:
             raise ValueError("path.dtype must be int32, int64, float32 or float64. Got " + str(path.dtype) + " instead.")
         return dtype, dataPtr
 
-def sigKernel_(data):
+def sigKernel_(data, gram):
     errCode = 0
-    if data.dtype == "int32":
-        cpsig.batchSigKernelInt32.argtypes = (
-        POINTER(c_int32), POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
-        cpsig.batchSigKernelInt32.restype = c_int64
-        errCode = cpsig.batchSigKernelInt32(data.dataPtr1, data.dataPtr2, data.outPtr, data.batchSize, data.dimension,
-                                       data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
-    elif data.dtype == "int64":
-        cpsig.batchSigKernelInt64.argtypes = (
-        POINTER(c_int64), POINTER(c_int64), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
-        cpsig.batchSigKernelInt64.restype = c_int64
-        errCode = cpsig.batchSigKernelInt64(data.dataPtr1, data.dataPtr2, data.outPtr, data.batchSize, data.dimension,
-                                       data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
-    elif data.dtype == "float32":
-        cpsig.batchSigKernelFloat.argtypes = (
-        POINTER(c_float), POINTER(c_float), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
-        cpsig.batchSigKernelFloat.restype = c_int64
-        errCode = cpsig.batchSigKernelFloat(data.dataPtr1, data.dataPtr2, data.outPtr, data.batchSize, data.dimension,
-                                       data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
-    elif data.dtype == "float64":
-        cpsig.batchSigKernelDouble.argtypes = (
-        POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
-        cpsig.batchSigKernelDouble.restype = c_int64
-        errCode = cpsig.batchSigKernelDouble(data.dataPtr1, data.dataPtr2, data.outPtr, data.batchSize, data.dimension,
-                                       data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
+    # if data.dtype == "int32":
+    #     cpsig.batchSigKernelInt32.argtypes = (
+    #     POINTER(c_int32), POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
+    #     cpsig.batchSigKernelInt32.restype = c_int64
+    #     errCode = cpsig.batchSigKernelInt32(data.dataPtr1, data.dataPtr2, data.outPtr, data.batchSize, data.dimension,
+    #                                    data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
+    # elif data.dtype == "int64":
+    #     cpsig.batchSigKernelInt64.argtypes = (
+    #     POINTER(c_int64), POINTER(c_int64), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
+    #     cpsig.batchSigKernelInt64.restype = c_int64
+    #     errCode = cpsig.batchSigKernelInt64(data.dataPtr1, data.dataPtr2, data.outPtr, data.batchSize, data.dimension,
+    #                                    data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
+    # elif data.dtype == "float32":
+    #     cpsig.batchSigKernelFloat.argtypes = (
+    #     POINTER(c_float), POINTER(c_float), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
+    #     cpsig.batchSigKernelFloat.restype = c_int64
+    #     errCode = cpsig.batchSigKernelFloat(data.dataPtr1, data.dataPtr2, data.outPtr, data.batchSize, data.dimension,
+    #                                    data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
+    # elif data.dtype == "float64":
+    #     cpsig.batchSigKernelDouble.argtypes = (
+    #     POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
+    #     cpsig.batchSigKernelDouble.restype = c_int64
+    #     errCode = cpsig.batchSigKernelDouble(data.dataPtr1, data.dataPtr2, data.outPtr, data.batchSize, data.dimension,
+    #                                    data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
+    #
+    # if errCode:
+    #     raise Exception(errMsg[errCode] + " in sigKernel")
+    # return data.out
+
+    cpsig.batchSigKernel.argtypes = (
+    POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
+    cpsig.batchSigKernel.restype = c_int64
+
+    errCode = cpsig.batchSigKernel(cast(gram.data_ptr(), POINTER(c_double)), data.outPtr, data.batchSize, data.dimension,
+                                   data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
 
     if errCode:
         raise Exception(errMsg[errCode] + " in sigKernel")
@@ -348,10 +361,14 @@ def sigKernelCUDA_(data):
         raise Exception(errMsg[errCode] + " in sigKernel")
     return data.out
 
+# @profile
 def sigKernel(path1, path2, dyadicOrder):
     data = sigKernelDataHandler(path1, path2, dyadicOrder)
     if data.device.type == "cpu":
-        return sigKernel_(data)
+        x1 = path1[:, 1:, :] - path1[:, :-1, :]
+        y1 = path2[:, 1:, :] - path2[:, :-1, :]
+        gram = torch.bmm(x1, y1.permute(0,2,1))
+        return sigKernel_(data, gram)
     else:
         return sigKernelCUDA_(data)
 
