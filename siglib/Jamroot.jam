@@ -1,13 +1,14 @@
 # pySigLib 
 
 build-project cpsig ;
-build-project test_app ;
+# build-project cusig ;
+# build-project test_app ;
 
 
 # install dist : cpsig test_app ./cpsig/cpsig.h ;
 
-install dist : cpsig test_app ./cpsig/cpsig.h :
-   <variant>release:<location>dist/release
+install dist : cpsig ./cpsig/cpsig.h :
+   <variant>release:<location>x64/Release
    <variant>debug:<location>dist/debug
    ;
  

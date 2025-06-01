@@ -4,7 +4,7 @@ from pathlib import Path
 import shutil
 import os
 import platform
-from build_utils import get_b2, build_cpp
+from build_utils import get_b2, build_cpp, build_cusig
 
 GETDLL = True
 USE_CUDA = False
@@ -22,6 +22,7 @@ class CustomInstall(install):
         if GETDLL:
             get_b2()
             build_cpp()
+            build_cusig()
             parent_dir = Path(__file__).parent
             dir_ = parent_dir / 'pysiglib'
 

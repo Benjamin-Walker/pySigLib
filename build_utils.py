@@ -62,10 +62,15 @@ def get_b2():
         shutil.rmtree(zip_foldername)
 
 
-def build_cpp(CUDA_PATH):
+def build_cpp():
     os.chdir(r'siglib')
     subprocess.run(["b2", "--toolset=msvc", "--build-type=complete", "architecture=x86", "address-model=64", "release"])
     os.chdir(r'..')
+
+def build_cusig():
+    DIR, VCTOOLSINSTALLDIR, CL_PATH, CUDA_PATH, INCLUDE = get_paths()
+    VC0 = VCTOOLSINSTALLDIR[:VCTOOLSINSTALLDIR.find(r'\Tools')]
+    subprocess.run(["C:\\Users\Shmelev\source\\repos\pySigLib\\build_copy1.bat", VC0, VCTOOLSINSTALLDIR])
 
 def get_msvc_path():
     output = subprocess.run(["b2", "toolset=msvc", "--debug-configuration"], capture_output=True, text=True)
