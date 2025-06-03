@@ -6,9 +6,11 @@ import shutil
 import os
 import platform
 from build_utils import get_b2, build_cpsig, build_cusig
-#TODO: pass flag during install which controls if cusig is built
+
 REBUILD = True
-USE_CUDA = True
+USE_CUDA = 'CUDA_PATH' in os.environ
+if 'CUSIG' in os.environ and os.environ['CUSIG'] == 0:
+    USE_CUDA = False
 
 # Only support Windows, Linux and MacOS
 SYSTEM = platform.system()
@@ -18,6 +20,11 @@ if SYSTEM not in ['Windows', 'Linux', 'Darwin']:
 # Don't support CUDA on MacOS
 if SYSTEM == 'Darwin':
     USE_CUDA = False
+
+if USE_CUDA:
+    print("Found CUDA_PATH, attempting to build with CUDA. To build without CUDA, run 'CUSIG=0 pip install pysiglib' instead.")
+else:
+    print("Building without CUDA.")
 
 # Get lib extension
 if SYSTEM == 'Windows':
