@@ -7,6 +7,8 @@ import os
 import platform
 from build_utils import get_b2, build_cpsig, build_cusig
 
+#TODO: AVX flag
+
 REBUILD = True
 USE_CUDA = 'CUDA_PATH' in os.environ
 if 'CUSIG' in os.environ and os.environ['CUSIG'] == 0:
@@ -29,7 +31,7 @@ else:
 # Get lib extension
 if SYSTEM == 'Windows':
     LIB_PREFIX = ''
-if SYSTEM == 'Linux':
+elif SYSTEM == 'Linux':
     LIB_PREFIX = ''
 else:
     LIB_PREFIX = 'lib'

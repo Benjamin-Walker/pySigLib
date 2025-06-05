@@ -12,7 +12,7 @@ zip_filename = zip_foldername + '.zip'
 b2_url = 'https://github.com/bfgroup/b2/releases/download/' + b2_version + '/b2-' + b2_version + '.zip'
 
 def get_paths(SYSTEM):
-    if 'CUDA_PATH' not in os.environ:#TODO: If no cuda, add flag
+    if 'CUDA_PATH' not in os.environ:
         raise RuntimeError("Error while compiling pysiglib: CUDA_PATH environment variable not set")
 
     CUDA_PATH = os.environ['CUDA_PATH']
@@ -77,7 +77,7 @@ def get_b2(SYSTEM):
 def build_cpsig(SYSTEM):
     os.chdir(r'siglib')
     if SYSTEM == 'Windows':
-        subprocess.run(["../b2/bin/b2", "--toolset=msvc", "--build-type=complete", "architecture=x86", "address-model=64", "release"])
+        subprocess.run(["../b2/b2", "--toolset=msvc", "--build-type=complete", "architecture=x86", "address-model=64", "release"])
     elif SYSTEM == 'Linux':
         raise #TODO
     elif SYSTEM == 'Darwin':
