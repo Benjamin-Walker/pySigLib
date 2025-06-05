@@ -58,12 +58,14 @@ def get_b2(SYSTEM):
 
     os.chdir(r'..')
 
-    b2_path = os.getcwd() + "\\b2"
-    os.chdir(zip_foldername)
-    subprocess.run(["./b2", "install", "--prefix=" + b2_path])
-    sys.path.append(b2_path)
 
+    os.chdir(zip_foldername)
+    subprocess.run(["./b2", "install", "--prefix=../b2"])
     os.chdir(r'..')
+    # b2_path = os.getcwd() + "\\b2\\bin"
+    # sys.path.append(b2_path)
+
+    # os.chdir(r'..')
 
     if os.path.isfile(zip_filename):
         os.remove(zip_filename)
@@ -75,11 +77,13 @@ def get_b2(SYSTEM):
 def build_cpsig(SYSTEM):
     os.chdir(r'siglib')
     if SYSTEM == 'Windows':
-        subprocess.run(["b2", "--toolset=msvc", "--build-type=complete", "architecture=x86", "address-model=64", "release"])
+        subprocess.run(["../b2/bin/b2", "--toolset=msvc", "--build-type=complete", "architecture=x86", "address-model=64", "release"])
     elif SYSTEM == 'Linux':
         raise #TODO
     elif SYSTEM == 'Darwin':
-        raise #TODO
+        subprocess.run(["chmod", "755", "../b2"])
+        subprocess.run(
+            ["../b2/bin/b2", "--build-type=complete", "release"])
     else:
         # Shouldn't really end up here, but just in case
         raise RuntimeError("Unknown error while building pysiglib: unexpected system '" + SYSTEM + "' in build_cpsig()")

@@ -28,6 +28,13 @@ else:
 
 # Get lib extension
 if SYSTEM == 'Windows':
+    LIB_PREFIX = ''
+if SYSTEM == 'Linux':
+    LIB_PREFIX = ''
+else:
+    LIB_PREFIX = 'lib'
+
+if SYSTEM == 'Windows':
     LIB_EXT = '.dll'
 elif SYSTEM == 'Linux':
     LIB_EXT = '.so'
@@ -35,9 +42,9 @@ else:
     LIB_EXT = '.dylib'
 
 # Get lib names
-LIBS = ['cpsig' + LIB_EXT]
+LIBS = [LIB_PREFIX + 'cpsig' + LIB_EXT]
 if USE_CUDA:
-    LIBS += ['cusig' + LIB_EXT]
+    LIBS += [LIB_PREFIX + 'cusig' + LIB_EXT]
 
 class CustomInstall(install):
     def run(self):
