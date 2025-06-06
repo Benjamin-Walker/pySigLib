@@ -9,13 +9,13 @@ plotting_params.set_plotting_params(8, 10, 12)
 
 if __name__ == '__main__':
 
-    batchSize = 32
+    batch_size = 32
     length = 1024
     dimension = 5
     N = 5
     device = "cpu"
 
-    degreeArr = [i for i in range(1, 8)]
+    degree_arr = list(range(1, 8))
     iisigtime = []
     signatorytime = []
     pysiglibtime = []
@@ -23,13 +23,13 @@ if __name__ == '__main__':
     pysiglibtimehorner = []
     pysiglibtimehornerparallel = []
 
-    for degree in tqdm(degreeArr):
-        iisigtime.append(timeiisig(batchSize, length, dimension, degree, device, N))
-        signatorytime.append(timesignatory(batchSize, length, dimension, degree, device, N))
-        pysiglibtime.append(timepysiglib(batchSize, length, dimension, degree, False, False, device, N))
-        pysiglibtimeparallel.append(timepysiglib(batchSize, length, dimension, degree, False, True, device, N))
-        pysiglibtimehorner.append(timepysiglib(batchSize, length, dimension, degree, True, False, device, N))
-        pysiglibtimehornerparallel.append(timepysiglib(batchSize, length, dimension, degree, True, True, device, N))
+    for degree in tqdm(degree_arr):
+        iisigtime.append(timeiisig(batch_size, length, dimension, degree, device, N))
+        signatorytime.append(timesignatory(batch_size, length, dimension, degree, device, N))
+        pysiglibtime.append(timepysiglib(batch_size, length, dimension, degree, False, False, device, N))
+        pysiglibtimeparallel.append(timepysiglib(batch_size, length, dimension, degree, False, True, device, N))
+        pysiglibtimehorner.append(timepysiglib(batch_size, length, dimension, degree, True, False, device, N))
+        pysiglibtimehornerparallel.append(timepysiglib(batch_size, length, dimension, degree, True, True, device, N))
 
     print(iisigtime)
     print(signatorytime)
@@ -40,8 +40,8 @@ if __name__ == '__main__':
 
     for scale in ["linear", "log"]:
         plot_times(
-            X = degreeArr,
-            Ys = [iisigtime, pysiglibtime, pysiglibtimehorner],
+            x= degree_arr,
+            ys= [iisigtime, pysiglibtime, pysiglibtimehorner],
             legend = ["iisignature (Direct)", "pySigLib (Direct)", "pySigLib (Horner)"],
             title = "Truncated Signatures (Serial)",
             xlabel = "Truncation Level",
@@ -51,8 +51,8 @@ if __name__ == '__main__':
         )
 
         plot_times(
-            X=degreeArr,
-            Ys=[signatorytime, pysiglibtimeparallel, pysiglibtimehornerparallel],
+            x=degree_arr,
+            ys=[signatorytime, pysiglibtimeparallel, pysiglibtimehornerparallel],
             legend=["signatory (Horner)", "pySigLib (Direct)", "pySigLib (Horner)"],
             title= "Truncated Signatures (Parallel)",
             xlabel="Truncation Level",

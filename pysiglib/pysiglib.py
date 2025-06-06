@@ -1,22 +1,22 @@
-from typing import Union
-import numpy as np
-import torch
-import ctypes
-from ctypes import c_float, c_double, c_int32, c_int64, c_bool, POINTER, cast
 import os
 import sys
 import platform
+from typing import Union
+import ctypes
+from ctypes import c_float, c_double, c_int32, c_int64, c_bool, POINTER, cast
 
-from .errorCodes import errMsg
-import warnings
+import numpy as np
+import torch
+
+from .error_codes import err_msg
 
 try:
     from ._config import SYSTEM, BUILT_WITH_CUDA, BUILT_WITH_AVX
-except ImportError:
+except ImportError as exc:
     SYSTEM = None
     BUILT_WITH_CUDA = None
     BUILT_WITH_AVX = None
-    raise RuntimeError("Could not import configuration properties from _config.py - package may not have been built correctly.")
+    raise RuntimeError("Could not import configuration properties from _config.py - package may not have been built correctly.") from exc
 
 if SYSTEM != platform.system():
     raise RuntimeError("System on which pySigLib was built does not match the current system - package may not have been built correctly.")
@@ -38,7 +38,7 @@ elif SYSTEM == 'Darwin':
 else:
     raise Exception("Unsupported OS during pysiglib.py")
 
-def polyLength(dimension : int, degree : int) -> int:
+def poly_length(dimension : int, degree : int) -> int:
     """
     Returns the length of a truncated signature,
 
@@ -62,145 +62,154 @@ def polyLength(dimension : int, degree : int) -> int:
         raise Exception("Integer overflow encountered in polyLength")
     return out
 
-class sigDataHandler:
-    def __init__(self, path, degree, timeAug, leadLag):
+class SigDataHandler:
+    def __init__(self, path, degree, time_aug, lead_lag):
         self.degree = degree
-        self.timeAug = timeAug
-        self.leadLag = leadLag
+        self.time_aug = time_aug
+        self.lead_lag = lead_lag
 
-        self.getDims(path)
+        self.get_dims(path)
 
         if isinstance(path, np.ndarray):
-            self.initNumpy(path)
+            self.init_numpy(path)
 
         if isinstance(path, torch.Tensor):
-            self.initTorch(path)
+            self.init_torch(path)
 
-    def initNumpy(self, path):
+    def init_numpy(self, path):
         if path.dtype == np.int32:
             self.dtype = "int32"
-            self.dataPtr = path.ctypes.data_as(POINTER(c_int32))
+            self.data_ptr = path.ctypes.data_as(POINTER(c_int32))
         elif path.dtype == np.int64:
             self.dtype = "int64"
-            self.dataPtr = path.ctypes.data_as(POINTER(c_int64))
+            self.data_ptr = path.ctypes.data_as(POINTER(c_int64))
         elif path.dtype == np.float32:
             self.dtype = "float32"
-            self.dataPtr = path.ctypes.data_as(POINTER(c_float))
+            self.data_ptr = path.ctypes.data_as(POINTER(c_float))
         elif path.dtype == np.float64:
             self.dtype = "float64"
-            self.dataPtr = path.ctypes.data_as(POINTER(c_double))
+            self.data_ptr = path.ctypes.data_as(POINTER(c_double))
         else:
             raise ValueError("path.dtype must be int32, int64, float32 or float64. Got " + str(path.dtype) + " instead.")
 
-        length_, dimension_ = self.transformedDims()
-        if self.isBatch:
-            self.out = np.empty(shape=(self.batchSize, polyLength(dimension_, self.degree)), dtype=np.float64)
+        _, dimension_ = self.transformed_dims()
+        if self.is_batch:
+            self.out = np.empty(
+                shape=(self.batch_size, poly_length(dimension_, self.degree)),
+                dtype=np.float64
+            )
         else:
-            self.out = np.empty(shape=polyLength(dimension_, self.degree), dtype=np.float64)
-        self.outPtr = self.out.ctypes.data_as(POINTER(c_double))
+            self.out = np.empty(shape=poly_length(dimension_, self.degree), dtype=np.float64)
+        self.out_ptr = self.out.ctypes.data_as(POINTER(c_double))
 
-    def initTorch(self, path):
+    def init_torch(self, path):
         if path.dtype == torch.int32:
             self.dtype = "int32"
-            self.dataPtr = cast(path.data_ptr(), POINTER(c_int32))
+            self.data_ptr = cast(path.data_ptr(), POINTER(c_int32))
         if path.dtype == torch.int64:
             self.dtype = "int64"
-            self.dataPtr = cast(path.data_ptr(), POINTER(c_int64))
+            self.data_ptr = cast(path.data_ptr(), POINTER(c_int64))
         elif path.dtype == torch.float32:
             self.dtype = "float32"
-            self.dataPtr = cast(path.data_ptr(), POINTER(c_float))
+            self.data_ptr = cast(path.data_ptr(), POINTER(c_float))
         elif path.dtype == torch.float64:
             self.dtype = "float64"
-            self.dataPtr = cast(path.data_ptr(), POINTER(c_double))
+            self.data_ptr = cast(path.data_ptr(), POINTER(c_double))
         else:
             raise ValueError("path.dtype must be int32, int64, float32 or float64. Got " + str(path.dtype) + " instead.")
 
-        length_, dimension_ = self.transformedDims()
-        if self.isBatch:
-            self.out = torch.empty(size=(self.batchSize, polyLength(dimension_, self.degree)), dtype=torch.float64)
+        _, dimension_ = self.transformed_dims()
+        if self.is_batch:
+            self.out = torch.empty(
+                size=(self.batch_size, poly_length(dimension_, self.degree)),
+                dtype=torch.float64
+            )
         else:
-            self.out = torch.empty(size=(polyLength(dimension_, self.degree),), dtype=torch.float64)
-        self.outPtr = cast(self.out.data_ptr(), POINTER(c_double))
+            self.out = torch.empty(
+                size=(poly_length(dimension_, self.degree),),
+                dtype=torch.float64
+            )
+        self.out_ptr = cast(self.out.data_ptr(), POINTER(c_double))
 
-    def getDims(self, path):
+    def get_dims(self, path):
         if len(path.shape) == 2:
-            self.isBatch = False
+            self.is_batch = False
             self.length = path.shape[0]
             self.dimension = path.shape[1]
 
 
         elif len(path.shape) == 3:
-            self.isBatch = True
-            self.batchSize = path.shape[0]
+            self.is_batch = True
+            self.batch_size = path.shape[0]
             self.length = path.shape[1]
             self.dimension = path.shape[2]
 
         else:
             raise ValueError("path.shape must have length 2 or 3, got length " + str(path.shape) + " instead.")
 
-    def transformedDims(self):
+    def transformed_dims(self):
         length_ = self.length
         dimension_ = self.dimension
-        if self.leadLag:
+        if self.lead_lag:
             length_ *= 2
             length_ -= 3
             dimension_ *= 2
-        if self.timeAug:
+        if self.time_aug:
             dimension_ += 1
         return (length_, dimension_)
 
 
-def signature_(data, timeAug = False, leadLag = False, horner = True):
-    errCode = 0
+def signature_(data, time_aug = False, lead_lag = False, horner = True):
+    err_code = 0
     if data.dtype == "int32":
         cpsig.signatureInt32.argtypes = (POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
         cpsig.signatureInt32.restype = c_int64
-        errCode = cpsig.signatureInt32(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+        err_code = cpsig.signatureInt32(data.data_ptr, data.out_ptr, data.dimension, data.length, data.degree, time_aug, lead_lag, horner)
     elif data.dtype == "int64":
         cpsig.signatureInt64.argtypes = (POINTER(c_int64), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
         cpsig.signatureInt64.restype = c_int64
-        errCode = cpsig.signatureInt64(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+        err_code = cpsig.signatureInt64(data.data_ptr, data.out_ptr, data.dimension, data.length, data.degree, time_aug, lead_lag, horner)
     elif data.dtype == "float32":
         cpsig.signatureFloat.argtypes = (POINTER(c_float), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
         cpsig.signatureFloat.restype = c_int64
-        errCode = cpsig.signatureFloat(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+        err_code = cpsig.signatureFloat(data.data_ptr, data.out_ptr, data.dimension, data.length, data.degree, time_aug, lead_lag, horner)
     elif data.dtype == "float64":
         cpsig.signatureDouble.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
         cpsig.signatureDouble.restype = c_int64
-        errCode = cpsig.signatureDouble(data.dataPtr, data.outPtr, data.dimension, data.length, data.degree, timeAug, leadLag, horner)
+        err_code = cpsig.signatureDouble(data.data_ptr, data.out_ptr, data.dimension, data.length, data.degree, time_aug, lead_lag, horner)
 
-    if errCode:
-        raise Exception(errMsg[errCode] + " in signature")
+    if err_code:
+        raise Exception(err_msg[err_code] + " in signature")
     return data.out
 
-def batchSignature_(data, timeAug = False, leadLag = False, horner = True, parallel = True):
-    errCode = 0
+def batch_signature_(data, time_aug = False, lead_lag = False, horner = True, parallel = True):
+    err_code = 0
     if data.dtype == "int32":
         cpsig.batchSignatureInt32.argtypes = (POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
         cpsig.batchSignatureInt32.restype = c_int64
-        errCode = cpsig.batchSignatureInt32(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+        err_code = cpsig.batchSignatureInt32(data.data_ptr, data.out_ptr, data.batch_size, data.dimension, data.length, data.degree, time_aug, lead_lag, horner, parallel)
     elif data.dtype == "int64":
         cpsig.batchSignatureInt64.argtypes = (POINTER(c_int64), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
         cpsig.batchSignatureInt64.restype = c_int64
-        errCode = cpsig.batchSignatureInt64(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+        err_code = cpsig.batchSignatureInt64(data.data_ptr, data.out_ptr, data.batch_size, data.dimension, data.length, data.degree, time_aug, lead_lag, horner, parallel)
     elif data.dtype == "float32":
         cpsig.batchSignatureFloat.argtypes = (POINTER(c_float), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
         cpsig.batchSignatureFloat.restype = c_int64
-        errCode = cpsig.batchSignatureFloat(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+        err_code = cpsig.batchSignatureFloat(data.data_ptr, data.out_ptr, data.batch_size, data.dimension, data.length, data.degree, time_aug, lead_lag, horner, parallel)
     elif data.dtype == "float64":
         cpsig.batchSignatureDouble.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_bool)
         cpsig.batchSignatureDouble.restype = c_int64
-        errCode = cpsig.batchSignatureDouble(data.dataPtr, data.outPtr, data.batchSize, data.dimension, data.length, data.degree, timeAug, leadLag, horner, parallel)
+        err_code = cpsig.batchSignatureDouble(data.data_ptr, data.out_ptr, data.batch_size, data.dimension, data.length, data.degree, time_aug, lead_lag, horner, parallel)
 
-    if errCode:
-        raise Exception(errMsg[errCode] + " in signature")
+    if err_code:
+        raise Exception(err_msg[err_code] + " in signature")
     return data.out
 
 def signature(
         path : Union[np.ndarray, torch.tensor],
         degree : int,
-        timeAug : bool = False,
-        leadLag : bool = False,
+        time_aug : bool = False,
+        lead_lag : bool = False,
         horner : bool = True,
         parallel : bool = True #TODO: change to n_jobs
 ) -> Union[np.ndarray, torch.tensor]:
@@ -219,11 +228,11 @@ def signature(
     :type path: numpy.ndarray | torch.tensor
     :param degree: The truncation level of the signature, :math:`N`.
     :type degree: int
-    :param timeAug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
+    :param time_aug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
         defined as the original path with an extra channel set to time, :math:`t`.
-    :type timeAug: bool
-    :param leadLag: If set to True, will compute the signatue of the path after applying the lead-lag transformation.
-    :type leadLag: bool
+    :type time_aug: bool
+    :param lead_lag: If set to True, will compute the signatue of the path after applying the lead-lag transformation.
+    :type lead_lag: bool
     :param horner: If True, will use Horner's algorithm for polynomial multiplication.
     :type horner: bool
     :param parallel: If True, will parallelise the computation.
@@ -231,47 +240,46 @@ def signature(
     :return: Truncated signature, or a batch of truncated signatures.
     :rtype: numpy.ndarray | torch.tensor
     """
-    data = sigDataHandler(path, degree, timeAug, leadLag)
-    if data.isBatch:
-        return batchSignature_(data, timeAug, leadLag, horner, parallel)
-    else:
-        return signature_(data, timeAug, leadLag, horner)
+    data = SigDataHandler(path, degree, time_aug, lead_lag)
+    if data.is_batch:
+        return batch_signature_(data, time_aug, lead_lag, horner, parallel)
+    return signature_(data, time_aug, lead_lag, horner)
 
 
-class sigKernelDataHandler:
-    def __init__(self, path1, path2, dyadicOrder):
-        if isinstance(dyadicOrder, tuple) and len(dyadicOrder) == 2:
-            self.dyadicOrder1 = dyadicOrder[0]
-            self.dyadicOrder2 = dyadicOrder[1]
-        elif isinstance(dyadicOrder, int):
-            self.dyadicOrder1 = dyadicOrder
-            self.dyadicOrder2 = dyadicOrder
+class SigKernelDataHandler:
+    def __init__(self, path1, path2, dyadic_order):
+        if isinstance(dyadic_order, tuple) and len(dyadic_order) == 2:
+            self.dyadic_order_1 = dyadic_order[0]
+            self.dyadic_order_2 = dyadic_order[1]
+        elif isinstance(dyadic_order, int):
+            self.dyadic_order_1 = dyadic_order
+            self.dyadic_order_2 = dyadic_order
         else:
             raise ValueError("dyadicOrder must be an integer or a tuple of length 2")
 
         if len(path1.shape) == 2:
-            self.isBatch = False
-            self.batchSize = 1
-            self.length1 = path1.shape[0]
+            self.is_batch = False
+            self.batch_size = 1
+            self.length_1 = path1.shape[0]
             self.dimension = path1.shape[1]
         elif len(path1.shape) == 3:
-            self.isBatch = True
-            self.batchSize = path1.shape[0]
-            self.length1 = path1.shape[1]
+            self.is_batch = True
+            self.batch_size = path1.shape[0]
+            self.length_1 = path1.shape[1]
             self.dimension = path1.shape[2]
         else:
             raise ValueError("path1.shape must have length 2 or 3, got length " + str(path1.shape) + " instead.")
 
         if len(path2.shape) == 2:
-            if self.batchSize != 1:
+            if self.batch_size != 1:
                 raise ValueError("path1, path2 have different batch sizes")
-            self.length2 = path1.shape[0]
+            self.length_2 = path1.shape[0]
             if self.dimension != path1.shape[1]:
                 raise ValueError("path1, path2 have different dimensions")
         elif len(path2.shape) == 3:
-            if self.batchSize != path1.shape[0]:
+            if self.batch_size != path1.shape[0]:
                 raise ValueError("path1, path2 have different batch sizes")
-            self.length2 = path1.shape[1]
+            self.length_2 = path1.shape[1]
             if self.dimension != path1.shape[2]:
                 raise ValueError("path1, path2 have different dimensions")
         else:
@@ -279,44 +287,59 @@ class sigKernelDataHandler:
 
         if isinstance(path1, np.ndarray) and isinstance(path2, np.ndarray):
             self.device = "cpu"
-            self.out = np.empty(shape=self.batchSize, dtype=np.float64)
-            self.outPtr = self.out.ctypes.data_as(POINTER(c_double))
+            self.out = np.empty(shape=self.batch_size, dtype=np.float64)
+            self.out_ptr = self.out.ctypes.data_as(POINTER(c_double))
 
         elif isinstance(path1, torch.Tensor) and isinstance(path2, torch.Tensor) and path1.device == path2.device:
             self.device = path1.device
-            self.out = torch.empty(self.batchSize, dtype=torch.float64, device = self.device)
-            self.outPtr = cast(self.out.data_ptr(), POINTER(c_double))
+            self.out = torch.empty(self.batch_size, dtype=torch.float64, device = self.device)
+            self.out_ptr = cast(self.out.data_ptr(), POINTER(c_double))
         else:
             raise ValueError("path1, path2 must both be numpy arrays or both torch arrays on the same device")
 
-def sigKernel_(data, gram):
+def sig_kernel_(data, gram):
     cpsig.batchSigKernel.argtypes = (
     POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
     cpsig.batchSigKernel.restype = c_int64
 
-    errCode = cpsig.batchSigKernel(cast(gram.data_ptr(), POINTER(c_double)), data.outPtr, data.batchSize, data.dimension,
-                                   data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
+    err_code = cpsig.batchSigKernel(
+        cast(gram.data_ptr(), POINTER(c_double)),
+        data.out_ptr,
+        data.batch_size,
+        data.dimension,
+        data.length_1,
+        data.length_2,
+        data.dyadic_order_1,
+        data.dyadic_order_2
+    )
 
-    if errCode:
-        raise Exception(errMsg[errCode] + " in sigKernel")
+    if err_code:
+        raise Exception(err_msg[err_code] + " in sigKernel")
     return data.out
 
-def sigKernelCUDA_(data, gram):
+def sig_kernel_cuda_(data, gram):
     cusig.batchSigKernelCUDA.argtypes = (
     POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
     cusig.batchSigKernelCUDA.restype = c_int64
-    errCode = cusig.batchSigKernelCUDA(cast(gram.data_ptr(), POINTER(c_double)), data.outPtr, data.batchSize, data.dimension,
-                                   data.length1, data.length2, data.dyadicOrder1, data.dyadicOrder2)
+    err_code = cusig.batchSigKernelCUDA(
+        cast(gram.data_ptr(), POINTER(c_double)),
+        data.out_ptr, data.batch_size,
+        data.dimension,
+        data.length_1,
+        data.length_2,
+        data.dyadic_order_1,
+        data.dyadic_order_2
+    )
 
-    if errCode:
-        raise Exception(errMsg[errCode] + " in sigKernel")
+    if err_code:
+        raise Exception(err_msg[err_code] + " in sigKernel")
     return data.out
 
 # @profile
-def sigKernel(
+def sig_kernel(
         path1 : Union[np.ndarray, torch.tensor],
         path2 : Union[np.ndarray, torch.tensor],
-        dyadicOrder : Union[int, tuple] #TODO: add n_jobs
+        dyadic_order : Union[int, tuple] #TODO: add n_jobs
 ) -> Union[np.ndarray, torch.tensor]: #TODO: add time-aug and lead-lag
     """
     Computes a single signature kernel or a batch of signature kernels.
@@ -333,27 +356,28 @@ def sigKernel(
     .. math::
         \\left< u, v \\right>_{\\left(\\mathbb{R}^d\\right)^{\\otimes k}} := \\prod_{i=1}^k \\left< u_i, v_i \\right>_{\\mathbb{R}^d}
 
-    :param path1: The first underlying path or batch of paths, given as a `numpy.ndarray` or `torch.tensor`.
-        For a single path, this must be of shape (length, dimension). For a batch of paths, this must
-        be of shape (batch size, length, dimension).
+    :param path1: The first underlying path or batch of paths, given as a `numpy.ndarray` or
+        `torch.tensor`. For a single path, this must be of shape (length, dimension). For a
+         batch of paths, this must be of shape (batch size, length, dimension).
     :type path1: numpy.ndarray | torch.tensor
-    :param path2: The second underlying path or batch of paths, given as a `numpy.ndarray` or `torch.tensor`.
-        For a single path, this must be of shape (length, dimension). For a batch of paths, this must
-        be of shape (batch size, length, dimension).
+    :param path2: The second underlying path or batch of paths, given as a `numpy.ndarray`
+        or `torch.tensor`. For a single path, this must be of shape (length, dimension).
+        For a batch of paths, this must be of shape (batch size, length, dimension).
     :type path2: numpy.ndarray | torch.tensor
-    :param dyadicOrder: If set to a positive integer :math:`\\lambda`, will refine the PDE grid by a factor of :math:`2^\\lambda`.
-    :type dyadicOrder: int | tuple
+    :param dyadic_order: If set to a positive integer :math:`\\lambda`, will refine the
+        PDE grid by a factor of :math:`2^\\lambda`.
+    :type dyadic_order: int | tuple
     :return: Single signature kernel or batch of signature kernels
     :rtype: numpy.ndarray | torch.tensor
     """
-    data = sigKernelDataHandler(path1, path2, dyadicOrder)
+    data = SigKernelDataHandler(path1, path2, dyadic_order)
     x1 = path1[:, 1:, :] - path1[:, :-1, :]
     y1 = path2[:, 1:, :] - path2[:, :-1, :]
     gram = torch.bmm(x1, y1.permute(0, 2, 1))
 
     if data.device.type == "cpu":
-        return sigKernel_(data, gram)
-    else:
-        if not BUILT_WITH_CUDA:
-            raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
-        return sigKernelCUDA_(data, gram)
+        return sig_kernel_(data, gram)
+
+    if not BUILT_WITH_CUDA:
+        raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
+    return sig_kernel_cuda_(data, gram)

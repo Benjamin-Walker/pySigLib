@@ -6,27 +6,27 @@ plotting_params.set_plotting_params(8, 10, 12)
 
 if __name__ == '__main__':
 
-    dyadicOrder = 0
-    batchSize = 32
+    dyadic_order = 0
+    batch_size = 32
     length = 1000
     N = 10
     device = "cuda"
 
-    dimArr = [i for i in range(10, 1100, 100)]
+    dim_arr = list(range(10, 1100, 100))
     sigkerneltime = []
     pysiglibtime = []
 
-    for dimension in tqdm(dimArr):
-        sigkerneltime.append(timesigkernel(batchSize, length, dimension, dyadicOrder, device, N))
-        pysiglibtime.append(timepysiglib_kernel(batchSize, length, dimension, dyadicOrder, device, N))
+    for dimension in tqdm(dim_arr):
+        sigkerneltime.append(timesigkernel(batch_size, length, dimension, dyadic_order, device, N))
+        pysiglibtime.append(timepysiglib_kernel(batch_size, length, dimension, dyadic_order, device, N))
 
     print(sigkerneltime)
     print(pysiglibtime)
 
     for scale in ["linear", "log"]:
         plot_times(
-                X = dimArr,
-                Ys = [sigkerneltime, pysiglibtime],
+                x= dim_arr,
+                ys= [sigkerneltime, pysiglibtime],
                 legend = ["sigkernel", "pysiglib"],
                 title = "Signature Kernels " + device,
                 xlabel = "Path Dimension",

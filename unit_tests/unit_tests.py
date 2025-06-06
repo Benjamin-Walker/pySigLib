@@ -1,10 +1,12 @@
 import warnings
 import unittest
-import pysiglib
+
 import iisignature
 import sigkernel
 import numpy as np
 import torch
+
+import pysiglib
 
 np.random.seed(42)
 torch.manual_seed(42)
@@ -13,16 +15,16 @@ EPSILON = 1e-10
 
 class GeneralTests(unittest.TestCase):
 
-    def test_polyLength(self):
-        self.assertEqual(1, pysiglib.polyLength(0, 0))
-        self.assertEqual(1, pysiglib.polyLength(0, 1))
-        self.assertEqual(1, pysiglib.polyLength(1, 0))
+    def test_poly_length(self):
+        self.assertEqual(1, pysiglib.poly_length(0, 0))
+        self.assertEqual(1, pysiglib.poly_length(0, 1))
+        self.assertEqual(1, pysiglib.poly_length(1, 0))
 
-        self.assertEqual(435848050, pysiglib.polyLength(9, 9))
-        self.assertEqual(11111111111, pysiglib.polyLength(10, 10))
-        self.assertEqual(313842837672, pysiglib.polyLength(11, 11))
+        self.assertEqual(435848050, pysiglib.poly_length(9, 9))
+        self.assertEqual(11111111111, pysiglib.poly_length(10, 10))
+        self.assertEqual(313842837672, pysiglib.poly_length(11, 11))
 
-        self.assertEqual(10265664160401, pysiglib.polyLength(400, 5))
+        self.assertEqual(10265664160401, pysiglib.poly_length(400, 5))
 
 class SignatureTests(unittest.TestCase):
 
@@ -48,7 +50,7 @@ class SignatureTests(unittest.TestCase):
             sig = pysiglib.signature(X, deg)
             self.check_close(iisig, sig[1:])
 
-    def test_randomBatch(self):
+    def test_random_batch(self):
         for deg in range(1, 6):
             X = np.random.uniform(size=(32, 100, 5))
             iisig = iisignature.sig(X, deg)
@@ -57,14 +59,14 @@ class SignatureTests(unittest.TestCase):
             sig = pysiglib.signature(X, deg, parallel = True)
             self.check_close(iisig, sig[:, 1:])
 
-    def test_randomInt(self):
+    def test_random_int(self):
         for deg in range(1, 6):
             X = np.random.randint(low=-2, high=2, size=(100, 5))
             iisig = iisignature.sig(X, deg)
             sig = pysiglib.signature(X, deg)
             self.check_close(iisig, sig[1:])
 
-    def test_randomIntBatch(self):
+    def test_random_int_batch(self):
         for deg in range(1, 6):
             X = np.random.randint(low=-2, high=2, size=(32, 100, 5))
             iisig = iisignature.sig(X, deg)
@@ -82,7 +84,7 @@ class SigKernelTests(unittest.TestCase):
 
     def run_random(self, device):
         for _ in range(5):
-            for dyadicOrder in range(3):
+            for dyadic_order in range(3):
                 X = np.random.uniform(size=(32, 100, 5))
                 Y = np.random.uniform(size=(32, 100, 5))
 
@@ -90,9 +92,9 @@ class SigKernelTests(unittest.TestCase):
                 Y = torch.tensor(Y, device=device)
 
                 static_kernel = sigkernel.LinearKernel()
-                signature_kernel = sigkernel.SigKernel(static_kernel, dyadicOrder)
+                signature_kernel = sigkernel.SigKernel(static_kernel, dyadic_order)
                 kernel1 = signature_kernel.compute_kernel(X, Y, 100)
-                kernel2 = pysiglib.sigKernel(X, Y, dyadicOrder)
+                kernel2 = pysiglib.sig_kernel(X, Y, dyadic_order)
 
                 self.check_close(kernel1.cpu(), kernel2.cpu())
 

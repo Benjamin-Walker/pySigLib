@@ -1,16 +1,18 @@
-import pysiglib
+import timeit
+
 import numpy as np
 import iisignature
-import timeit
+
+import pysiglib
 
 if __name__ == '__main__':
 
-    batchSize = 100
+    batch_size = 100
     length = 1000
     dim = 5
     degree = 5
 
-    X = np.random.uniform(size=(batchSize, length, dim)).astype("double")
+    X = np.random.uniform(size=(batch_size, length, dim)).astype("double")
 
     start = timeit.default_timer()
     sig = iisignature.sig(X, degree)

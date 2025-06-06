@@ -50,7 +50,7 @@ sig = pysiglib.signature(X, degree = 5)
 
 ### Signature Kernels
 
-pySigLib implements signature kernels through the function `pysiglib.sigKernel`,
+pySigLib implements signature kernels through the function `pysiglib.sig_kernel`,
 which takes as input a pair of paths or a pair of batches of paths `X, Y`. The
 `dyadic_order` parameter can be used to refine the PDE grid, giving more
 accurate results. If specified as an integer, the same refinement factor
@@ -67,7 +67,7 @@ import numpy as np
 
 X = np.random.uniform(size=(32, 1000, 10))
 Y = np.random.uniform(size=(32, 1000, 10))
-sig = pysiglib.sigKernel(X, Y, dyadic_order = 1)
+sig = pysiglib.sig_kernel(X, Y, dyadic_order=1)
 
 # In cases where the paths differ in length, it may
 # be advantageous to refine the PDE grid by different
@@ -75,7 +75,7 @@ sig = pysiglib.sigKernel(X, Y, dyadic_order = 1)
 
 X = np.random.uniform(size=(32, 100, 10))
 Y = np.random.uniform(size=(32, 5000, 10))
-sig = pysiglib.sigKernel(X, Y, dyadic_order = (3,0))
+sig = pysiglib.sig_kernel(X, Y, dyadic_order=(3, 0))
 ```
 
 ## Citation

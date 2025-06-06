@@ -6,28 +6,28 @@ plotting_params.set_plotting_params(8, 10, 12)
 
 if __name__ == '__main__':
 
-    dyadicOrder = 0
-    batchSize = 120
+    dyadic_order = 0
+    batch_size = 120
     dimension = 5
     N = 10
-    device = "cuda"
+    device = "cpu"
 
-    lengthArr = [i for i in range(10, 2100, 100)]
+    length_arr = list(range(10, 2100, 100))
     sigkerneltime = []
     pysiglibtime = []
 
 
-    for length in tqdm(lengthArr):
-        sigkerneltime.append(timesigkernel(batchSize, length, dimension, dyadicOrder, device, N))
-        pysiglibtime.append(timepysiglib_kernel(batchSize, length, dimension, dyadicOrder, device, N))
+    for length in tqdm(length_arr):
+        sigkerneltime.append(timesigkernel(batch_size, length, dimension, dyadic_order, device, N))
+        pysiglibtime.append(timepysiglib_kernel(batch_size, length, dimension, dyadic_order, device, N))
 
     print(sigkerneltime)
     print(pysiglibtime)
 
     for scale in ["linear", "log"]:
         plot_times(
-                X = lengthArr[:9],
-                Ys = [sigkerneltime[:9], pysiglibtime[:9]],
+                x=length_arr[:9],
+                ys= [sigkerneltime[:9], pysiglibtime[:9]],
                 legend = ["sigkernel", "pysiglib"],
                 title = "Signature Kernels " + device,
                 xlabel = "Path Length",
@@ -36,8 +36,8 @@ if __name__ == '__main__':
                 filename = "sigkernel_times_len_" + scale + "_" + device + "_1"
         )
         plot_times(
-                X = lengthArr,
-                Ys = [sigkerneltime, pysiglibtime],
+                x= length_arr,
+                ys= [sigkerneltime, pysiglibtime],
                 legend = ["sigkernel", "pysiglib"],
                 title = "Signature Kernels " + device,
                 xlabel = "Path Length",

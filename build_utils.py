@@ -1,15 +1,15 @@
-import requests
 import zipfile
-import sys
 import subprocess
 import shutil
 import os
 
-b2_version = '5.3.2'
+import requests
 
-zip_foldername = 'b2-' + b2_version
-zip_filename = zip_foldername + '.zip'
-b2_url = 'https://github.com/bfgroup/b2/releases/download/' + b2_version + '/b2-' + b2_version + '.zip'
+B2_VERSION = '5.3.2'
+
+ZIP_FOLDERNAME = 'b2-' + B2_VERSION
+ZIP_FILENAME = ZIP_FOLDERNAME + '.zip'
+B2_URL = 'https://github.com/bfgroup/b2/releases/download/' + B2_VERSION + '/b2-' + B2_VERSION + '.zip'
 
 def get_paths(SYSTEM):
     if 'CUDA_PATH' not in os.environ:
@@ -35,16 +35,16 @@ def get_paths(SYSTEM):
     return DIR, VCTOOLSINSTALLDIR, CL_PATH, CUDA_PATH, INCLUDE
 
 def get_b2(SYSTEM):
-    response = requests.get(b2_url)
-    with open(zip_filename, 'wb') as f:
+    response = requests.get(B2_URL)
+    with open(ZIP_FILENAME, 'wb') as f:
         f.write(response.content)
 
     os.makedirs('.', exist_ok=True)
 
-    with zipfile.ZipFile(zip_filename, 'r') as zip_ref:
+    with zipfile.ZipFile(ZIP_FILENAME, 'r') as zip_ref:
         zip_ref.extractall('.')
 
-    os.chdir(zip_foldername)
+    os.chdir(ZIP_FOLDERNAME)
     if SYSTEM == 'Windows':
         subprocess.run([".\\bootstrap.bat"])
     elif SYSTEM == 'Linux':
@@ -59,7 +59,7 @@ def get_b2(SYSTEM):
     os.chdir(r'..')
 
 
-    os.chdir(zip_foldername)
+    os.chdir(ZIP_FOLDERNAME)
     subprocess.run(["./b2", "install", "--prefix=../b2"])
     os.chdir(r'..')
     # b2_path = os.getcwd() + "\\b2\\bin"
@@ -67,11 +67,11 @@ def get_b2(SYSTEM):
 
     # os.chdir(r'..')
 
-    if os.path.isfile(zip_filename):
-        os.remove(zip_filename)
+    if os.path.isfile(ZIP_FILENAME):
+        os.remove(ZIP_FILENAME)
 
-    if os.path.isdir(zip_foldername):
-        shutil.rmtree(zip_foldername)
+    if os.path.isdir(ZIP_FOLDERNAME):
+        shutil.rmtree(ZIP_FOLDERNAME)
 
 
 def build_cpsig(SYSTEM):
@@ -93,7 +93,7 @@ def build_cusig(SYSTEM):
     DIR, VCTOOLSINSTALLDIR, CL_PATH, CUDA_PATH, INCLUDE = get_paths(SYSTEM)
     VC0 = VCTOOLSINSTALLDIR[:VCTOOLSINSTALLDIR.find(r'\Tools')]
     if SYSTEM == 'Windows':
-        subprocess.run(["C:\\Users\Shmelev\source\\repos\pySigLib\\build_cusig.bat", VC0, VCTOOLSINSTALLDIR])
+        subprocess.run(["C:\\Users\\Shmelev\\source\\repos\\pySigLib\\build_cusig.bat", VC0, VCTOOLSINSTALLDIR])
     elif SYSTEM == 'Linux':
         raise #TODO
     elif SYSTEM == 'Darwin':
