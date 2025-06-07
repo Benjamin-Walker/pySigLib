@@ -74,10 +74,19 @@ class CustomBuild(_build_py):
 class CustomInstall(install):
     def run(self):
         if REBUILD:
-            get_b2(SYSTEM)
-            build_cpsig(SYSTEM)
-            if USE_CUDA:
-                build_cusig(SYSTEM)
+            # Create log file
+            parent_dir = Path(__file__).parent
+            log_path = parent_dir / '_build_log.txt'
+
+            if os.path.exists(log_path):
+                os.remove(log_path)
+
+            with open(log_path, "w") as log_file:
+                get_b2(SYSTEM, log_file)
+                build_cpsig(SYSTEM, log_file)
+                if USE_CUDA:
+                    build_cusig(SYSTEM, log_file)
+
             parent_dir = Path(__file__).parent
             dir_ = parent_dir / 'pysiglib'
 

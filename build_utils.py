@@ -1,5 +1,6 @@
 import zipfile
 import subprocess
+import traceback
 import shutil
 import os
 
@@ -11,21 +12,48 @@ ZIP_FOLDERNAME = 'b2-' + B2_VERSION
 ZIP_FILENAME = ZIP_FOLDERNAME + '.zip'
 B2_URL = 'https://github.com/bfgroup/b2/releases/download/' + B2_VERSION + '/b2-' + B2_VERSION + '.zip'
 
-def get_paths(system):
+def _run(cmd, log_file, shell = False):
+    try:
+        output = subprocess.run(cmd, capture_output=True, check=True, text=True, shell = shell)
+        log_file.write(output.stdout)
+        log_file.write(output.stderr)
+        return output
+    except subprocess.CalledProcessError as e:
+        log_file.write("\n" + "=" * 10 + " Exception occurred " + "=" * 10 + "\n")
+        log_file.write("Exception occured whilst processing the command:\n\n")
+        cmd_str = ""
+        for c in cmd:
+            cmd_str += c + " "
+        log_file.write(cmd_str + "\n")
+        log_file.write(repr(e.stdout))
+        log_file.write(repr(e.stderr))
+        raise e
+    except Exception as e:
+        log_file.write("\n" + "=" * 10 + " Exception occurred " + "=" * 10 + "\n")
+        log_file.write("Exception occured whilst processing the command:\n\n")
+        cmd_str = ""
+        for c in cmd:
+            cmd_str += c + " "
+        log_file.write(cmd_str + "\n")
+        traceback.print_exc(file=log_file)
+        raise e
+
+def get_paths(system, log_file):
     if 'CUDA_PATH' not in os.environ:
         raise RuntimeError("Error while compiling pysiglib: CUDA_PATH environment variable not set")
 
     cuda_path = os.environ['CUDA_PATH']
 
-    vctoolsinstalldir = get_msvc_path()
+    vctoolsinstalldir = get_msvc_path(log_file)
     cl_path = os.path.join(vctoolsinstalldir, 'bin', 'HostX64', 'x64')
     os.environ["PATH"] += os.pathsep + cl_path
 
     idx = vctoolsinstalldir.find("VC")
     path = vctoolsinstalldir[:idx]
 
-    output = subprocess.run([os.path.join(path, 'Common7', 'Tools', 'VsDevCmd.bat'), '&&', 'set'], capture_output=True,
-                            text=True, shell=True, check=True)
+    output = _run([os.path.join(path, 'Common7', 'Tools', 'VsDevCmd.bat'), '&&', 'set'], log_file, shell = True)
+
+    log_file.write(output.stdout + output.stderr)
     output = output.stdout
     start = output.find('INCLUDE') + 8
     end = output[start:].find('\n')
@@ -34,7 +62,7 @@ def get_paths(system):
     dir_ = os.getcwd()
     return dir_, vctoolsinstalldir, cl_path, cuda_path, include
 
-def get_b2(system):
+def get_b2(system, log_file):
     response = requests.get(B2_URL, timeout=(5, 60), stream=True)
     with open(ZIP_FILENAME, 'wb') as f:
         f.write(response.content)
@@ -46,12 +74,12 @@ def get_b2(system):
 
     os.chdir(ZIP_FOLDERNAME)
     if system == 'Windows':
-        subprocess.run([".\\bootstrap.bat"], check=True)
+        _run([".\\bootstrap.bat"], log_file)
     elif system == 'Linux':
         raise #TODO
     elif system == 'Darwin':
-        subprocess.run(["chmod", "-R", "755", "."], check=True)
-        subprocess.run(["./bootstrap.sh"], check=True)
+        _run(["chmod", "-R", "755", "."], log_file)
+        _run(["./bootstrap.sh"], log_file)
     else:
         # Shouldn't really end up here, but just in case
         raise RuntimeError("Unknown error while building pysiglib: unexpected system '" + system + "' in get_b2()")
@@ -60,7 +88,7 @@ def get_b2(system):
 
 
     os.chdir(ZIP_FOLDERNAME)
-    subprocess.run(["./b2", "install", "--prefix=../b2"], check=True)
+    _run(["./b2", "install", "--prefix=../b2"], log_file)
     os.chdir(r'..')
     # b2_path = os.getcwd() + "\\b2\\bin"
     # sys.path.append(b2_path)
@@ -74,26 +102,25 @@ def get_b2(system):
         shutil.rmtree(ZIP_FOLDERNAME)
 
 
-def build_cpsig(system):
+def build_cpsig(system, log_file):
     os.chdir(r'siglib')
     if system == 'Windows':
-        subprocess.run(["../b2/b2", "--toolset=msvc", "--build-type=complete", "architecture=x86", "address-model=64", "release"], check=True)
+        _run(["../b2/b2", "--toolset=msvc", "--build-type=complete", "architecture=x86", "address-model=64", "release"], log_file)
     elif system == 'Linux':
         raise #TODO
     elif system == 'Darwin':
-        subprocess.run(["chmod", "755", "../b2"], check=True)
-        subprocess.run(
-            ["../b2/bin/b2", "--build-type=complete", "release"], check=True)
+        _run(["chmod", "755", "../b2"], log_file)
+        _run(["../b2/bin/b2", "--build-type=complete", "release"], log_file)
     else:
         # Shouldn't really end up here, but just in case
         raise RuntimeError("Unknown error while building pysiglib: unexpected system '" + system + "' in build_cpsig()")
     os.chdir(r'..')
 
-def build_cusig(system):
-    _, vctoolsinstalldir, _, _, _ = get_paths(system)
+def build_cusig(system, log_file):
+    _, vctoolsinstalldir, _, _, _ = get_paths(system, log_file)
     vc0 = vctoolsinstalldir[:vctoolsinstalldir.find(r'\Tools')]
     if system == 'Windows':
-        subprocess.run(["C:\\Users\\Shmelev\\source\\repos\\pySigLib\\build_cusig.bat", vc0, vctoolsinstalldir], check=True)
+        _run(["C:\\Users\\Shmelev\\source\\repos\\pySigLib\\build_cusig.bat", vc0, vctoolsinstalldir], log_file)
     elif system == 'Linux':
         raise #TODO
     elif system == 'Darwin':
@@ -102,11 +129,12 @@ def build_cusig(system):
         # Shouldn't really end up here, but just in case
         raise RuntimeError("Unknown error while building pysiglib: unexpected system '" + system + "' in build_cusig()")
 
-def get_msvc_path():
+def get_msvc_path(log_file):
     os.chdir('siglib')
-    output = subprocess.run(["b2", "toolset=msvc", "--debug-configuration", "-n"], capture_output=True, text=True, check=True)
+    output = _run(["b2", "toolset=msvc", "--debug-configuration", "-n"], log_file)
     os.chdir('..')
     output = output.stdout
+    log_file.write(output + "\n")
     idx = output.find("[msvc-cfg] msvc-")
     output = output[idx:]
     start = output.find("'") + 1

@@ -24,6 +24,7 @@
 /docs/_build
 /docs/_templates
 /pysiglib/_config.py
+/_build_log.txt
 *.dll
 *.dylib
 *.so
