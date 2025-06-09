@@ -1,0 +1,6 @@
+exe avx_info : avx_info.cpp ;
+
+install dist : avx_info :
+   <variant>release:<location>x64/Release
+   <variant>debug:<location>x64/Debug
+   ;

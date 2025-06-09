@@ -12,9 +12,9 @@ ZIP_FOLDERNAME = 'b2-' + B2_VERSION
 ZIP_FILENAME = ZIP_FOLDERNAME + '.zip'
 B2_URL = 'https://github.com/bfgroup/b2/releases/download/' + B2_VERSION + '/b2-' + B2_VERSION + '.zip'
 
-def _run(cmd, log_file, shell = False):
+def _run(cmd, log_file, shell = False, check = True):
     try:
-        output = subprocess.run(cmd, capture_output=True, check=True, text=True, shell = shell)
+        output = subprocess.run(cmd, capture_output=True, check=check, text=True, shell = shell)
         log_file.write(output.stdout)
         log_file.write(output.stderr)
         return output
@@ -119,7 +119,7 @@ def build_cpsig(system, log_file):
 def build_cusig(system, log_file):
     _, vctoolsinstalldir, _, _, _ = get_paths(system, log_file)
     vc0 = vctoolsinstalldir[:vctoolsinstalldir.find(r'\Tools')]
-    if system == 'Windows':
+    if system == 'Windows':#TODO: correct path
         _run(["C:\\Users\\Shmelev\\source\\repos\\pySigLib\\build_cusig.bat", vc0, vctoolsinstalldir], log_file)
     elif system == 'Linux':
         raise #TODO
@@ -145,65 +145,72 @@ def get_msvc_path(log_file):
 
     return output[start: end]
 
-def nvcc_compile_and_link(files, dir_, cl_path, cuda_path, include):
+# def nvcc_compile_and_link(files, dir_, cl_path, cuda_path, include, log_file):
+#
+#     for filename in files:
+#         nvcc_compile_file_(filename, dir_, cl_path, cuda_path, include, log_file)
+#
+#     nvcc_link(files, dir_, cuda_path, log_file)
+#
+#
+# def nvcc_compile_file_(filename, dir_, cl_path, cuda_path, include, log_file):
+#
+#     commands = [
+#         os.path.join(cuda_path, 'bin', 'nvcc.exe'),
+#         '-gencode=arch=compute_52,code=\"sm_52,compute_52\"',
+#         '--use-local-env',
+#         '-ccbin', cl_path,
+#         '-x', 'cu', '-rdc=true',
+#         # f'-I{CUDA_PATH}\\include',
+#         # f'-I{VCTOOLSINSTALLDIR}\\include'
+#     ]
+#
+#     commands += ['-I' + x for x in include.split(';')]
+#
+#     commands += [
+#         '-diag-suppress', '108',
+#         '-diag-suppress', '174',
+#         '--keep-dir_', 'x64\\Release',
+#         '-maxrregcount=0',
+#         '--machine', '64',
+#         '--compile', '-cudart', 'static', '-lineinfo',
+#         '-DNDEBUG', '-DCUSIG_EXPORTS', '-D_WINDOWS', '-D_USRDLL', '-D_WINDLL',
+#         '-D_UNICODE', '-DUNICODE',
+#         '-Xcompiler', '"/EHsc /W3 /nologo /O2 /FS /MT"',
+#         '-Xcompiler', '/Fdx64\\Release\\vc143.pdb',
+#         '-o', f'{dir_}\\siglib\\cusig\\{filename}.obj',
+#         f'{dir_}\\siglib\\cusig\\{filename}'
+#     ]
+#
+#     _run(commands, log_file)
+#
+# def nvcc_link(files, dir_, cuda_path, log_file):
+#
+#     print(os.path.join(cuda_path, 'bin', 'crt'), "<--")
+#     print(os.path.join(cuda_path, 'lib', 'x64'))
+#
+#     commands = [
+#         os.path.join(cuda_path, 'bin', 'nvcc.exe'),
+#         # '--verbose',
+#         '-dlink',
+#         '-o', 'siglib\\cusig\\cusig.device-link.obj',
+#         '-Xcompiler', '"/EHsc /W3 /nologo /O2 /MT"',
+#         # '-Xcompiler' '/Fdx64\Release/vc143.pdb',
+#         '-L' + os.path.join(cuda_path, 'bin', 'crt'),
+#         '-L' + os.path.join(cuda_path, 'lib', 'x64'),
+#         'kernel32.lib', 'user32.lib', 'gdi32.lib', 'winspool.lib',
+#         'comdlg32.lib', 'advapi32.lib', 'shell32.lib', 'ole32.lib',
+#         'oleaut32.lib', 'uuid.lib', 'odbc32.lib', 'odbccp32.lib',
+#         'cudart.lib', 'cudadevrt.lib',
+#         '-gencode=arch=compute_52,code=sm_52'
+#     ]
+#     commands += [f'{dir_}\\siglib\\cusig\\{filename}.obj' for filename in files]
+#
+#     _run(commands, log_file)
 
-    for filename in files:
-        nvcc_compile_file_(filename, dir_, cl_path, cuda_path, include)
-
-    nvcc_link(files, dir_, cuda_path)
-
-
-def nvcc_compile_file_(filename, dir_, cl_path, cuda_path, include):
-
-    commands = [
-        os.path.join(cuda_path, 'bin', 'nvcc.exe'),
-        '-gencode=arch=compute_52,code=\"sm_52,compute_52\"',
-        '--use-local-env',
-        '-ccbin', cl_path,
-        '-x', 'cu', '-rdc=true',
-        # f'-I{CUDA_PATH}\\include',
-        # f'-I{VCTOOLSINSTALLDIR}\\include'
-    ]
-
-    commands += ['-I' + x for x in include.split(';')]
-
-    commands += [
-        '-diag-suppress', '108',
-        '-diag-suppress', '174',
-        '--keep-dir_', 'x64\\Release',
-        '-maxrregcount=0',
-        '--machine', '64',
-        '--compile', '-cudart', 'static', '-lineinfo',
-        '-DNDEBUG', '-DCUSIG_EXPORTS', '-D_WINDOWS', '-D_USRDLL', '-D_WINDLL',
-        '-D_UNICODE', '-DUNICODE',
-        '-Xcompiler', '"/EHsc /W3 /nologo /O2 /FS /MT"',
-        '-Xcompiler', '/Fdx64\\Release\\vc143.pdb',
-        '-o', f'{dir_}\\siglib\\cusig\\{filename}.obj',
-        f'{dir_}\\siglib\\cusig\\{filename}'
-    ]
-
-    subprocess.run(commands, check=True)
-
-def nvcc_link(files, dir_, cuda_path):
-
-    print(os.path.join(cuda_path, 'bin', 'crt'), "<--")
-    print(os.path.join(cuda_path, 'lib', 'x64'))
-
-    commands = [
-        os.path.join(cuda_path, 'bin', 'nvcc.exe'),
-        # '--verbose',
-        '-dlink',
-        '-o', 'siglib\\cusig\\cusig.device-link.obj',
-        '-Xcompiler', '"/EHsc /W3 /nologo /O2 /MT"',
-        # '-Xcompiler' '/Fdx64\Release/vc143.pdb',
-        '-L' + os.path.join(cuda_path, 'bin', 'crt'),
-        '-L' + os.path.join(cuda_path, 'lib', 'x64'),
-        'kernel32.lib', 'user32.lib', 'gdi32.lib', 'winspool.lib',
-        'comdlg32.lib', 'advapi32.lib', 'shell32.lib', 'ole32.lib',
-        'oleaut32.lib', 'uuid.lib', 'odbc32.lib', 'odbccp32.lib',
-        'cudart.lib', 'cudadevrt.lib',
-        '-gencode=arch=compute_52,code=sm_52'
-    ]
-    commands += [f'{dir_}\\siglib\\cusig\\{filename}.obj' for filename in files]
-
-    subprocess.run(commands, check=True)
+def get_avx_info(log_file):
+    os.chdir('avx_info')
+    _run(["b2", "release"], log_file)
+    output = _run(["x64/Release/avx_info.exe"], log_file, check = False)
+    print(output.returncode, "<" + "=" * 20)
+    os.chdir('..')
