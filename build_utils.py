@@ -210,7 +210,55 @@ def get_msvc_path(log_file):
 
 def get_avx_info(log_file):
     os.chdir('avx_info')
+
+    file_path = "jamroot.jam"
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    with open(file_path, "w") as file:
+        file.write('exe avx_info : avx_info.cpp ;\n')
+        file.write('install dist : avx_info :\n')
+        file.write('   <variant>release:<location>x64/Release\n')
+        file.write('   <variant>debug:<location>x64/Debug\n')
+        file.write('   ;')
+
     _run(["b2", "release"], log_file)
     output = _run(["x64/Release/avx_info.exe"], log_file, check = False)
     print(output.returncode, "<" + "=" * 20)
     os.chdir('..')
+
+def make_jamfiles():
+    #siglib/Jamroot.jam
+    file_path = "siglib/Jamroot.jam"
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    with open(file_path, "w") as file:
+        file.write('build-project cpsig ;\n')
+        file.write('install dist : cpsig ./cpsig/cpsig.h :\n')
+        file.write('   <variant>release:<location>x64/Release\n')
+        file.write('   <variant>debug:<location>dist/debug\n')
+        file.write('   ;')
+
+    # siglib/cpsig/Jamfile.jam
+    file_path = "siglib/cpsig/Jamfile.jam"
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    with open(file_path, "w") as file:
+        file.write('lib cpsig : cpsig.cpp cp_path_transforms.cpp cp_signature.cpp cp_tensor_poly.cpp cppch.cpp cp_sig_kernel.cpp\n')
+        file.write('	: <define>CPSIG_EXPORTS <cxxstd>20 <threading>multi \n')
+        file.write('	<toolset>msvc:<cxxflags>"/arch:AVX2"\n')
+        file.write('	;\n')
+
+    # siglib/cusig/Jamfile.jam
+    file_path = "siglib/cusig/Jamfile.jam"
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    with open(file_path, "w") as file:
+        file.write('lib cusig : dllmain.cpp cupch.cpp cusig.device-link.obj cu_sig_kernel.cu.obj cu_sig_kernel.h.obj "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/lib/x64/cudart.lib" "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/lib/x64/cudadevrt.lib"\n')
+        file.write('	: <include>"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/include" <define>CUSIG_EXPORTS <cxxstd>20 <threading>multi \n')
+        file.write('	<toolset>msvc:<cxxflags>"/arch:AVX2"\n')
+        file.write('	;\n')
+

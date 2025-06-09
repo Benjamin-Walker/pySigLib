@@ -1,8 +1,0 @@
-
-lib cusig : dllmain.cpp cupch.cpp cusig.device-link.obj cu_sig_kernel.cu.obj cu_sig_kernel.h.obj "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/lib/x64/cudart.lib" "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/lib/x64/cudadevrt.lib"
-	: <include>"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/include" <define>CUSIG_EXPORTS <cxxstd>20 <threading>multi 
-#	<toolset>gcc:<cxxflags>"-march=x86-64-v3"
-	<toolset>msvc:<cxxflags>"/arch:AVX2"
-	;
-
-#TODO: precompiled headers

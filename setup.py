@@ -7,7 +7,7 @@ from setuptools import setup
 from setuptools.command.install import install
 from setuptools.command.build_py import build_py as _build_py
 
-from build_utils import get_b2, build_cpsig, build_cusig, get_avx_info
+from build_utils import get_b2, build_cpsig, build_cusig, get_avx_info, make_jamfiles
 
 #TODO: AVX flag
 USE_AVX = False
@@ -84,6 +84,7 @@ class CustomInstall(install):
             with open(log_path, "w") as log_file:
                 get_b2(SYSTEM, log_file)
                 get_avx_info(log_file)
+                make_jamfiles()
                 build_cpsig(SYSTEM, log_file)
                 if USE_CUDA:
                     build_cusig(SYSTEM, log_file)
