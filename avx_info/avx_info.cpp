@@ -1,6 +1,7 @@
 // avx_info.cpp
 
 #include <cstdlib>
+#include <cstdint>
 #include <vector>
 #include <bitset>
 #include <array>

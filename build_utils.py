@@ -44,7 +44,7 @@ def get_paths(system, log_file):
 
     cuda_path = os.environ['CUDA_PATH']
 
-    vctoolsinstalldir = get_msvc_path(log_file)
+    vctoolsinstalldir = get_msvc_path(system, log_file)
     cl_path = os.path.join(vctoolsinstalldir, 'bin', 'HostX64', 'x64')
     os.environ["PATH"] += os.pathsep + cl_path
 
@@ -76,7 +76,8 @@ def get_b2(system, log_file):
     if system == 'Windows':
         _run([".\\bootstrap.bat"], log_file)
     elif system == 'Linux':
-        raise #TODO
+        _run(["chmod", "-R", "755", "."], log_file)
+        _run(["./bootstrap.sh"], log_file)
     elif system == 'Darwin':
         _run(["chmod", "-R", "755", "."], log_file)
         _run(["./bootstrap.sh"], log_file)
@@ -107,7 +108,10 @@ def build_cpsig(system, log_file):
     if system == 'Windows':
         _run(["../b2/b2", "--toolset=msvc", "--build-type=complete", "architecture=x86", "address-model=64", "release"], log_file)
     elif system == 'Linux':
-        raise #TODO
+        _run(["chmod", "755", "../b2"], log_file)
+        _run(
+            ["../b2/bin/b2", "--toolset=gcc", "--build-type=complete", "architecture=x86", "address-model=64",
+             "release"], log_file)
     elif system == 'Darwin':
         _run(["chmod", "755", "../b2"], log_file)
         _run(["../b2/bin/b2", "--build-type=complete", "release"], log_file)
@@ -129,7 +133,7 @@ def build_cusig(system, log_file):
         # Shouldn't really end up here, but just in case
         raise RuntimeError("Unknown error while building pysiglib: unexpected system '" + system + "' in build_cusig()")
 
-def get_msvc_path(log_file):
+def get_msvc_path(system, log_file):
     os.chdir('siglib')
     output = _run(["../b2/b2", "toolset=msvc", "--debug-configuration", "-n"], log_file)
     os.chdir('..')
@@ -145,7 +149,7 @@ def get_msvc_path(log_file):
 
     return output[start: end]
 
-def get_avx_info(log_file):
+def get_avx_info(system, log_file):
     os.chdir('avx_info')
 
     file_path = "jamroot.jam"
@@ -162,9 +166,12 @@ install dist : avx_info :
    ;
 """
 )
-
-    _run(["../b2/b2", "release"], log_file)
-    output = _run(["x64/Release/avx_info.exe"], log_file, check = False)
+    if system == "Windows":
+        _run(["../b2/b2", "release"], log_file)
+        output = _run(["x64/Release/avx_info.exe"], log_file, check=False)
+    elif system == "Linux":
+        _run(["../b2/bin/b2", "release"], log_file)
+        output = _run(["x64/Release/avx_info"], log_file, check=False)
 
     instructions = []
 
@@ -187,12 +194,13 @@ install dist : avx_info :
     if rc & 1:
         instructions.append('avx512cd')
 
+    log_file.write("\nFound supported instruction sets: " + repr(instructions) + "\n")
     print("Found supported instruction sets: ", instructions)
 
     os.chdir('..')
     return instructions
 
-def make_jamfiles(instructions):
+def make_jamfiles(system, instructions, log_file):
     #siglib/Jamroot.jam
     file_path = "siglib/Jamroot.jam"
     if os.path.exists(file_path):
@@ -223,25 +231,29 @@ install dist : cpsig ./cpsig/cpsig.h :
     # Get AVX info
     if 'avx2' in instructions:
         define_avx = '<define>AVX'
+        log_file.write("\nAVX2 supported, defining macro AVX in cpsig...\n")
         print("AVX2 supported, defining macro AVX in cpsig...")
     else:
         define_avx = ''
 
-    if 'avx512f' in instructions:
-        arch_flag = '<toolset>msvc:<cxxflags>"/arch:AVX512"'
-    elif 'avx2' in instructions:
-        arch_flag = '<toolset>msvc:<cxxflags>"/arch:AVX2"'
-    elif 'avx' in instructions:
-        arch_flag = '<toolset>msvc:<cxxflags>"/arch:AVX"'
-    else:
-        arch_flag = ''
+    if system=="Windows":
+        if 'avx512f' in instructions:
+            toolset = '<toolset>msvc:<cxxflags>"/arch:AVX512"'
+        elif 'avx2' in instructions:
+            toolset = '<toolset>msvc:<cxxflags>"/arch:AVX2"'
+        elif 'avx' in instructions:
+            toolset = '<toolset>msvc:<cxxflags>"/arch:AVX"'
+        else:
+            toolset = '<toolset>msvc'
+    elif system=="Linux":
+        toolset = '<toolset>gcc:<cxxflags>"-march=native"'
 
     with open(file_path, "w") as file:
         file.write(
     f"""
 lib cpsig : {cpp_files_str}
         : <define>CPSIG_EXPORTS {define_avx} <cxxstd>20 <threading>multi 
-        {arch_flag}
+        {toolset}
         ;
 """
         )

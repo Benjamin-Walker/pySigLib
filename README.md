@@ -11,6 +11,8 @@
 pip install pysiglib
 ```
 
+[//]: # (TODO: Must make sure CUDA_PATH is set. If not, set it first and then pip install)
+[//]: # (TODO: install requires a c++ compiler. On windows this is msvc, on linux...)
 pySigLib will automatically detect CUDA, provided the `CUDA_PATH` environment variable is set correctly.
 To manually disable CUDA and build pySigLib for CPU only, create an environment variable `CUSIG` and set
 it to `0`:

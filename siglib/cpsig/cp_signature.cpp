@@ -3,6 +3,10 @@
 #include "cp_signature.h"
 #include "macros.h"
 
+template class Path<float>;
+template class Path<double>;
+template class Path<int32_t>;
+template class Path<int64_t>;
 
 template<typename T>
 PointImpl<T>* Path<T>::point_impl_factory(uint64_t index) const {

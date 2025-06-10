@@ -32,6 +32,13 @@ if SYSTEM == 'Windows':
     if BUILT_WITH_CUDA:
         cusig_path = os.path.join(dir_, 'cusig.dll')
         cusig = ctypes.CDLL(cusig_path, winmode=0)
+elif SYSTEM == "Linux":
+    cpsig_path = os.path.join(dir_, 'libcpsig.so')
+    cpsig = ctypes.CDLL(cpsig_path, winmode=0)
+
+    if BUILT_WITH_CUDA:
+        cusig_path = os.path.join(dir_, 'libcusig.so')
+        cusig = ctypes.CDLL(cusig_path, winmode=0)
 elif SYSTEM == 'Darwin':
     cpsig_path = os.path.join(dir_, 'libcpsig.dylib')
     cpsig = ctypes.CDLL(cpsig_path)

@@ -35,7 +35,7 @@ else:
 if SYSTEM == 'Windows':
     LIB_PREFIX = ''
 elif SYSTEM == 'Linux':
-    LIB_PREFIX = ''
+    LIB_PREFIX = 'lib'
 else:
     LIB_PREFIX = 'lib'
 
@@ -83,8 +83,8 @@ class CustomInstall(install):
 
             with open(log_path, "w") as log_file:
                 get_b2(SYSTEM, log_file)
-                instructions = get_avx_info(log_file)
-                make_jamfiles(instructions)
+                instructions = get_avx_info(SYSTEM, log_file)
+                make_jamfiles(SYSTEM, instructions, log_file)
                 build_cpsig(SYSTEM, log_file)
                 if USE_CUDA:
                     build_cusig(SYSTEM, log_file)
