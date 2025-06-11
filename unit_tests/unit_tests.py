@@ -107,6 +107,14 @@ class SigKernelTests(unittest.TestCase):
         else:
             warnings.warn("Package built without CUDA, skipping test...")
 
+    def test_sig_kernel_numpy1(self):
+        x = np.array([[0,1],[3,2]])
+        pysiglib.sig_kernel(x,x,0)
+
+    def test_sig_kernel_numpy2(self):
+        x = np.array([[[0,1],[3,2]]])
+        pysiglib.sig_kernel(x,x,0)
+
 
 
 if __name__ == '__main__':

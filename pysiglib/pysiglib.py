@@ -50,6 +50,7 @@ def poly_length(dimension : int, degree : int) -> int:
     Returns the length of a truncated signature,
 
     .. math::
+
         \\sum_{i=0}^N d^i = \\frac{d^{N+1} - 1}{d - 1},
 
     where :math:`d` is the dimension of the underlying path and :math:`N`
@@ -225,8 +226,10 @@ def signature(
      For a single path :math:`x`, the signature is given by
 
     .. math::
+
         S(x)_{[s,t]} := \\left( 1, S(x)^{(1)}_{[s,t]}, \\ldots, S(x)^{(N)}_{[s,t]}\\right) \\in T((\\mathbb{R}^d)),
     .. math::
+
         S(x)^{(k)}_{[s,t]} := \\int_{s < t_1 < \\cdots < t_k < t} dx_{t_1} \\otimes dx_{t_2} \\otimes \\cdots \\otimes dx_{t_k} \\in \\left(\\mathbb{R}^d\\right)^{\\otimes k}.
 
     :param path: The underlying path or batch of paths, given as a `numpy.ndarray` or `torch.tensor`.
@@ -297,20 +300,38 @@ class SigKernelDataHandler:
             self.out = np.empty(shape=self.batch_size, dtype=np.float64)
             self.out_ptr = self.out.ctypes.data_as(POINTER(c_double))
 
+            if self.is_batch:
+                x1 = torch.tensor(path1[:, 1:, :] - path1[:, :-1, :])
+                y1 = torch.tensor(path2[:, 1:, :] - path2[:, :-1, :])
+                self.gram = torch.bmm(x1, y1.permute(0, 2, 1))
+            else:
+                x1 = torch.tensor(path1[1:, :] - path1[:-1, :])[None, : ,:]
+                y1 = torch.tensor(path2[1:, :] - path2[:-1, :])[None, : ,:]
+                self.gram = torch.bmm(x1, y1.permute(0, 2, 1))
+
         elif isinstance(path1, torch.Tensor) and isinstance(path2, torch.Tensor) and path1.device == path2.device:
             self.device = path1.device
             self.out = torch.empty(self.batch_size, dtype=torch.float64, device = self.device)
             self.out_ptr = cast(self.out.data_ptr(), POINTER(c_double))
+
+            if self.is_batch:
+                x1 = path1[:, 1:, :] - path1[:, :-1, :]
+                y1 = path2[:, 1:, :] - path2[:, :-1, :]
+                self.gram = torch.bmm(x1, y1.permute(0, 2, 1))
+            else:
+                x1 = (path1[1:, :] - path1[:-1, :])[None, : ,:]
+                y1 = (path2[1:, :] - path2[:-1, :])[None, : ,:]
+                self.gram = torch.bmm(x1, y1.permute(0, 2, 1))
         else:
             raise ValueError("path1, path2 must both be numpy arrays or both torch arrays on the same device")
 
-def sig_kernel_(data, gram):
+def sig_kernel_(data):
     cpsig.batch_sig_kernel.argtypes = (
     POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
     cpsig.batch_sig_kernel.restype = c_int64
 
     err_code = cpsig.batch_sig_kernel(
-        cast(gram.data_ptr(), POINTER(c_double)),
+        cast(data.gram.data_ptr(), POINTER(c_double)),
         data.out_ptr,
         data.batch_size,
         data.dimension,
@@ -324,12 +345,12 @@ def sig_kernel_(data, gram):
         raise Exception(err_msg[err_code] + " in sig_kernel")
     return data.out
 
-def sig_kernel_cuda_(data, gram):
+def sig_kernel_cuda_(data):
     cusig.batch_sig_kernel_cuda.argtypes = (
     POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
     cusig.batch_sig_kernel_cuda.restype = c_int64
     err_code = cusig.batch_sig_kernel_cuda(
-        cast(gram.data_ptr(), POINTER(c_double)),
+        cast(data.gram.data_ptr(), POINTER(c_double)),
         data.out_ptr, data.batch_size,
         data.dimension,
         data.length_1,
@@ -354,13 +375,16 @@ def sig_kernel(
     is defined as
 
     .. math::
+
         k_{x,y}(s,t) := \\left< S(x)_{[0,s]}, S(y)_{[0, t]} \\right>_{T((\\mathbb{R}^d))}
 
     where the inner product is defined as
 
     .. math::
+
         \\left< A, B \\right> := \\sum_{k=0}^{\\infty} \\left< A_k, B_k \\right>_{\\left(\\mathbb{R}^d\\right)^{\\otimes k}}
     .. math::
+
         \\left< u, v \\right>_{\\left(\\mathbb{R}^d\\right)^{\\otimes k}} := \\prod_{i=1}^k \\left< u_i, v_i \\right>_{\\mathbb{R}^d}
 
     :param path1: The first underlying path or batch of paths, given as a `numpy.ndarray` or
@@ -377,14 +401,11 @@ def sig_kernel(
     :return: Single signature kernel or batch of signature kernels
     :rtype: numpy.ndarray | torch.tensor
     """
-    data = SigKernelDataHandler(path1, path2, dyadic_order)
-    x1 = path1[:, 1:, :] - path1[:, :-1, :]
-    y1 = path2[:, 1:, :] - path2[:, :-1, :]
-    gram = torch.bmm(x1, y1.permute(0, 2, 1))
+    data = SigKernelDataHandler(torch.tensor(path1), torch.tensor(path2), dyadic_order)
 
     if data.device.type == "cpu":
-        return sig_kernel_(data, gram)
+        return sig_kernel_(data)
 
     if not BUILT_WITH_CUDA:
         raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
-    return sig_kernel_cuda_(data, gram)
+    return sig_kernel_cuda_(data)

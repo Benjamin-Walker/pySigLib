@@ -3,16 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Docs
+pySigLib Documentation
 ======================
 
-.. automodule:: pysiglib
+.. toctree::
+   :titlesonly:
+   :maxdepth: 2
 
-.. autofunction:: pysiglib.polyLength
-.. autofunction:: pysiglib.signature
-.. autofunction:: pysiglib.sigKernel
+   /pages/installation
+   /pages/pysiglib
 
-.. .. toctree::
-..    :maxdepth: 2
-..    :caption: Contents:
+
 
