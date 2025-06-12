@@ -17,4 +17,4 @@ extern __constant__ uint64_t num_anti_diag;
 extern __constant__ double dyadic_frac;
 extern __constant__ uint64_t gram_length;
 
-#endif CUDACONSTANTS
+#endif

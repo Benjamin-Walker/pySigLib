@@ -1,7 +1,20 @@
 #include "cupch.h"
 #include "cusig.h"
-#include "cuda_constants.h"
+//#include "cuda_constants.h"
 #include "cu_sig_kernel.h"
+
+__constant__ uint64_t dimension;
+__constant__ uint64_t length1;
+__constant__ uint64_t length2;
+__constant__ uint64_t dyadic_order_1;
+__constant__ uint64_t dyadic_order_2;
+
+__constant__ double twelth;
+__constant__ uint64_t dyadic_length_1;
+__constant__ uint64_t dyadic_length_2;
+__constant__ uint64_t num_anti_diag;
+__constant__ double dyadic_frac;
+__constant__ uint64_t gram_length;
 
 //TODO: Fix memory errors
 //TODO: Change paths to gram matrices
@@ -156,19 +169,6 @@ void sig_kernel_cuda_(//TODO: doesn't work with non-zero dyadics, e.g. 2,2
 		return;
 	}
 }
-
-__constant__ uint64_t dimension;
-__constant__ uint64_t length1;
-__constant__ uint64_t length2;
-__constant__ uint64_t dyadic_order_1;
-__constant__ uint64_t dyadic_order_2;
-
-__constant__ double twelth;
-__constant__ uint64_t dyadic_length_1;
-__constant__ uint64_t dyadic_length_2;
-__constant__ uint64_t num_anti_diag;
-__constant__ double dyadic_frac;
-__constant__ uint64_t gram_length;
 
 #define SAFE_CALL(function_call)                 \
     try {                                        \

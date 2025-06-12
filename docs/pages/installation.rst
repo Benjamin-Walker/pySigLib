@@ -40,6 +40,13 @@ Please ensure this exists, then run:
     pip install pysiglib
 
 pySigLib will automatically detect CUDA, provided the `CUDA_PATH` environment variable is set correctly.
+
+Typically:
+
+.. code-block::
+
+    export CUDA_PATH=/usr/lib/nvidia-cuda-toolkit
+
 To manually disable CUDA and build pySigLib for CPU only, create an environment variable `CUSIG` and set
 it to `0`:
 

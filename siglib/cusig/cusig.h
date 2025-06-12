@@ -1,7 +1,11 @@
 #pragma once
 
 #ifdef CUSIG_EXPORTS
+#ifdef _WIN32
 #define CUSIG_API __declspec(dllexport)
+#else
+#define CUSIG_API
+#endif
 #else
 #define CUSIG_API __declspec(dllimport)
 #endif

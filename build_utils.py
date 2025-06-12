@@ -121,14 +121,12 @@ def build_cpsig(system, log_file):
     os.chdir(r'..')
 
 def build_cusig(system, log_file):
-    _, vctoolsinstalldir, _, _, _ = get_paths(system, log_file)
-    vc0 = vctoolsinstalldir[:vctoolsinstalldir.find(r'\Tools')]
     if system == 'Windows':
+        _, vctoolsinstalldir, _, _, _ = get_paths(system, log_file)
+        vc0 = vctoolsinstalldir[:vctoolsinstalldir.find(r'\Tools')]
         _run(["build_cusig.bat", vc0, vctoolsinstalldir], log_file)
     elif system == 'Linux':
-        raise #TODO
-    elif system == 'Darwin':
-        raise #TODO
+        _run(["bash", "build_cusig.sh"], log_file)
     else:
         # Shouldn't really end up here, but just in case
         raise RuntimeError("Unknown error while building pysiglib: unexpected system '" + system + "' in build_cusig()")

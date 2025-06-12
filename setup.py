@@ -24,11 +24,6 @@ if SYSTEM not in ['Windows', 'Linux', 'Darwin']:
 if SYSTEM == 'Darwin':
     USE_CUDA = False
 
-if USE_CUDA:
-    print("Found CUDA_PATH, attempting to build with CUDA. To build without CUDA, run 'CUSIG=0 pip install pysiglib' instead.")
-else:
-    print("Building without CUDA.")
-
 # Get lib extension
 if SYSTEM == 'Windows':
     LIB_PREFIX = ''
@@ -65,6 +60,14 @@ class CustomBuild(_build_py):
                 os.remove(log_path)
 
             with open(log_path, "w") as log_file:
+
+                if USE_CUDA:
+                    print("Found CUDA_PATH, attempting to build with CUDA. To build without CUDA, run 'CUSIG=0 pip install pysiglib' instead.")
+                    log_file.write("Found CUDA_PATH, attempting to build with CUDA. To build without CUDA, run 'CUSIG=0 pip install pysiglib' instead.")
+                else:
+                    print("Building without CUDA.")
+                    log_file.write("Building without CUDA.")
+
                 print("Building sigLib, output being written to _build_log.txt")
                 get_b2(SYSTEM, log_file)
                 instructions = get_avx_info(SYSTEM, log_file)
