@@ -310,7 +310,7 @@ class SigKernelDataHandler:
                 self.gram = torch.bmm(x1, y1.permute(0, 2, 1))
 
         elif isinstance(path1, torch.Tensor) and isinstance(path2, torch.Tensor) and path1.device == path2.device:
-            self.device = path1.device
+            self.device = path1.device.type
             self.out = torch.empty(self.batch_size, dtype=torch.float64, device = self.device)
             self.out_ptr = cast(self.out.data_ptr(), POINTER(c_double))
 
@@ -401,9 +401,9 @@ def sig_kernel(
     :return: Single signature kernel or batch of signature kernels
     :rtype: numpy.ndarray | torch.tensor
     """
-    data = SigKernelDataHandler(torch.tensor(path1), torch.tensor(path2), dyadic_order)
+    data = SigKernelDataHandler(path1, path2, dyadic_order)
 
-    if data.device.type == "cpu":
+    if data.device == "cpu":
         return sig_kernel_(data)
 
     if not BUILT_WITH_CUDA:
