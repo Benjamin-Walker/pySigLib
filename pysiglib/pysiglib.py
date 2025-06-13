@@ -8,6 +8,7 @@ from ctypes import c_float, c_double, c_int32, c_int64, c_bool, POINTER, cast
 import numpy as np
 import torch
 
+from .param_checks import check_type, check_type_multiple, check_non_neg, check_dtype
 from .error_codes import err_msg
 
 ######################################################
@@ -56,6 +57,9 @@ else:
 # Set argtypes and restypes for all imported functions
 ######################################################
 
+cpsig.poly_length.argtypes = (c_int64, c_int64)
+cpsig.poly_length.restype = c_int64
+
 cpsig.signature_int32.argtypes = (POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
 cpsig.signature_int32.restype = c_int64
 
@@ -90,17 +94,6 @@ if BUILT_WITH_CUDA:
 ######################################################
 # Some dicts to simplify dtype cases
 ######################################################
-
-SUPPORTED_DTYPES = [
-    np.int32,
-    np.int64,
-    np.float32,
-    np.float64,
-    torch.int32,
-    torch.int64,
-    torch.float32,
-    torch.float64
-]
 
 DTYPES = {
     "int32": c_int32,
@@ -145,17 +138,11 @@ def poly_length(dimension : int, degree : int) -> int:
     :return: Length of a truncated signature
     :rtype: int
     """
-    if not isinstance(dimension, int):
-        raise TypeError("dimension must be of type int, got " + str(type(dimension)) + " instead")
-    if not isinstance(degree, int):
-        raise TypeError("degree must be of type int, got " + str(degree) + " instead")
-    if dimension < 0:
-        raise ValueError("dimension must be a non-negative integer, got dimension = " + str(dimension))
-    if degree < 0:
-        raise ValueError("degree must be a non-negative integer, got degree = " + str(degree))
+    check_type(dimension, "dimension", int)
+    check_type(degree, "degree", int)
+    check_non_neg(dimension, "dimension")
+    check_non_neg(degree, "degree")
 
-    cpsig.poly_length.argtypes = (c_int64, c_int64)
-    cpsig.poly_length.restype = c_int64
     out = cpsig.poly_length(dimension, degree)
     if out == 0:
         raise ValueError("Integer overflow encountered in poly_length")
@@ -163,19 +150,12 @@ def poly_length(dimension : int, degree : int) -> int:
 
 class SigDataHandler:
     def __init__(self, path, degree, time_aug, lead_lag):
-
-        if not isinstance(path, (np.ndarray, torch.Tensor)):
-            raise TypeError("path must be a numpy array or torch tensor, got " + str(type(path)) + " instead")
-        if path.dtype not in SUPPORTED_DTYPES:
-            raise TypeError("path.dtype must be int32, int64, float32 or float64, got " + str(path.dtype) + " instead")
-        if not isinstance(degree, int):
-            raise TypeError("degree must be of type int, got " + str(type(degree)) + " instead")
-        if degree < 0:
-            raise ValueError("degree must be non-negative, got degree = " + str(degree))
-        if not isinstance(time_aug, bool):
-            raise TypeError("time_aug must be of type bool, got " + str(type(time_aug)) + " instead")
-        if not isinstance(lead_lag, bool):
-            raise TypeError("lead_lag must be of type bool, got " + str(type(lead_lag)) + " instead")
+        check_type_multiple(path, "path",(np.ndarray, torch.Tensor))
+        check_dtype(path, "path")
+        check_type(degree, "degree", int)
+        check_non_neg(degree, "degree")
+        check_type(time_aug, "time_aug", bool)
+        check_type(lead_lag, "lead_lag", bool)
 
         self.degree = degree
         self.time_aug = time_aug
@@ -189,14 +169,8 @@ class SigDataHandler:
             self.init_torch(path)
 
     def init_numpy(self, path):
-
         self.dtype = str(path.dtype)
-
-        if self.dtype in DTYPES:
-            self.data_ptr = path.ctypes.data_as(POINTER(DTYPES[self.dtype]))
-        else:
-            raise ValueError(
-                "path.dtype must be one of int32, int64, float32 or float64. Got " + str(path.dtype) + " instead.")
+        self.data_ptr = path.ctypes.data_as(POINTER(DTYPES[self.dtype]))
 
         _, dimension_ = self.transformed_dims()
         if self.is_batch:
@@ -212,13 +186,8 @@ class SigDataHandler:
         self.out_ptr = self.out.ctypes.data_as(POINTER(c_double))
 
     def init_torch(self, path):
-
         self.dtype = str(path.dtype)[6:]
-
-        if self.dtype in DTYPES:
-            self.data_ptr = cast(path.data_ptr(), POINTER(DTYPES[self.dtype]))
-        else:
-            raise ValueError("path.dtype must be one of int32, int64, float32 or float64. Got " + str(path.dtype) + " instead.")
+        self.data_ptr = cast(path.data_ptr(), POINTER(DTYPES[self.dtype]))
 
         _, dimension_ = self.transformed_dims()
         if self.is_batch:
@@ -247,7 +216,7 @@ class SigDataHandler:
             self.dimension = path.shape[2]
 
         else:
-            raise ValueError("path.shape must have length 2 or 3, got length " + str(path.shape) + " instead.")
+            raise ValueError("path.shape must have length 2 or 3, got length " + str(len(path.shape)) + " instead.")
 
     def transformed_dims(self):
         length_ = self.length
@@ -332,28 +301,21 @@ def signature(
     :return: Truncated signature, or a batch of truncated signatures.
     :rtype: numpy.ndarray | torch.tensor
     """
-    if not isinstance(horner, bool):
-        raise TypeError("horner must be of type bool, got " + str(type(horner)) + " instead")
+    check_type(horner, "horner", bool)
 
     data = SigDataHandler(path, degree, time_aug, lead_lag)
     if data.is_batch:
-        if not isinstance(parallel, bool):
-            raise TypeError("parallel must be of type bool, got " + str(type(parallel)) + " instead")
+        check_type(parallel, "parallel", bool)
         return batch_signature_(data, time_aug, lead_lag, horner, parallel)
     return signature_(data, time_aug, lead_lag, horner)
 
 
 class SigKernelDataHandler:
     def __init__(self, path1, path2, dyadic_order):
-
-        if not isinstance(path1, (np.ndarray, torch.Tensor)):
-            raise TypeError("path1 must be a numpy array or a torch tensor, got " + str(type(path1)) + " instead")
-        if path1.dtype not in SUPPORTED_DTYPES:
-            raise TypeError("path1.dtype must be int32, int64, float32 or float64, got " + str(path1.dtype) + " instead")
-        if not isinstance(path2, (np.ndarray, torch.Tensor)):
-            raise TypeError("path2 must be a numpy array or a torch tensor, got " + str(type(path1)) + " instead")
-        if path2.dtype not in SUPPORTED_DTYPES:
-            raise TypeError("path2.dtype must be int32, int64, float32 or float64, got " + str(path2.dtype) + " instead")
+        check_type_multiple(path1, "path1", (np.ndarray, torch.Tensor))
+        check_type_multiple(path2, "path2", (np.ndarray, torch.Tensor))
+        check_dtype(path1, "path1")
+        check_dtype(path2, "path2")
 
         if isinstance(dyadic_order, tuple) and len(dyadic_order) == 2:
             self.dyadic_order_1 = dyadic_order[0]
@@ -378,7 +340,7 @@ class SigKernelDataHandler:
             self.length_1 = path1.shape[1]
             self.dimension = path1.shape[2]
         else:
-            raise ValueError("path1.shape must have length 2 or 3, got length " + str(path1.shape) + " instead.")
+            raise ValueError("path1.shape must have length 2 or 3, got length " + str(len(path1.shape)) + " instead.")
 
         if len(path2.shape) == 2:
             if self.batch_size != 1:
@@ -393,37 +355,31 @@ class SigKernelDataHandler:
             if self.dimension != path1.shape[2]:
                 raise ValueError("path1, path2 have different dimensions")
         else:
-            raise ValueError("path2.shape must have length 2 or 3, got length " + str(path2.shape) + " instead.")
+            raise ValueError("path2.shape must have length 2 or 3, got length " + str(len(path2.shape)) + " instead.")
 
         if isinstance(path1, np.ndarray) and isinstance(path2, np.ndarray):
             self.device = "cpu"
             self.out = np.empty(shape=self.batch_size, dtype=np.float64)
             self.out_ptr = self.out.ctypes.data_as(POINTER(c_double))
 
-            if self.is_batch:
-                x1 = torch.tensor(path1[:, 1:, :] - path1[:, :-1, :])
-                y1 = torch.tensor(path2[:, 1:, :] - path2[:, :-1, :])
-                self.gram = torch.bmm(x1, y1.permute(0, 2, 1))
-            else:
-                x1 = torch.tensor(path1[1:, :] - path1[:-1, :])[None, : ,:]
-                y1 = torch.tensor(path2[1:, :] - path2[:-1, :])[None, : ,:]
-                self.gram = torch.bmm(x1, y1.permute(0, 2, 1))
-
         elif isinstance(path1, torch.Tensor) and isinstance(path2, torch.Tensor) and path1.device == path2.device:
             self.device = path1.device.type
             self.out = torch.empty(self.batch_size, dtype=torch.float64, device = self.device)
             self.out_ptr = cast(self.out.data_ptr(), POINTER(c_double))
-
-            if self.is_batch:
-                x1 = path1[:, 1:, :] - path1[:, :-1, :]
-                y1 = path2[:, 1:, :] - path2[:, :-1, :]
-                self.gram = torch.bmm(x1, y1.permute(0, 2, 1))
-            else:
-                x1 = (path1[1:, :] - path1[:-1, :])[None, : ,:]
-                y1 = (path2[1:, :] - path2[:-1, :])[None, : ,:]
-                self.gram = torch.bmm(x1, y1.permute(0, 2, 1))
         else:
             raise ValueError("path1, path2 must both be numpy arrays or both torch arrays on the same device")
+
+        self.torch_path1 = torch.as_tensor(path1)  # Avoids data copy
+        self.torch_path2 = torch.as_tensor(path2)
+
+        if self.is_batch:
+            x1 = self.torch_path1[:, 1:, :] - self.torch_path1[:, :-1, :]
+            y1 = self.torch_path2[:, 1:, :] - self.torch_path2[:, :-1, :]
+        else:
+            x1 = (self.torch_path1[1:, :] - self.torch_path1[:-1, :])[None, :, :]
+            y1 = (self.torch_path2[1:, :] - self.torch_path2[:-1, :])[None, :, :]
+
+        self.gram = torch.bmm(x1, y1.permute(0, 2, 1))
 
 def sig_kernel_(data):
 
