@@ -1,12 +1,6 @@
 #pragma once
 #include "cppch.h"
 
-//Path has a single iterator, which returns a pointer to an Element class. Element then has its own [], ++, etc operators
-//which deal with the given setup.
-
-//have three options for on-the-fly computations: timeaug, leadlag, timeaugleadlag. Every other combination can be done in
-//pre-processing for now.
-
 #pragma pack(push)
 //#pragma pack(1)
 
@@ -28,10 +22,6 @@ class Point;
 template<typename T>
 class Path {
 public:
-	//Add concat, push_back functions
-	//Add time reversal function
-	//Add time augmentation
-	//Add lead lag
 	static_assert(std::is_arithmetic<T>::value);
 
 	Path(T* data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false) :

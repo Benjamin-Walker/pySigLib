@@ -132,7 +132,7 @@ setup(
             "Operating System :: Unix",
             "Operating System :: POSIX :: Linux",
             "Programming Language :: Python",
-            "Programming Language :: C++",#
+            "Programming Language :: C++",
             "Topic :: Scientific/Engineering :: Artificial Intelligence",
             "Topic :: Scientific/Engineering :: Information Analysis",
             "Topic :: Scientific/Engineering :: Mathematics",

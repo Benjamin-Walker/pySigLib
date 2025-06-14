@@ -1,6 +1,5 @@
 #include "CppUnitTest.h"
 #include "cusig.h"
-#include "cuframework.h"
 #include "cuda_runtime.h"
 #include <vector>
 

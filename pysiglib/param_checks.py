@@ -14,12 +14,11 @@ SUPPORTED_DTYPES = [
 
 SUPPORTED_DTYPES_STR = "int32, int64, float or double"
 
-def get_type_str(type):
+def get_type_str(type_):
     try:
-        if hasattr(type, '__name__'):
-            return type.__name__
-        else:
-            return str(type)
+        if hasattr(type_, '__name__'):
+            return type_.__name__
+        return str(type_)
     except:
         return "UNKNOWN"
 

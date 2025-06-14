@@ -14,6 +14,14 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
+double dot_product(double* a, double* b, int n) {
+    double res = 0;
+    for (int i = 0; i < n; ++i) {
+        res += *(a + i) * *(b + i);
+    }
+    return res;
+}
+
 void gram_(
     double* path1,
     double* path2,

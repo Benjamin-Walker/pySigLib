@@ -227,7 +227,7 @@ class SigDataHandler:
             dimension_ *= 2
         if self.time_aug:
             dimension_ += 1
-        return (length_, dimension_)
+        return length_, dimension_
 
 
 def signature_(data, time_aug = False, lead_lag = False, horner = True):
@@ -413,7 +413,6 @@ def sig_kernel_cuda_(data):
         raise Exception(err_msg[err_code] + " in sig_kernel")
     return data.out
 
-# @profile
 def sig_kernel(
         path1 : Union[np.ndarray, torch.tensor],
         path2 : Union[np.ndarray, torch.tensor],

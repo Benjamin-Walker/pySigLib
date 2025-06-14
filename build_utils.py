@@ -1,3 +1,7 @@
+"""
+This file contains functions used for building pySigLib on Windows, Linus and MacOS.
+"""
+
 import zipfile
 import subprocess
 import traceback
@@ -13,9 +17,7 @@ ZIP_FILENAME = ZIP_FOLDERNAME + '.zip'
 B2_URL = 'https://github.com/bfgroup/b2/releases/download/' + B2_VERSION + '/b2-' + B2_VERSION + '.zip'
 
 def _run(cmd, log_file, shell = False, check = True):
-    cmd_str = ""
-    for c in cmd:
-        cmd_str += c + " "
+    cmd_str = ' '.join(cmd)
 
     try:
         log_file.write("\n" + "=" * 10 + " Running Command " + "=" * 10 + "\n")
@@ -27,24 +29,24 @@ def _run(cmd, log_file, shell = False, check = True):
     except subprocess.CalledProcessError as e:
         log_file.write("\n" + "=" * 10 + " Exception occurred " + "=" * 10 + "\n")
         log_file.write("Exception occured whilst processing the command:\n\n")
-        log_file.write(cmd_str + "\n")
+        log_file.write(cmd_str + "\n\n")
         log_file.write(repr(e.stdout))
         log_file.write(repr(e.stderr))
         raise e
     except Exception as e:
         log_file.write("\n" + "=" * 10 + " Exception occurred " + "=" * 10 + "\n")
         log_file.write("Exception occured whilst processing the command:\n\n")
-        log_file.write(cmd_str + "\n")
+        log_file.write(cmd_str + "\n\n")
         traceback.print_exc(file=log_file)
         raise e
 
-def get_paths(system, log_file):
+def get_paths(log_file):
     if 'CUDA_PATH' not in os.environ:
         raise RuntimeError("Error while compiling pysiglib: CUDA_PATH environment variable not set")
 
     cuda_path = os.environ['CUDA_PATH']
 
-    vctoolsinstalldir = get_msvc_path(system, log_file)
+    vctoolsinstalldir = get_msvc_path(log_file)
     cl_path = os.path.join(vctoolsinstalldir, 'bin', 'HostX64', 'x64')
     os.environ["PATH"] += os.pathsep + cl_path
 
@@ -75,10 +77,7 @@ def get_b2(system, log_file):
     os.chdir(ZIP_FOLDERNAME)
     if system == 'Windows':
         _run([".\\bootstrap.bat"], log_file)
-    elif system == 'Linux':
-        _run(["chmod", "-R", "755", "."], log_file)
-        _run(["./bootstrap.sh"], log_file)
-    elif system == 'Darwin':
+    elif system in ('Linux', 'Darwin'):
         _run(["chmod", "-R", "755", "."], log_file)
         _run(["./bootstrap.sh"], log_file)
     else:
@@ -87,14 +86,9 @@ def get_b2(system, log_file):
 
     os.chdir(r'..')
 
-
     os.chdir(ZIP_FOLDERNAME)
     _run(["./b2", "install", "--prefix=../b2"], log_file)
     os.chdir(r'..')
-    # b2_path = os.getcwd() + "\\b2\\bin"
-    # sys.path.append(b2_path)
-
-    # os.chdir(r'..')
 
     if os.path.isfile(ZIP_FILENAME):
         os.remove(ZIP_FILENAME)
@@ -109,9 +103,7 @@ def build_cpsig(system, log_file):
         _run(["../b2/b2", "--toolset=msvc", "--build-type=complete", "architecture=x86", "address-model=64", "release"], log_file)
     elif system == 'Linux':
         _run(["chmod", "755", "../b2"], log_file)
-        _run(
-            ["../b2/bin/b2", "--toolset=gcc", "--build-type=complete", "architecture=x86", "address-model=64",
-             "release"], log_file)
+        _run(["../b2/bin/b2", "--toolset=gcc", "--build-type=complete", "architecture=x86", "address-model=64", "release"], log_file)
     elif system == 'Darwin':
         _run(["chmod", "755", "../b2"], log_file)
         _run(["../b2/bin/b2", "--build-type=complete", "release"], log_file)
@@ -122,7 +114,7 @@ def build_cpsig(system, log_file):
 
 def build_cusig(system, log_file):
     if system == 'Windows':
-        _, vctoolsinstalldir, _, _, _ = get_paths(system, log_file)
+        _, vctoolsinstalldir, _, _, _ = get_paths(log_file)
         vc0 = vctoolsinstalldir[:vctoolsinstalldir.find(r'\Tools')]
         _run(["build_cusig.bat", vc0, vctoolsinstalldir], log_file)
     elif system == 'Linux':
@@ -131,7 +123,7 @@ def build_cusig(system, log_file):
         # Shouldn't really end up here, but just in case
         raise RuntimeError("Unknown error while building pysiglib: unexpected system '" + system + "' in build_cusig()")
 
-def get_msvc_path(system, log_file):
+def get_msvc_path(log_file):
     os.chdir('siglib')
     output = _run(["../b2/b2", "toolset=msvc", "--debug-configuration", "-n"], log_file)
     os.chdir('..')
@@ -169,33 +161,21 @@ install dist : avx_info :
     if system == "Windows":
         _run(["../b2/b2", "release"], log_file)
         output = _run(["x64/Release/avx_info.exe"], log_file, check=False)
-    elif system == "Linux" or system == "Darwin":
+    elif system in ("Linux", "Darwin"):
         _run(["../b2/bin/b2", "release"], log_file)
         output = _run(["x64/Release/avx_info"], log_file, check=False)
     else:
         # Shouldn't really end up here, but just in case
         raise RuntimeError("Unknown error while building pysiglib: unexpected system '" + system + "' in get_avx_info()")
 
+    avx_instr_sets = ['avx', 'avx2', 'avx512f', 'avx512pf', 'avx512er', 'avx512cd']
     instructions = []
 
     rc = output.returncode
-    if rc & 1:
-        instructions.append('avx')
-    rc = rc >> 1
-    if rc & 1:
-        instructions.append('avx2')
-    rc = rc >> 1
-    if rc & 1:
-        instructions.append('avx512f')
-    rc = rc >> 1
-    if rc & 1:
-        instructions.append('avx512pf')
-    rc = rc >> 1
-    if rc & 1:
-        instructions.append('avx512er')
-    rc = rc >> 1
-    if rc & 1:
-        instructions.append('avx512cd')
+    for instr_ in avx_instr_sets:
+        if rc & 1:
+            instructions.append(instr_)
+        rc = rc >> 1
 
     log_file.write("\nFound supported instruction sets: " + repr(instructions) + "\n")
     print("Found supported instruction sets: ", instructions)
@@ -247,7 +227,7 @@ install dist : cpsig ./cpsig/cpsig.h :
             toolset = '<toolset>msvc:<cxxflags>"/arch:AVX"'
         else:
             toolset = '<toolset>msvc'
-    elif system=="Linux" or system=="Darwin":
+    elif system in ("Linux", "Darwin"):
         toolset = '<toolset>gcc:<cxxflags>"-march=native"'
     else:
         # Shouldn't really end up here, but just in case
@@ -257,7 +237,7 @@ install dist : cpsig ./cpsig/cpsig.h :
         file.write(
     f"""
 lib cpsig : {cpp_files_str}
-        : <define>CPSIG_EXPORTS {define_avx} <cxxstd>20 <threading>multi 
+        : <define>CPSIG_EXPORTS {define_avx} <cxxstd>20 <threading>multi
         {toolset}
         : <variant>release
         ;
