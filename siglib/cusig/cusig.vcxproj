@@ -107,7 +107,6 @@
   <ItemGroup>
     <ClInclude Include="cuda_constants.h" />
     <ClInclude Include="cusig.h" />
-    <ClInclude Include="cuframework.h" />
     <ClInclude Include="cupch.h" />
     <CudaCompile Include="cu_sig_kernel.h" />
   </ItemGroup>

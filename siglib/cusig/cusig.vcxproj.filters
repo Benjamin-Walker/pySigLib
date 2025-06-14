@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cuframework.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cusig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
