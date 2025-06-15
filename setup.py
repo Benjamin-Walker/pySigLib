@@ -67,6 +67,18 @@ class CustomBuild(_build_py):
         global REBUILD, SYSTEM, USE_CUDA, USE_AVX, LIBS
 
         if REBUILD:
+            old_build_paths = []
+            old_build_paths.append( Path(__file__).parent / 'siglib' / 'x64' )
+            old_build_paths.append(Path(__file__).parent / 'siglib' / 'bin')
+            old_build_paths.append(Path(__file__).parent / 'siglib' / 'cpsig'/ 'x64')
+            old_build_paths.append(Path(__file__).parent / 'siglib' / 'cpsig' / 'bin')
+            old_build_paths.append(Path(__file__).parent / 'siglib' / 'cusig' / 'x64')
+            old_build_paths.append(Path(__file__).parent / 'siglib' / 'cusig' / 'bin')
+
+            for path_ in old_build_paths:
+                if os.path.exists(path_):
+                    shutil.rmtree(path_)
+
             # Create log file
             parent_dir = Path(__file__).parent
             log_path = parent_dir / 'pysiglib' / '_build_log.txt'

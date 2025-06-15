@@ -234,16 +234,19 @@ install dist : cpsig ./cpsig/cpsig.h :
         define_avx = ''
 
     if system=="Windows":
+        toolset = '<toolset>msvc:<cxxflags>"'
+
         if 'avx512f' in instructions:
-            toolset = '<toolset>msvc:<cxxflags>"/arch:AVX512"'
+            toolset += '/arch:AVX512'
         elif 'avx2' in instructions:
-            toolset = '<toolset>msvc:<cxxflags>"/arch:AVX2"'
+            toolset += '/arch:AVX2'
         elif 'avx' in instructions:
-            toolset = '<toolset>msvc:<cxxflags>"/arch:AVX"'
-        else:
-            toolset = '<toolset>msvc'
+            toolset += '/arch:AVX'
+
+        toolset += ' /Qvec-report:2"'
+
     elif system in ("Linux", "Darwin"):
-        toolset = '<toolset>gcc:<cxxflags>"-march=native"'
+        toolset = '<toolset>gcc:<cxxflags>"-march=native -ftree-vectorize -fopt-info-vec-missed"'
     else:
         # Shouldn't really end up here, but just in case
         raise RuntimeError("Unknown error while building pysiglib: unexpected system '" + system + "' in make_jamfiles()")
