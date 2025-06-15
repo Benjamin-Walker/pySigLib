@@ -100,7 +100,7 @@ class SigKernelTests(unittest.TestCase):
     def run_random(self, device):
         for _ in range(5):
             for dyadic_order in range(3):
-                X = np.random.uniform(size=(32, 100, 5))
+                X = np.random.uniform(size=(32, 50, 5))
                 Y = np.random.uniform(size=(32, 100, 5))
 
                 X = torch.tensor(X, device=device)

@@ -580,5 +580,16 @@ namespace cpSigTests
             gram_(path.data(), path.data(), gram.data(), 1, dimension, length, length);
             check_result(f, gram, true_sig, dimension, length, length, 2, 2);
         }
+
+        TEST_METHOD(NonSquare) {
+            auto f = sig_kernel;
+            uint64_t dimension = 1, length1 = 2, length2 = 3;
+            std::vector<double> path1 = { 0., 2. };
+            std::vector<double> path2 = { 0., 1., 2. };
+            std::vector<double> true_sig = { 11. };
+            std::vector<double> gram(length1 * length2);
+            gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+            check_result(f, gram, true_sig, dimension, length1, length2, 0, 0);
+        }
     };
 }

@@ -360,14 +360,14 @@ class SigKernelDataHandler:
         if len(path2.shape) == 2:
             if self.batch_size != 1:
                 raise ValueError("path1, path2 have different batch sizes")
-            self.length_2 = path1.shape[0]
-            if self.dimension != path1.shape[1]:
+            self.length_2 = path2.shape[0]
+            if self.dimension != path2.shape[1]:
                 raise ValueError("path1, path2 have different dimensions")
         elif len(path2.shape) == 3:
-            if self.batch_size != path1.shape[0]:
+            if self.batch_size != path2.shape[0]:
                 raise ValueError("path1, path2 have different batch sizes")
-            self.length_2 = path1.shape[1]
-            if self.dimension != path1.shape[2]:
+            self.length_2 = path2.shape[1]
+            if self.dimension != path2.shape[2]:
                 raise ValueError("path1, path2 have different dimensions")
         else:
             raise ValueError("path2.shape must have length 2 or 3, got length " + str(len(path2.shape)) + " instead.")
