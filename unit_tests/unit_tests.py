@@ -27,6 +27,7 @@ np.random.seed(42)
 torch.manual_seed(42)
 
 EPSILON = 1e-10
+class PolyTests(unittest.TestCase):
 
     def check_close(self, a, b):
         a_ = np.array(a)

@@ -67,30 +67,7 @@ void poly_mult_(double* poly1, double* poly2, double* out, uint64_t dimension, u
 
     std::memcpy(out, poly1, sizeof(double) * level_index[degree + 1]);
 
-
-	for (int64_t target_level = static_cast<int64_t>(degree); target_level > 0L; --target_level) {
-		for (int64_t left_level = target_level - 1L, right_level = 1L;
-			left_level > 0L;
-			--left_level, ++right_level) {
-
-			double* result_ptr = out + level_index[target_level];
-			const double* left_ptr_upper_bound = poly1 + level_index[left_level + 1];
-			for (double* left_ptr = poly1 + level_index[left_level]; left_ptr != left_ptr_upper_bound; ++left_ptr) {
-				const double* right_ptr_upper_bound = poly2 + level_index[right_level + 1];
-				for (double* right_ptr = poly2 + level_index[right_level]; right_ptr != right_ptr_upper_bound; ++right_ptr) {
-					*(result_ptr++) += (*left_ptr) * (*right_ptr);
-				}
-			}
-
-		}
-
-		//left_level = 0
-		double* result_ptr = out + level_index[target_level];
-		const double* right_ptr_upper_bound = poly2 + level_index[target_level + 1];
-		for (double* right_ptr = poly2 + level_index[target_level]; right_ptr != right_ptr_upper_bound; ++right_ptr) {
-			*(result_ptr++) += *right_ptr;
-		}
-	}
+	poly_mult_inplace_(out, poly2, dimension, degree, level_index);
 }
 
 void batch_poly_mult_(double* poly1, double* poly2, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool parallel = true)
@@ -99,7 +76,6 @@ void batch_poly_mult_(double* poly1, double* poly2, double* out, uint64_t batch_
 
 	const uint64_t polylength = ::poly_length(dimension, degree);
 	double* const poly1_end = poly1 + polylength * batch_size;
-	double* const poly2_end = poly2 + polylength * batch_size;
 
 	std::function<void(double*, double*, double*)> poly_mult_func;
 

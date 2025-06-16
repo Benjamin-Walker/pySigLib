@@ -17,6 +17,7 @@
 #include "cppch.h"
 
 #include "multithreading.h"
+#include "cp_tensor_poly.h"
 
 #include "cp_path.h"
 #include "macros.h"
@@ -83,29 +84,7 @@ void signature_naive_(Path<T>& path, double* out, uint64_t degree)
 
 		linear_signature_(prev_pt, next_pt, linear_signature, dimension, degree, level_index);
 
-		for (int64_t target_level = static_cast<int64_t>(degree); target_level > 0L; --target_level) {
-			for (int64_t left_level = target_level - 1L, right_level = 1L;
-				left_level > 0L;
-				--left_level, ++right_level) {
-
-				double* result_ptr = out + level_index[target_level];
-				const double* left_ptr_upper_bound = out + level_index[left_level + 1];
-				for (double* left_ptr = out + level_index[left_level]; left_ptr != left_ptr_upper_bound; ++left_ptr) {
-					const double* right_ptr_upper_bound = linear_signature + level_index[right_level + 1];
-					for (double* right_ptr = linear_signature + level_index[right_level]; right_ptr != right_ptr_upper_bound; ++right_ptr) {
-						*(result_ptr++) += (*left_ptr) * (*right_ptr);
-					}
-				}
-				
-			}
-
-			//left_level = 0
-			double* result_ptr = out + level_index[target_level];
-			const double* right_ptr_upper_bound = linear_signature + level_index[target_level + 1];
-			for (double* right_ptr = linear_signature + level_index[target_level]; right_ptr != right_ptr_upper_bound; ++right_ptr) {
-				*(result_ptr++) += *right_ptr;
-			}
-		}
+		poly_mult_inplace_(out, linear_signature, dimension, degree, level_index);
 	}
 }
 

@@ -264,12 +264,18 @@ def poly_mult(
     :type poly1: numpy.ndarray | torch.tensor
     :param poly2: The second truncated tensor polynomial. Must have the same degree and dimension as the first.
     :type poly2: numpy.ndarray | torch.tensor
-    :param dimension: Dimension of the undelying space, :math:`d`.
+    :param dimension: Dimension of the underlying space, :math:`d`.
     :type dimension: int
     :param degree: Truncation level of the tensor polynomial, :math:`N`
     :type degree: int
     :return: Tensor product of the truncated tensor polynomials
     :rtype: numpy.ndarray | torch.tensor
+
+    .. note::
+
+        The flag `parallel` defaults to `True`. However, if the workload is too small, it
+        may be beneficial to set this to `False` and run the computation serially,
+        due to parallelisation overhead.
 
     Example usage::
 
@@ -346,7 +352,7 @@ class SigDataHandler:
         if isinstance(path, np.ndarray):
             self.init_numpy(path)
         elif isinstance(path, torch.Tensor):
-            if not path.device == "cpu":
+            if not path.device.type == "cpu":
                 raise ValueError("Data must be located on the cpu")
             self.init_torch(path)
 
