@@ -28,7 +28,10 @@ torch.manual_seed(42)
 
 EPSILON = 1e-10
 
-class GeneralTests(unittest.TestCase):
+    def check_close(self, a, b):
+        a_ = np.array(a)
+        b_ = np.array(b)
+        self.assertTrue(not np.any(np.abs(a_ - b_) > EPSILON))
 
     def test_poly_length(self):
         self.assertEqual(1, pysiglib.poly_length(0, 0))
@@ -40,6 +43,36 @@ class GeneralTests(unittest.TestCase):
         self.assertEqual(313842837672, pysiglib.poly_length(11, 11))
 
         self.assertEqual(10265664160401, pysiglib.poly_length(400, 5))
+
+    def test_poly_mult_random(self):
+        for deg in range(1, 6):
+            X1 = np.random.uniform(size=(100, 5))
+            X2 = np.random.uniform(size=(100, 5))
+            X = np.concatenate((X1, X2), axis=0)
+            X2 = np.concatenate((X1[[-1], :], X2), axis = 0)
+            sig1 = pysiglib.signature(X1, deg)
+            sig2 = pysiglib.signature(X2, deg)
+            sig = pysiglib.signature(X, deg)
+            sig_mult = pysiglib.poly_mult(sig1, sig2, 5, deg)
+            self.check_close(sig, sig_mult)
+
+    def test_poly_mult_random_batch(self):
+        for deg in range(1, 6):
+            X1 = np.random.uniform(size=(32, 100, 5))
+            X2 = np.random.uniform(size=(32, 100, 5))
+            X = np.concatenate((X1, X2), axis=1)
+            X2 = np.concatenate((X1[:, [-1], :], X2), axis=1)
+            sig1 = pysiglib.signature(X1, deg)
+            sig2 = pysiglib.signature(X2, deg)
+            sig = pysiglib.signature(X, deg)
+            sig_mult = pysiglib.poly_mult(sig1, sig2, 5, deg)
+            self.check_close(sig, sig_mult)
+
+    def test_mult_poly_cuda_err(self):
+        x = torch.tensor([[0.]], dtype = torch.float64, device = "cuda")
+        with self.assertRaises(ValueError):
+            pysiglib.poly_mult(x, x, 1, 0)
+
 
 class SignatureTests(unittest.TestCase):
 
@@ -89,6 +122,11 @@ class SignatureTests(unittest.TestCase):
             self.check_close(iisig, sig[:, 1:])
             sig = pysiglib.signature(X, deg, parallel = True)
             self.check_close(iisig, sig[:, 1:])
+
+    def test_cuda_err(self):
+        x = torch.tensor([[0.],[1.]], device = "cuda")
+        with self.assertRaises(ValueError):
+            pysiglib.signature(x, 2)
 
 class SigKernelTests(unittest.TestCase):
 

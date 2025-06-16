@@ -53,3 +53,7 @@ def check_non_neg(param, param_name):
 def check_dtype(arr, arr_name):
     if arr.dtype not in SUPPORTED_DTYPES:
         raise TypeError(arr_name + ".dtype must be " + SUPPORTED_DTYPES_STR + ", got " + str(arr.dtype) + " instead")
+
+def check_dtype_double(arr, arr_name):
+    if arr.dtype not in [np.float64, torch.float64]:
+        raise TypeError(arr_name + ".dtype must be float64, got " + str(arr.dtype) + " instead")

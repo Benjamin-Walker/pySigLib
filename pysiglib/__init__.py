@@ -13,5 +13,5 @@
 # limitations under the License.
 # =========================================================================
 
-from .pysiglib import (poly_length, signature, sig_kernel,
+from .pysiglib import (poly_length, poly_mult, signature, sig_kernel,
                        SYSTEM, BUILT_WITH_CUDA, BUILT_WITH_AVX)

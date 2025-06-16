@@ -117,10 +117,10 @@ void check_result_2(FN f, std::vector<T>& path1, std::vector<T>& path2, std::vec
 
 namespace cpSigTests
 {
-    TEST_CLASS(PolyLengthTest)
+    TEST_CLASS(PolyTest)
     {
     public:
-        TEST_METHOD(ValueTest)
+        TEST_METHOD(PolyLengthTest)
         {
             Assert::AreEqual((uint64_t)1, poly_length(0, 0));
             Assert::AreEqual((uint64_t)1, poly_length(0, 0));
@@ -132,6 +132,86 @@ namespace cpSigTests
             Assert::AreEqual((uint64_t)313842837672, poly_length(11, 11));
 
             Assert::AreEqual((uint64_t)10265664160401, poly_length(400, 5));
+        }
+
+        TEST_METHOD(PolyMultTestLinear)
+        {
+            // Test signatures of linear 2d paths
+            auto f = poly_mult;
+            std::vector<double> poly = { 1., 1., 1., 1./2, 1./2, 1./2, 1./2 };
+            std::vector<double> true_res = { 1., 2., 2., 2., 2., 2., 2. };
+
+            check_result_2(f, poly, poly, true_res, 2, 2);
+        }
+
+        TEST_METHOD(PolyMultSigTest)
+        {
+            uint64_t dimension = 2, length = 4, degree = 5;
+            auto f = poly_mult;
+            std::vector<double> path1 = { 0., 0., 1., 0.5, 0.4, 2. };
+            std::vector<double> path2 = { 0.4, 2., 6., 0.1, 2.3, 4.1 };
+            std::vector<double> path = { 0., 0., 1., 0.5, 0.4, 2., 6., 0.1, 2.3, 4.1 };
+
+            uint64_t poly_len_ = poly_length(dimension, degree);
+
+            std::vector<double> poly1;
+            poly1.resize(poly_len_);
+            signature_double(path1.data(), poly1.data(), dimension, 3, degree);
+
+            std::vector<double> poly2;
+            poly2.resize(poly_len_);
+            signature_double(path2.data(), poly2.data(), dimension, 3, degree);
+
+            std::vector<double> true_sig;
+            true_sig.resize(poly_len_);
+            signature_double(path.data(), true_sig.data(), dimension, 5, degree);
+            check_result_2(f, poly1, poly2, true_sig, dimension, degree);
+        }
+
+        TEST_METHOD(BatchPolyMultSigTest)
+        {
+            uint64_t batch_size = 3, dimension = 2, length = 4, degree = 2;
+            auto f = batch_poly_mult;
+            std::vector<double> path1 = { 0., 0., 0.25, 0.25, 0.5, 0.5,
+                0., 0., 0.4, 0.4, 0.6, 0.6,
+                0., 0., 1., 0.5, 4., 0. };
+            std::vector<double> path2 = { 0.5, 0.5, 1., 1.,
+                0.6, 0.6, 1., 1.,
+                4., 0., 0., 1. };
+            std::vector<double> path = { 0., 0., 0.25, 0.25, 0.5, 0.5, 1., 1.,
+                0., 0., 0.4, 0.4, 0.6, 0.6, 1., 1.,
+                0., 0., 1., 0.5, 4., 0., 0., 1. };
+
+            uint64_t res_len_ = poly_length(dimension, degree) * batch_size;
+
+            std::vector<double> poly1;
+            poly1.resize(res_len_);
+            batch_signature_double(path1.data(), poly1.data(), batch_size, dimension, 3, degree);
+
+            std::vector<double> poly2;
+            poly2.resize(res_len_);
+            batch_signature_double(path2.data(), poly2.data(), batch_size, dimension, 2, degree);
+
+            std::vector<double> true_sig;
+            true_sig.resize(res_len_);
+            batch_signature_double(path.data(), true_sig.data(), batch_size, dimension, 4, degree);
+            check_result_2(f, poly1, poly2, true_sig, batch_size, dimension, degree, false);
+            check_result_2(f, poly1, poly2, true_sig, batch_size, dimension, degree, true);
+        }
+
+        TEST_METHOD(BatchPolyMultStressTest)
+        {
+            uint64_t batch_size = 1000, dimension = 5, degree = 5;
+
+            std::vector<double> poly;
+            poly.resize(batch_size * poly_length(dimension, degree));
+            std::fill(poly.data(), poly.data() + poly.size(), 1.);
+
+            std::vector<double> out;
+            out.resize(batch_size * poly_length(dimension, degree));
+
+            int err = batch_poly_mult(poly.data(), poly.data(), out.data(), batch_size, dimension, degree, true);
+            Assert::IsFalse(err);
         }
     };
 
