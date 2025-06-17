@@ -13,6 +13,8 @@
 # limitations under the License.
 # =========================================================================
 
+import warnings
+
 import numpy as np
 import torch
 
@@ -57,3 +59,30 @@ def check_dtype(arr, arr_name):
 def check_dtype_double(arr, arr_name):
     if arr.dtype not in [np.float64, torch.float64]:
         raise TypeError(arr_name + ".dtype must be float64, got " + str(arr.dtype) + " instead")
+
+WARNED_ONCE_ABOUT_MEMORY = False
+MEMORY_WARNING = "Detected a non-contiguous or view-based array. Such arrays will be cloned to ensure safe access. To avoid this overhead, pass arrays that are both contiguous and own their data. This warning will only appear once per session."
+
+def ensure_own_contiguous_storage(arr, stacklevel):
+    global WARNED_ONCE_ABOUT_MEMORY
+
+    if isinstance(arr, torch.Tensor):
+        is_view = arr._base is not None
+        has_stride_0 = any(s == 0 for s in arr.stride())
+        is_contiguous = arr.is_contiguous()
+        if is_view or not is_contiguous or has_stride_0:
+            if not WARNED_ONCE_ABOUT_MEMORY:
+                warnings.warn(MEMORY_WARNING, stacklevel=stacklevel)
+                WARNED_ONCE_ABOUT_MEMORY = True
+            return arr.clone().contiguous()
+        return arr
+
+    elif isinstance(arr, np.ndarray):
+        owns_data = arr.base is None
+        is_contiguous = arr.flags['C_CONTIGUOUS']
+        if not owns_data or not is_contiguous:
+            if not WARNED_ONCE_ABOUT_MEMORY:
+                warnings.warn(MEMORY_WARNING, stacklevel=stacklevel)
+                WARNED_ONCE_ABOUT_MEMORY = True
+            return np.ascontiguousarray(arr.copy())
+        return arr

@@ -23,7 +23,7 @@ from ctypes import c_float, c_double, c_int32, c_int64, c_bool, POINTER, cast
 import numpy as np
 import torch
 
-from .param_checks import check_type, check_type_multiple, check_non_neg, check_dtype, check_dtype_double
+from .param_checks import check_type, check_type_multiple, check_non_neg, check_dtype, check_dtype_double, ensure_own_contiguous_storage
 from .error_codes import err_msg
 
 ######################################################
@@ -170,46 +170,48 @@ def poly_length(dimension : int, degree : int) -> int:
     return out
 
 class PolyDataHandler:
-    def __init__(self, poly1, poly2, dimension, degree):
+    def __init__(self, poly1_, poly2_, dimension, degree):
+
+        check_type_multiple(poly1_, "poly1", (np.ndarray, torch.Tensor))
+        check_type_multiple(poly2_, "poly2", (np.ndarray, torch.Tensor))
+        self.poly1 = ensure_own_contiguous_storage(poly1_, 4)
+        self.poly2 = ensure_own_contiguous_storage(poly2_, 4)
+        check_dtype_double(self.poly1, "poly1")
+        check_dtype_double(self.poly2, "poly2")
 
         self.poly_len_ = poly_length(dimension, degree)
-        if poly1.shape[-1] != self.poly_len_:
-            raise ValueError("poly1 is of incorrect length. Expected " + str(self.poly_len_) + ", got " + str(poly1.shape[-1]))
-        if poly2.shape[-1] != self.poly_len_:
-            raise ValueError("poly2 is of incorrect length. Expected " + str(self.poly_len_) + ", got " + str(poly2.shape[-1]))
+        if self.poly1.shape[-1] != self.poly_len_:
+            raise ValueError("poly1 is of incorrect length. Expected " + str(self.poly_len_) + ", got " + str(self.poly1.shape[-1]))
+        if self.poly2.shape[-1] != self.poly_len_:
+            raise ValueError("poly2 is of incorrect length. Expected " + str(self.poly_len_) + ", got " + str(self.poly2.shape[-1]))
 
-        check_type_multiple(poly1, "poly1", (np.ndarray, torch.Tensor))
-        check_type_multiple(poly2, "poly2", (np.ndarray, torch.Tensor))
-        check_dtype_double(poly1, "poly1")
-        check_dtype_double(poly2, "poly2")
-
-        if len(poly1.shape) == 1:
+        if len(self.poly1.shape) == 1:
             self.is_batch = False
             self.batch_size = 1
-            self.length_1 = poly1.shape[0]
-        elif len(poly1.shape) == 2:
+            self.length_1 = self.poly1.shape[0]
+        elif len(self.poly1.shape) == 2:
             self.is_batch = True
-            self.batch_size = poly1.shape[0]
-            self.length_1 = poly1.shape[1]
+            self.batch_size = self.poly1.shape[0]
+            self.length_1 = self.poly1.shape[1]
         else:
-            raise ValueError("poly1.shape must have length 1 or 2, got length " + str(len(poly1.shape)) + " instead.")
+            raise ValueError("poly1.shape must have length 1 or 2, got length " + str(len(self.poly1.shape)) + " instead.")
 
-        if len(poly2.shape) == 1:
+        if len(self.poly2.shape) == 1:
             if self.batch_size != 1:
                 raise ValueError("poly1, poly2 have different batch sizes")
-            self.length_2 = poly2.shape[0]
-        elif len(poly2.shape) == 2:
-            if self.batch_size != poly2.shape[0]:
+            self.length_2 = self.poly2.shape[0]
+        elif len(self.poly2.shape) == 2:
+            if self.batch_size != self.poly2.shape[0]:
                 raise ValueError("path1, path2 have different batch sizes")
-            self.length_2 = poly2.shape[1]
+            self.length_2 = self.poly2.shape[1]
         else:
-            raise ValueError("poly2.shape must have length 1 or 2, got length " + str(len(poly2.shape)) + " instead.")
+            raise ValueError("poly2.shape must have length 1 or 2, got length " + str(len(self.poly2.shape)) + " instead.")
 
         self.result_length = self.batch_size * self.poly_len_
 
-        if isinstance(poly1, np.ndarray) and isinstance(poly2, np.ndarray):
-            self.poly1_ptr = poly1.ctypes.data_as(POINTER(c_double))
-            self.poly2_ptr = poly2.ctypes.data_as(POINTER(c_double))
+        if isinstance(self.poly1, np.ndarray) and isinstance(self.poly2, np.ndarray):
+            self.poly1_ptr = self.poly1.ctypes.data_as(POINTER(c_double))
+            self.poly2_ptr = self.poly2.ctypes.data_as(POINTER(c_double))
             if self.is_batch:
                 self.out = np.empty(
                     shape=(self.batch_size, self.poly_len_),
@@ -222,11 +224,11 @@ class PolyDataHandler:
                 )
             self.out_ptr = self.out.ctypes.data_as(POINTER(c_double))
 
-        elif isinstance(poly1, torch.Tensor) and isinstance(poly2, torch.Tensor):
-            if not (poly1.device == "cpu" and poly2.device == "cpu"):
+        elif isinstance(self.poly1, torch.Tensor) and isinstance(self.poly2, torch.Tensor):
+            if not (self.poly1.device.type == "cpu" and self.poly2.device.type == "cpu"):
                 raise ValueError("Data must be located on the cpu")
-            self.poly1_ptr = cast(poly1.data_ptr(), POINTER(c_double))
-            self.poly2_ptr = cast(poly2.data_ptr(), POINTER(c_double))
+            self.poly1_ptr = cast(self.poly1.data_ptr(), POINTER(c_double))
+            self.poly2_ptr = cast(self.poly2.data_ptr(), POINTER(c_double))
             if self.is_batch:
                 self.out = torch.empty(
                     size=(self.batch_size, self.poly_len_),
@@ -335,9 +337,10 @@ def poly_mult(
 
 
 class SigDataHandler:
-    def __init__(self, path, degree, time_aug, lead_lag):
-        check_type_multiple(path, "path",(np.ndarray, torch.Tensor))
-        check_dtype(path, "path")
+    def __init__(self, path_, degree, time_aug, lead_lag):
+        check_type_multiple(path_, "path",(np.ndarray, torch.Tensor))
+        self.path = ensure_own_contiguous_storage(path_, 4)
+        check_dtype(self.path, "path")
         check_type(degree, "degree", int)
         check_non_neg(degree, "degree")
         check_type(time_aug, "time_aug", bool)
@@ -347,14 +350,14 @@ class SigDataHandler:
         self.time_aug = time_aug
         self.lead_lag = lead_lag
 
-        self.get_dims(path)
+        self.get_dims(self.path)
 
-        if isinstance(path, np.ndarray):
-            self.init_numpy(path)
-        elif isinstance(path, torch.Tensor):
-            if not path.device.type == "cpu":
+        if isinstance(self.path, np.ndarray):
+            self.init_numpy(self.path)
+        elif isinstance(self.path, torch.Tensor):
+            if not self.path.device.type == "cpu":
                 raise ValueError("Data must be located on the cpu")
-            self.init_torch(path)
+            self.init_torch(self.path)
 
     def init_numpy(self, path):
         self.dtype = str(path.dtype)
@@ -499,11 +502,13 @@ def signature(
 
 
 class SigKernelDataHandler:
-    def __init__(self, path1, path2, dyadic_order):
-        check_type_multiple(path1, "path1", (np.ndarray, torch.Tensor))
-        check_type_multiple(path2, "path2", (np.ndarray, torch.Tensor))
-        check_dtype(path1, "path1")
-        check_dtype(path2, "path2")
+    def __init__(self, path1_, path2_, dyadic_order):
+        check_type_multiple(path1_, "path1", (np.ndarray, torch.Tensor))
+        check_type_multiple(path2_, "path2", (np.ndarray, torch.Tensor))
+        self.path1 = ensure_own_contiguous_storage(path1_, 4)
+        self.path2 = ensure_own_contiguous_storage(path2_, 4)
+        check_dtype(self.path1, "path1")
+        check_dtype(self.path2, "path2")
 
         if isinstance(dyadic_order, tuple) and len(dyadic_order) == 2:
             self.dyadic_order_1 = dyadic_order[0]
@@ -517,48 +522,48 @@ class SigKernelDataHandler:
         if self.dyadic_order_1 < 0 or self.dyadic_order_2 < 0:
             raise ValueError("dyadic_order must be a non-negative integer or tuple of non-negative integers")
 
-        if len(path1.shape) == 2:
+        if len(self.path1.shape) == 2:
             self.is_batch = False
             self.batch_size = 1
-            self.length_1 = path1.shape[0]
-            self.dimension = path1.shape[1]
-        elif len(path1.shape) == 3:
+            self.length_1 = self.path1.shape[0]
+            self.dimension = self.path1.shape[1]
+        elif len(self.path1.shape) == 3:
             self.is_batch = True
-            self.batch_size = path1.shape[0]
-            self.length_1 = path1.shape[1]
-            self.dimension = path1.shape[2]
+            self.batch_size = self.path1.shape[0]
+            self.length_1 = self.path1.shape[1]
+            self.dimension = self.path1.shape[2]
         else:
-            raise ValueError("path1.shape must have length 2 or 3, got length " + str(len(path1.shape)) + " instead.")
+            raise ValueError("path1.shape must have length 2 or 3, got length " + str(len(self.path1.shape)) + " instead.")
 
-        if len(path2.shape) == 2:
+        if len(self.path2.shape) == 2:
             if self.batch_size != 1:
                 raise ValueError("path1, path2 have different batch sizes")
-            self.length_2 = path2.shape[0]
-            if self.dimension != path2.shape[1]:
+            self.length_2 = self.path2.shape[0]
+            if self.dimension != self.path2.shape[1]:
                 raise ValueError("path1, path2 have different dimensions")
-        elif len(path2.shape) == 3:
-            if self.batch_size != path2.shape[0]:
+        elif len(self.path2.shape) == 3:
+            if self.batch_size != self.path2.shape[0]:
                 raise ValueError("path1, path2 have different batch sizes")
-            self.length_2 = path2.shape[1]
-            if self.dimension != path2.shape[2]:
+            self.length_2 = self.path2.shape[1]
+            if self.dimension != self.path2.shape[2]:
                 raise ValueError("path1, path2 have different dimensions")
         else:
-            raise ValueError("path2.shape must have length 2 or 3, got length " + str(len(path2.shape)) + " instead.")
+            raise ValueError("path2.shape must have length 2 or 3, got length " + str(len(self.path2.shape)) + " instead.")
 
-        if isinstance(path1, np.ndarray) and isinstance(path2, np.ndarray):
+        if isinstance(self.path1, np.ndarray) and isinstance(self.path2, np.ndarray):
             self.device = "cpu"
             self.out = np.empty(shape=self.batch_size, dtype=np.float64)
             self.out_ptr = self.out.ctypes.data_as(POINTER(c_double))
 
-        elif isinstance(path1, torch.Tensor) and isinstance(path2, torch.Tensor) and path1.device == path2.device:
-            self.device = path1.device.type
+        elif isinstance(self.path1, torch.Tensor) and isinstance(self.path2, torch.Tensor) and self.path1.device == self.path2.device:
+            self.device = self.path1.device.type
             self.out = torch.empty(self.batch_size, dtype=torch.float64, device = self.device)
             self.out_ptr = cast(self.out.data_ptr(), POINTER(c_double))
         else:
             raise ValueError("path1, path2 must both be numpy arrays or both torch arrays on the same device")
 
-        self.torch_path1 = torch.as_tensor(path1)  # Avoids data copy
-        self.torch_path2 = torch.as_tensor(path2)
+        self.torch_path1 = torch.as_tensor(self.path1)  # Avoids data copy
+        self.torch_path2 = torch.as_tensor(self.path2)
 
         if self.is_batch:
             x1 = self.torch_path1[:, 1:, :] - self.torch_path1[:, :-1, :]

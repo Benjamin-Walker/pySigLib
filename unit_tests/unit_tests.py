@@ -69,10 +69,33 @@ class PolyTests(unittest.TestCase):
             sig_mult = pysiglib.poly_mult(sig1, sig2, 5, deg)
             self.check_close(sig, sig_mult)
 
-    def test_mult_poly_cuda_err(self):
+    def test_poly_mult_cuda_err(self):
         x = torch.tensor([[0.]], dtype = torch.float64, device = "cuda")
         with self.assertRaises(ValueError):
             pysiglib.poly_mult(x, x, 1, 0)
+
+    def test_poly_mult_non_contiguous(self):
+        # Make sure poly_mult works with any form of array
+        dim = 10
+        degree = 3
+        batch = 32
+        poly_length = pysiglib.poly_length(dim, degree)
+
+        rand_data = torch.rand(size = (batch,), dtype = torch.float64)[:, None]
+        X_non_cont = rand_data.expand(-1, poly_length)
+        X = X_non_cont.clone()
+
+        res1 = pysiglib.poly_mult(X, X, dim, degree)
+        res2 = pysiglib.poly_mult(X_non_cont, X_non_cont, dim, degree)
+        self.check_close(res1, res2)
+
+        rand_data = np.random.normal(size=batch)[:, None]
+        X_non_cont = np.broadcast_to(rand_data, (batch,poly_length))
+        X = np.array(X_non_cont)
+
+        res1 = pysiglib.poly_mult(X, X, dim, degree)
+        res2 = pysiglib.poly_mult(X_non_cont, X_non_cont, dim, degree)
+        self.check_close(res1, res2)
 
 
 class SignatureTests(unittest.TestCase):
@@ -129,6 +152,29 @@ class SignatureTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             pysiglib.signature(x, 2)
 
+    def test_signature_non_contiguous(self):
+        # Make sure signature works with any form of array
+        dim = 10
+        degree = 3
+        length = 100
+        batch = 32
+
+        rand_data = torch.rand(size = (batch, length), dtype = torch.float64)[:, :, None]
+        X_non_cont = rand_data.expand(-1, -1, dim)
+        X = X_non_cont.clone()
+
+        res1 = pysiglib.signature(X, degree)
+        res2 = pysiglib.signature(X_non_cont, degree)
+        self.check_close(res1, res2)
+
+        rand_data = np.random.normal(size=(batch, length))[:, :, None]
+        X_non_cont = np.broadcast_to(rand_data, (batch, length, dim))
+        X = np.array(X_non_cont)
+
+        res1 = pysiglib.signature(X, degree)
+        res2 = pysiglib.signature(X_non_cont, degree)
+        self.check_close(res1, res2)
+
 class SigKernelTests(unittest.TestCase):
 
     def check_close(self, a, b):
@@ -168,6 +214,28 @@ class SigKernelTests(unittest.TestCase):
     def test_sig_kernel_numpy2(self):
         x = np.array([[[0,1],[3,2]]])
         pysiglib.sig_kernel(x,x,0)
+
+    def test_sig_kernel_non_contiguous(self):
+        # Make sure sig_kernel works with any form of array
+        dim = 10
+        length = 100
+        batch = 32
+
+        rand_data = torch.rand(size = (batch, length), dtype = torch.float64)[:, :, None]
+        X_non_cont = rand_data.expand(-1, -1, dim)
+        X = X_non_cont.clone()
+
+        res1 = pysiglib.sig_kernel(X, X, 0)
+        res2 = pysiglib.sig_kernel(X_non_cont, X_non_cont, 0)
+        self.check_close(res1, res2)
+
+        rand_data = np.random.normal(size=(batch, length))[:, :, None]
+        X_non_cont = np.broadcast_to(rand_data, (batch, length, dim))
+        X = np.array(X_non_cont)
+
+        res1 = pysiglib.sig_kernel(X, X, 0)
+        res2 = pysiglib.sig_kernel(X_non_cont, X_non_cont, 0)
+        self.check_close(res1, res2)
 
 class InvalidParameterTests(unittest.TestCase):
     def test_poly_length_value_error(self):
