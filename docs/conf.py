@@ -24,6 +24,8 @@ extensions = [
     'sphinx.ext.napoleon'
 ]
 
+autodoc_typehints = "none"
+
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
@@ -32,10 +34,23 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
-html_logo = "_static/logo.png"
+html_theme = 'sphinx_book_theme'
 
+html_theme_options = {
+    "logo": {
+          "image_light": "_static/logo_light.png",
+          "image_dark": "_static/logo_dark.png",
+       },
+    "repository_url": "https://github.com/daniil-shmelev/pySigLib",
+    "use_repository_button": True,
+}
+
+html_static_path = ['_static']
+html_logo = "_static/logo_light.png"
 add_module_names = False
 
-html_title = "pySigLib"
+html_title = "Documentation"
+
+rst_epilog = """
+.. |release| replace:: %s
+""" % release

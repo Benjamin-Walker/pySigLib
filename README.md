@@ -1,8 +1,12 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/daniil-shmelev/pySigLib/master/docs/_static/logo.png" width="350"/>
+  <picture>
+    <source srcset="https://raw.githubusercontent.com/daniil-shmelev/pySigLib/master/docs/_static/logo_dark.png" media="(prefers-color-scheme: dark)">
+    <source srcset="https://raw.githubusercontent.com/daniil-shmelev/pySigLib/master/docs/_static/logo_light.png" media="(prefers-color-scheme: light)">
+    <img src="https://raw.githubusercontent.com/daniil-shmelev/pySigLib/master/docs/_static/logo_light.png" width="350" alt="Logo">
+  </picture>
 </p>
 
-[//]: # (<h1 align='center'>sigLib</h1>)
+
 <h2 align='center'>Signature Computations on CPU and GPU</h2>
 
 ## Installation

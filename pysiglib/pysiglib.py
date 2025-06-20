@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========================================================================
+"""
+Signature Computations on CPU and GPU
+"""
 
 import os
 import sys
@@ -275,9 +278,15 @@ def poly_mult(
 
     .. note::
 
-        The flag `parallel` defaults to `True`. However, if the workload is too small, it
-        may be beneficial to set this to `False` and run the computation serially,
+        The flag ``parallel`` defaults to ``True``. However, if the workload is too small, it
+        may be beneficial to set this to ``False`` and run the computation serially,
         due to parallelisation overhead.
+
+    .. note::
+
+        Ideally, any array passed to ``pysiglib.poly_mult`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.poly_mult`` will internally create a contiguous copy, which may be
+        inefficient.
 
     Example usage::
 
@@ -464,8 +473,8 @@ def signature(
         parallel : bool = True #TODO: change to n_jobs
 ) -> Union[np.ndarray, torch.tensor]:
     """
-    Computes the truncated signature of single path or a batch of paths.
-     For a single path :math:`x`, the signature is given by
+    Computes the truncated signature of single path or a batch of paths. For
+    a single path :math:`x`, the signature is given by
 
     .. math::
 
@@ -491,6 +500,13 @@ def signature(
     :type parallel: bool
     :return: Truncated signature, or a batch of truncated signatures.
     :rtype: numpy.ndarray | torch.tensor
+
+    .. note::
+
+        Ideally, any array passed to ``pysiglib.signature`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.signature`` will internally create a contiguous copy, which may be
+        inefficient.
+
     """
     check_type(horner, "horner", bool)
 
@@ -631,7 +647,7 @@ def sig_kernel(
 
     :param path1: The first underlying path or batch of paths, given as a `numpy.ndarray` or
         `torch.tensor`. For a single path, this must be of shape (length, dimension). For a
-         batch of paths, this must be of shape (batch size, length, dimension).
+        batch of paths, this must be of shape (batch size, length, dimension).
     :type path1: numpy.ndarray | torch.tensor
     :param path2: The second underlying path or batch of paths, given as a `numpy.ndarray`
         or `torch.tensor`. For a single path, this must be of shape (length, dimension).
@@ -642,6 +658,12 @@ def sig_kernel(
     :type dyadic_order: int | tuple
     :return: Single signature kernel or batch of signature kernels
     :rtype: numpy.ndarray | torch.tensor
+
+    .. note::
+
+        Ideally, any array passed to ``pysiglib.sig_kernel`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.sig_kernel`` will internally create a contiguous copy, which may be
+        inefficient.
     """
     data = SigKernelDataHandler(path1, path2, dyadic_order)
 
