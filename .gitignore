@@ -30,3 +30,4 @@
 *.so
 *.jam
 /.vs
+/tests/__pycache__

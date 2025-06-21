@@ -10,6 +10,7 @@
 <h2 align='center'>Signature Computations on CPU and GPU</h2>
 
 ![CI - Test](https://github.com/daniil-shmelev/pySigLib/actions/workflows/unit_tests.yml/badge.svg)
+[![codecov](https://codecov.io/gh/daniil-shmelev/pySigLib/graph/badge.svg?token=8W0JXOSIC7)](https://codecov.io/gh/daniil-shmelev/pySigLib)
 ![Read the Docs](https://img.shields.io/readthedocs/pySigLib)
 ![GitHub License](https://img.shields.io/github/license/daniil-shmelev/pySigLib)
 
