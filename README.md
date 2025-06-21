@@ -9,6 +9,11 @@
 
 <h2 align='center'>Signature Computations on CPU and GPU</h2>
 
+![CI - Test](https://github.com/daniil-shmelev/pySigLib/actions/workflows/unit_tests.yml/badge.svg)
+![Read the Docs](https://img.shields.io/readthedocs/pySigLib)
+![GitHub License](https://img.shields.io/github/license/daniil-shmelev/pySigLib)
+
+
 ## Installation
 
 ```
@@ -29,7 +34,7 @@ pip install pysiglib
 
 ## Documentation
 
-TBC
+Full documentation is available at [https://pysiglib.readthedocs.io](https://pysiglib.readthedocs.io)
 
 ## Examples
 
@@ -85,6 +90,7 @@ Y = np.random.uniform(size=(32, 5000, 10))
 sig = pysiglib.sig_kernel(X, Y, dyadic_order=(3, 0))
 ```
 
-## Citation
+[//]: # (## Citation)
 
-TBC
+[//]: # ()
+[//]: # (TBC)
