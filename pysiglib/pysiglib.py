@@ -75,14 +75,14 @@ else:
 # Set argtypes and restypes for all imported functions
 ######################################################
 
-cpsig.poly_length.argtypes = (c_int64, c_int64)
-cpsig.poly_length.restype = c_int64
+cpsig.sig_length.argtypes = (c_int64, c_int64)
+cpsig.sig_length.restype = c_int64
 
-cpsig.poly_mult.argtypes = (POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int64, c_int64)
-cpsig.poly_mult.restype = c_int64
+cpsig.sig_combine.argtypes = (POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int64, c_int64)
+cpsig.sig_combine.restype = c_int64
 
-cpsig.batch_poly_mult.argtypes = (POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_bool)
-cpsig.batch_poly_mult.restype = c_int64
+cpsig.batch_sig_combine.argtypes = (POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_bool)
+cpsig.batch_sig_combine.restype = c_int64
 
 cpsig.signature_int32.argtypes = (POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
 cpsig.signature_int32.restype = c_int64
@@ -144,7 +144,7 @@ CPSIG_BATCH_SIGNATURE = {
 # Python wrappers
 ######################################################
 
-def poly_length(dimension : int, degree : int) -> int:
+def sig_length(dimension : int, degree : int) -> int:
     """
     Returns the length of a truncated signature,
 
@@ -167,9 +167,9 @@ def poly_length(dimension : int, degree : int) -> int:
     check_non_neg(dimension, "dimension")
     check_non_neg(degree, "degree")
 
-    out = cpsig.poly_length(dimension, degree)
+    out = cpsig.sig_length(dimension, degree)
     if out == 0:
-        raise ValueError("Integer overflow encountered in poly_length")
+        raise ValueError("Integer overflow encountered in sig_length")
     return out
 
 class PolyDataHandler:
@@ -182,7 +182,7 @@ class PolyDataHandler:
         check_dtype_double(self.poly1, "poly1")
         check_dtype_double(self.poly2, "poly2")
 
-        self.poly_len_ = poly_length(dimension, degree)
+        self.poly_len_ = sig_length(dimension, degree)
         if self.poly1.shape[-1] != self.poly_len_:
             raise ValueError("poly1 is of incorrect length. Expected " + str(self.poly_len_) + ", got " + str(self.poly1.shape[-1]))
         if self.poly2.shape[-1] != self.poly_len_:
@@ -246,7 +246,7 @@ class PolyDataHandler:
         else:
             raise ValueError("path1, path2 must both be numpy arrays or both torch arrays")
 
-def poly_mult(
+def sig_combine(
         poly1 : Union[np.ndarray, torch.tensor],
         poly2 : Union[np.ndarray, torch.tensor],
         dimension : int,
@@ -254,7 +254,7 @@ def poly_mult(
         parallel : bool = True
 ) -> Union[np.ndarray, torch.tensor]:
     """
-    Returns the tensor product of two truncated tensor polynomials in :math:`T((\\mathbb{R}^d))`. In particular, let :math:`x_1, x_2`
+    Combines two truncated signatures of the same degree and dimension into one signature. In particular, let :math:`x_1, x_2`
     be two paths such that the first point of :math:`x_2` is the last point of :math:`x_1`. Let :math:`S(x_1), S(x_2)`
     be the truncated signatures of :math:`x_1, x_2` respectively. Then calling this function on :math:`S(x_1), S(x_2)` returns
     the truncated signature of the concatenated path,
@@ -284,8 +284,8 @@ def poly_mult(
 
     .. note::
 
-        Ideally, any array passed to ``pysiglib.poly_mult`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.poly_mult`` will internally create a contiguous copy, which may be
+        Ideally, any array passed to ``pysiglib.sig_combine`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.sig_combine`` will internally create a contiguous copy, which may be
         inefficient.
 
     Example usage::
@@ -306,7 +306,7 @@ def poly_mult(
         sig2 = pysiglib.signature(X2, degree)
 
         # The tensor product...
-        sig_mult = pysiglib.poly_mult(sig1, sig2, dimension, degree)
+        sig_mult = pysiglib.sig_combine(sig1, sig2, dimension, degree)
 
         # ... is the same as the signature of the concatenated path:
         sig = pysiglib.signature(X_concat, degree)
@@ -321,7 +321,7 @@ def poly_mult(
     data = PolyDataHandler(poly1, poly2, dimension, degree)
 
     if data.is_batch:
-        err_code = cpsig.batch_poly_mult(
+        err_code = cpsig.batch_sig_combine(
             data.poly1_ptr,
             data.poly2_ptr,
             data.out_ptr,
@@ -331,7 +331,7 @@ def poly_mult(
             parallel
         )
     else:
-        err_code = cpsig.poly_mult(
+        err_code = cpsig.sig_combine(
             data.poly1_ptr,
             data.poly2_ptr,
             data.out_ptr,
@@ -375,12 +375,12 @@ class SigDataHandler:
         _, dimension_ = self.transformed_dims()
         if self.is_batch:
             self.out = np.empty(
-                shape=(self.batch_size, poly_length(dimension_, self.degree)),
+                shape=(self.batch_size, sig_length(dimension_, self.degree)),
                 dtype=np.float64
             )
         else:
             self.out = np.empty(
-                shape=poly_length(dimension_, self.degree),
+                shape=sig_length(dimension_, self.degree),
                 dtype=np.float64
             )
         self.out_ptr = self.out.ctypes.data_as(POINTER(c_double))
@@ -392,12 +392,12 @@ class SigDataHandler:
         _, dimension_ = self.transformed_dims()
         if self.is_batch:
             self.out = torch.empty(
-                size=(self.batch_size, poly_length(dimension_, self.degree)),
+                size=(self.batch_size, sig_length(dimension_, self.degree)),
                 dtype=torch.float64
             )
         else:
             self.out = torch.empty(
-                size=(poly_length(dimension_, self.degree),),
+                size=(sig_length(dimension_, self.degree),),
                 dtype=torch.float64
             )
         self.out_ptr = cast(self.out.data_ptr(), POINTER(c_double))

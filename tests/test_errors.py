@@ -24,9 +24,9 @@ torch.manual_seed(42)
 EPSILON = 1e-10
 
 @pytest.mark.parametrize("dim, deg", [(-1, 2), (1, -2)])
-def test_poly_length_value_error(dim, deg):
+def test_sig_length_value_error(dim, deg):
     with pytest.raises(ValueError):
-        pysiglib.poly_length(dim, deg)
+        pysiglib.sig_length(dim, deg)
 
 
 @pytest.mark.parametrize("args", [

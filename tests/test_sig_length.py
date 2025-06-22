@@ -22,11 +22,11 @@ np.random.seed(42)
 torch.manual_seed(42)
 EPSILON = 1e-10
 
-def test_poly_length():
-    assert pysiglib.poly_length(0, 0) == 1
-    assert pysiglib.poly_length(0, 1) == 1
-    assert pysiglib.poly_length(1, 0) == 1
-    assert pysiglib.poly_length(9, 9) == 435848050
-    assert pysiglib.poly_length(10, 10) == 11111111111
-    assert pysiglib.poly_length(11, 11) == 313842837672
-    assert pysiglib.poly_length(400, 5) == 10265664160401
+def test_sig_length():
+    assert pysiglib.sig_length(0, 0) == 1
+    assert pysiglib.sig_length(0, 1) == 1
+    assert pysiglib.sig_length(1, 0) == 1
+    assert pysiglib.sig_length(9, 9) == 435848050
+    assert pysiglib.sig_length(10, 10) == 11111111111
+    assert pysiglib.sig_length(11, 11) == 313842837672
+    assert pysiglib.sig_length(400, 5) == 10265664160401

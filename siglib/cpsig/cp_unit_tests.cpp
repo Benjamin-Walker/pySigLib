@@ -122,22 +122,22 @@ namespace cpSigTests
     public:
         TEST_METHOD(PolyLengthTest)
         {
-            Assert::AreEqual((uint64_t)1, poly_length(0, 0));
-            Assert::AreEqual((uint64_t)1, poly_length(0, 0));
-            Assert::AreEqual((uint64_t)1, poly_length(0, 1));
-            Assert::AreEqual((uint64_t)1, poly_length(1, 0));
+            Assert::AreEqual((uint64_t)1, sig_length(0, 0));
+            Assert::AreEqual((uint64_t)1, sig_length(0, 0));
+            Assert::AreEqual((uint64_t)1, sig_length(0, 1));
+            Assert::AreEqual((uint64_t)1, sig_length(1, 0));
 
-            Assert::AreEqual((uint64_t)435848050, poly_length(9, 9));
-            Assert::AreEqual((uint64_t)11111111111, poly_length(10, 10));
-            Assert::AreEqual((uint64_t)313842837672, poly_length(11, 11));
+            Assert::AreEqual((uint64_t)435848050, sig_length(9, 9));
+            Assert::AreEqual((uint64_t)11111111111, sig_length(10, 10));
+            Assert::AreEqual((uint64_t)313842837672, sig_length(11, 11));
 
-            Assert::AreEqual((uint64_t)10265664160401, poly_length(400, 5));
+            Assert::AreEqual((uint64_t)10265664160401, sig_length(400, 5));
         }
 
         TEST_METHOD(PolyMultTestLinear)
         {
             // Test signatures of linear 2d paths
-            auto f = poly_mult;
+            auto f = sig_combine;
             std::vector<double> poly = { 1., 1., 1., 1./2, 1./2, 1./2, 1./2 };
             std::vector<double> true_res = { 1., 2., 2., 2., 2., 2., 2. };
 
@@ -147,12 +147,12 @@ namespace cpSigTests
         TEST_METHOD(PolyMultSigTest)
         {
             uint64_t dimension = 2, length = 4, degree = 5;
-            auto f = poly_mult;
+            auto f = sig_combine;
             std::vector<double> path1 = { 0., 0., 1., 0.5, 0.4, 2. };
             std::vector<double> path2 = { 0.4, 2., 6., 0.1, 2.3, 4.1 };
             std::vector<double> path = { 0., 0., 1., 0.5, 0.4, 2., 6., 0.1, 2.3, 4.1 };
 
-            uint64_t poly_len_ = poly_length(dimension, degree);
+            uint64_t poly_len_ = sig_length(dimension, degree);
 
             std::vector<double> poly1;
             poly1.resize(poly_len_);
@@ -171,7 +171,7 @@ namespace cpSigTests
         TEST_METHOD(BatchPolyMultSigTest)
         {
             uint64_t batch_size = 3, dimension = 2, length = 4, degree = 2;
-            auto f = batch_poly_mult;
+            auto f = batch_sig_combine;
             std::vector<double> path1 = { 0., 0., 0.25, 0.25, 0.5, 0.5,
                 0., 0., 0.4, 0.4, 0.6, 0.6,
                 0., 0., 1., 0.5, 4., 0. };
@@ -182,7 +182,7 @@ namespace cpSigTests
                 0., 0., 0.4, 0.4, 0.6, 0.6, 1., 1.,
                 0., 0., 1., 0.5, 4., 0., 0., 1. };
 
-            uint64_t res_len_ = poly_length(dimension, degree) * batch_size;
+            uint64_t res_len_ = sig_length(dimension, degree) * batch_size;
 
             std::vector<double> poly1;
             poly1.resize(res_len_);
@@ -204,13 +204,13 @@ namespace cpSigTests
             uint64_t batch_size = 1000, dimension = 5, degree = 5;
 
             std::vector<double> poly;
-            poly.resize(batch_size * poly_length(dimension, degree));
+            poly.resize(batch_size * sig_length(dimension, degree));
             std::fill(poly.data(), poly.data() + poly.size(), 1.);
 
             std::vector<double> out;
-            out.resize(batch_size * poly_length(dimension, degree));
+            out.resize(batch_size * sig_length(dimension, degree));
 
-            int err = batch_poly_mult(poly.data(), poly.data(), out.data(), batch_size, dimension, degree, true);
+            int err = batch_sig_combine(poly.data(), poly.data(), out.data(), batch_size, dimension, degree, true);
             Assert::IsFalse(err);
         }
     };
@@ -532,8 +532,8 @@ namespace cpSigTests
         TEST_METHOD(LinearPathTest) {
             auto f = signature_double;
             uint64_t dimension = 2, length = 3, degree = 3;
-            uint64_t level_3_start = poly_length(dimension, 2);
-            uint64_t level_4_start = poly_length(dimension, 3);
+            uint64_t level_3_start = sig_length(dimension, 2);
+            uint64_t level_4_start = sig_length(dimension, 3);
             std::vector<double> path = { 0., 0., 0.5, 0.5, 1.,1. };
             std::vector<double> true_sig;
             true_sig.resize(level_4_start);
@@ -547,8 +547,8 @@ namespace cpSigTests
         TEST_METHOD(LinearPathTest2) {
             auto f = signature_double;
             uint64_t dimension = 2, length = 4, degree = 3;
-            uint64_t level_3_start = poly_length(dimension, 2);
-            uint64_t level_4_start = poly_length(dimension, 3);
+            uint64_t level_3_start = sig_length(dimension, 2);
+            uint64_t level_4_start = sig_length(dimension, 3);
             std::vector<double> path = { 0.,0., 0.25, 0.25, 0.75, 0.75, 1.,1. };
             std::vector<double> true_sig;
             true_sig.resize(level_4_start);
@@ -634,7 +634,7 @@ namespace cpSigTests
             std::vector<double> path;
             path.resize(batch * length * dimension);
             std::vector<double> out;
-            out.resize(batch * poly_length(dimension * 2, degree));
+            out.resize(batch * sig_length(dimension * 2, degree));
             f(path.data(), out.data(), batch, dimension, length, degree, false, true, true, false);
         }
     };

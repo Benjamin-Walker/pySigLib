@@ -278,7 +278,7 @@ int main(int argc, char* argv[])
 #define CDECL_
 #endif
 
-    using poly_length_FN              = uint64_t(CDECL_*)(uint64_t, uint64_t);
+    using sig_length_FN              = uint64_t(CDECL_*)(uint64_t, uint64_t);
     using signature_double_FN         = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, bool, bool, bool);
     using signature_int32_FN          = void(CDECL_*)(int*, double*, uint64_t, uint64_t, uint64_t, bool, bool, bool);
     using batch_signature_double_FN   = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, bool, bool);
@@ -288,6 +288,7 @@ int main(int argc, char* argv[])
     using batch_sig_kernel_FN         = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
     using sig_kernel_cuda_FN          = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
     using batch_sig_kernel_cuda_FN    = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+    using batch_sig_combine_FN          = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, bool);
 
 #if defined(_WIN32)
 #define GET_FN_PTR ::GetProcAddress
@@ -298,13 +299,14 @@ int main(int argc, char* argv[])
 #define GET_FN(NAME, LIBNAME) NAME ## _FN NAME = reinterpret_cast<NAME ## _FN>(GET_FN_PTR(LIBNAME, #NAME)); \
     if (!NAME) { std::cerr << "Failed to get the address of function " #NAME "\n"; return 2; }
 
-    GET_FN(poly_length, cpsig);
+    GET_FN(sig_length, cpsig);
     GET_FN(signature_double, cpsig);
     GET_FN(signature_int32, cpsig);
     GET_FN(batch_signature_double, cpsig);
     GET_FN(batch_signature_int32, cpsig);
     GET_FN(sig_kernel, cpsig);
     GET_FN(batch_sig_kernel, cpsig);
+    GET_FN(batch_sig_combine, cpsig);
 
     GET_FN(sig_kernel_cuda, cusig);
     GET_FN(batch_sig_kernel_cuda, cusig);
@@ -319,7 +321,7 @@ int main(int argc, char* argv[])
     //std::vector<double> path1 = test_data(dimension1, length1);
 
     //std::vector<double> out1;
-    //uint64_t data_size1 = poly_length(dimension1, degree1);
+    //uint64_t data_size1 = sig_length(dimension1, degree1);
     //out1.reserve(data_size1);
 
     //for (int i = 0; i < data_size1; i++) {
@@ -340,7 +342,7 @@ int main(int argc, char* argv[])
     //std::vector<int> path2 = test_data_int(dimension2, length2);
 
     //std::vector<double> out2;
-    //uint64_t data_size2 = poly_length(dimension2, degree2);
+    //uint64_t data_size2 = sig_length(dimension2, degree2);
     //out2.reserve(data_size2);
 
     //for (int i = 0; i < data_size2; i++) {
@@ -364,7 +366,7 @@ int main(int argc, char* argv[])
 
 
     std::vector<double> result3;
-    uint64_t data_size3 = poly_length(dimension3, degree3) * batch3;
+    uint64_t data_size3 = sig_length(dimension3, degree3) * batch3;
     result3.reserve(data_size3);
 
     for (int i = 0; i < data_size3; i++) {
@@ -387,7 +389,7 @@ int main(int argc, char* argv[])
     for (uint64_t i = 0; i < sz5; ++i) data5.push_back((double)i);
 
     std::vector<double> result5;
-    uint64_t data_size5 = poly_length(dimension5, degree5) * batch5;
+    uint64_t data_size5 = sig_length(dimension5, degree5) * batch5;
 
     result5.reserve(data_size5);
 
@@ -411,7 +413,7 @@ int main(int argc, char* argv[])
     //    0, 0, 1, 2, 4, 4, 6, 8 };
 
     //std::vector<double> result4;
-    //uint64_t data_size4 = poly_length(dimension4, degree4) * 2;
+    //uint64_t data_size4 = sig_length(dimension4, degree4) * 2;
     //result4.reserve(data_size4);
 
     //for (int i = 0; i < data_size4; i++) {

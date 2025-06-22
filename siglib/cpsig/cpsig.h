@@ -37,9 +37,9 @@
 
 extern "C" {
 
-	CPSIG_API uint64_t poly_length(uint64_t dimension, uint64_t degree) noexcept;
-	CPSIG_API int poly_mult(double* poly1, double* poly2, double* out, uint64_t dimension, uint64_t degree) noexcept;
-	CPSIG_API int batch_poly_mult(double* poly1, double* poly2, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool parallel = true) noexcept;
+	CPSIG_API uint64_t sig_length(uint64_t dimension, uint64_t degree) noexcept;
+	CPSIG_API int sig_combine(double* sig1, double* sig2, double* out, uint64_t dimension, uint64_t degree) noexcept;
+	CPSIG_API int batch_sig_combine(double* sig1, double* sig2, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool parallel = true) noexcept;
 	CPSIG_API double get_path_element(double* data_ptr, int data_length, int data_dimension, int length_index, int dim_index);
 
 	CPSIG_API int signature_float(float* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, bool horner) noexcept; //bool time_aug = false, bool lead_lag = false, bool horner = true);

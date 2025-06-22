@@ -40,7 +40,7 @@ if __name__ == '__main__':
     sig = pysiglib.signature(X, degree)
 
     start = timeit.default_timer()
-    sig_combine = pysiglib.poly_mult(sig, sig, dim, degree)
+    sig_combine = pysiglib.sig_combine(sig, sig, dim, degree)
     end = timeit.default_timer()
     print(end - start)
     print(sig_combine[0][1:6])

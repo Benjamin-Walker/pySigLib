@@ -37,7 +37,7 @@ uint64_t power(uint64_t base, uint64_t exp) noexcept {
     return result;
 }
 
-extern "C" CPSIG_API uint64_t poly_length(uint64_t dimension, uint64_t degree) noexcept {
+extern "C" CPSIG_API uint64_t sig_length(uint64_t dimension, uint64_t degree) noexcept {
     if (dimension == 0UL) {
         return 1UL;
     }
@@ -54,9 +54,9 @@ extern "C" CPSIG_API uint64_t poly_length(uint64_t dimension, uint64_t degree) n
 }
 
 
-void poly_mult_(double* poly1, double* poly2, double* out, uint64_t dimension, uint64_t degree)
+void sig_combine_(double* sig1, double* sig2, double* out, uint64_t dimension, uint64_t degree)
 {
-	if (dimension == 0) { throw std::invalid_argument("poly_mult received dimension 0"); }
+	if (dimension == 0) { throw std::invalid_argument("sig_combine received dimension 0"); }
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
@@ -65,38 +65,38 @@ void poly_mult_(double* poly1, double* poly2, double* out, uint64_t dimension, u
 	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
 		level_index[i] = level_index[i - 1UL] * dimension + 1;
 
-    std::memcpy(out, poly1, sizeof(double) * level_index[degree + 1]);
+    std::memcpy(out, sig1, sizeof(double) * level_index[degree + 1]);
 
-	poly_mult_inplace_(out, poly2, dimension, degree, level_index);
+	sig_combine_inplace_(out, sig2, degree, level_index);
 }
 
-void batch_poly_mult_(double* poly1, double* poly2, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool parallel = true)
+void batch_sig_combine_(double* sig1, double* sig2, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool parallel = true)
 {
-	if (dimension == 0) { throw std::invalid_argument("poly_mult received dimension 0"); }
+	if (dimension == 0) { throw std::invalid_argument("sig_combine received dimension 0"); }
 
-	const uint64_t polylength = ::poly_length(dimension, degree);
-	double* const poly1_end = poly1 + polylength * batch_size;
+	const uint64_t siglength = ::sig_length(dimension, degree);
+	double* const sig1_end = sig1 + siglength * batch_size;
 
-	std::function<void(double*, double*, double*)> poly_mult_func;
+	std::function<void(double*, double*, double*)> sig_combine_func;
 
-	poly_mult_func = [&](double* poly1_ptr, double* poly2_ptr, double* out_ptr) {
-		poly_mult_(poly1_ptr, poly2_ptr, out_ptr, dimension, degree);
+	sig_combine_func = [&](double* sig1_ptr, double* sig2_ptr, double* out_ptr) {
+		sig_combine_(sig1_ptr, sig2_ptr, out_ptr, dimension, degree);
 		};
 
 	if (parallel) {
-		multi_threaded_batch_2(poly_mult_func, poly1, poly2, out, batch_size, polylength, polylength, polylength);
+		multi_threaded_batch_2(sig_combine_func, sig1, sig2, out, batch_size, siglength, siglength, siglength);
 	}
 	else {
-		double* poly1_ptr = poly1;
-		double* poly2_ptr = poly2;
+		double* sig1_ptr = sig1;
+		double* sig2_ptr = sig2;
 		double* out_ptr = out;
 		for (;
-			poly1_ptr < poly1_end;
-			poly1_ptr += polylength,
-			poly2_ptr += polylength,
-			out_ptr += polylength) {
+			sig1_ptr < sig1_end;
+			sig1_ptr += siglength,
+			sig2_ptr += siglength,
+			out_ptr += siglength) {
 
-			poly_mult_func(poly1_ptr, poly2_ptr, out_ptr);
+			sig_combine_func(sig1_ptr, sig2_ptr, out_ptr);
 		}
 	}
 	return;
@@ -104,11 +104,11 @@ void batch_poly_mult_(double* poly1, double* poly2, double* out, uint64_t batch_
 
 extern "C" {
 
-	CPSIG_API int poly_mult(double* poly1, double* poly2, double* out, uint64_t dimension, uint64_t degree) noexcept {
-		SAFE_CALL(poly_mult_(poly1, poly2, out, dimension, degree));
+	CPSIG_API int sig_combine(double* sig1, double* sig2, double* out, uint64_t dimension, uint64_t degree) noexcept {
+		SAFE_CALL(sig_combine_(sig1, sig2, out, dimension, degree));
 	}
 
-	CPSIG_API int batch_poly_mult(double* poly1, double* poly2, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool parallel) noexcept {
-		SAFE_CALL(batch_poly_mult_(poly1, poly2, out, batch_size, dimension, degree, parallel));
+	CPSIG_API int batch_sig_combine(double* sig1, double* sig2, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool parallel) noexcept {
+		SAFE_CALL(batch_sig_combine_(sig1, sig2, out, batch_size, dimension, degree, parallel));
 	}
 }

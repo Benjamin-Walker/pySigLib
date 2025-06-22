@@ -22,27 +22,27 @@
 // Return 0 on error (integer overflow)
 uint64_t power(uint64_t base, uint64_t exp) noexcept;
 
-FORCE_INLINE void poly_mult_inplace_(double* poly1, double* poly2, uint64_t dimension, uint64_t degree, uint64_t* level_index) {
+FORCE_INLINE void sig_combine_inplace_(double* sig1, double* sig2, uint64_t degree, uint64_t* level_index) {
 
 	for (int64_t target_level = static_cast<int64_t>(degree); target_level > 0L; --target_level) {
 		for (int64_t left_level = target_level - 1L, right_level = 1L;
 			left_level > 0L;
 			--left_level, ++right_level) {
 
-			double* result_ptr = poly1 + level_index[target_level];
-			const double* left_ptr_upper_bound = poly1 + level_index[left_level + 1];
-			for (double* left_ptr = poly1 + level_index[left_level]; left_ptr != left_ptr_upper_bound; ++left_ptr) {
-				const double* right_ptr_upper_bound = poly2 + level_index[right_level + 1];
-				for (double* right_ptr = poly2 + level_index[right_level]; right_ptr != right_ptr_upper_bound; ++right_ptr) {
+			double* result_ptr = sig1 + level_index[target_level];
+			const double* left_ptr_upper_bound = sig1 + level_index[left_level + 1];
+			for (double* left_ptr = sig1 + level_index[left_level]; left_ptr != left_ptr_upper_bound; ++left_ptr) {
+				const double* right_ptr_upper_bound = sig2 + level_index[right_level + 1];
+				for (double* right_ptr = sig2 + level_index[right_level]; right_ptr != right_ptr_upper_bound; ++right_ptr) {
 					*(result_ptr++) += (*left_ptr) * (*right_ptr);
 				}
 			}
 		}
 
 		//left_level = 0
-		double* result_ptr = poly1 + level_index[target_level];
-		const double* right_ptr_upper_bound = poly2 + level_index[target_level + 1];
-		for (double* right_ptr = poly2 + level_index[target_level]; right_ptr != right_ptr_upper_bound; ++right_ptr) {
+		double* result_ptr = sig1 + level_index[target_level];
+		const double* right_ptr_upper_bound = sig2 + level_index[target_level + 1];
+		for (double* right_ptr = sig2 + level_index[target_level]; right_ptr != right_ptr_upper_bound; ++right_ptr) {
 			*(result_ptr++) += *right_ptr;
 		}
 	}

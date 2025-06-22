@@ -75,7 +75,7 @@ void signature_naive_(Path<T>& path, double* out, uint64_t degree)
 	++prev_pt;
 	++next_pt;
 
-	auto linear_signature_uptr = std::make_unique<double[]>(::poly_length(dimension, degree));
+	auto linear_signature_uptr = std::make_unique<double[]>(::sig_length(dimension, degree));
 	double* linear_signature = linear_signature_uptr.get();
 
 	Point<T> last_pt(path.end());
@@ -84,7 +84,7 @@ void signature_naive_(Path<T>& path, double* out, uint64_t degree)
 
 		linear_signature_(prev_pt, next_pt, linear_signature, dimension, degree, level_index);
 
-		poly_mult_inplace_(out, linear_signature, dimension, degree, level_index);
+		sig_combine_inplace_(out, linear_signature, degree, level_index);
 	}
 }
 
@@ -207,7 +207,7 @@ void signature_(T* path, double* out, uint64_t dimension, uint64_t length, uint6
 
 	if (path_obj.length() <= 1) {
 		out[0] = 1.;
-		uint64_t result_length = ::poly_length(path_obj.dimension(), degree);
+		uint64_t result_length = ::sig_length(path_obj.dimension(), degree);
 		std::fill(out + 1, out + result_length, 0.);
 		return;
 	}
@@ -236,7 +236,7 @@ void batch_signature_(T* path, double* out, uint64_t batch_size, uint64_t dimens
 
 	Path<T> dummy_path_obj(nullptr, dimension, length, time_aug, lead_lag); //Work with path_obj to capture time_aug, lead_lag transformations
 
-	const uint64_t result_length = ::poly_length(dummy_path_obj.dimension(), degree);
+	const uint64_t result_length = ::sig_length(dummy_path_obj.dimension(), degree);
 
 	if (dummy_path_obj.length() <= 1) {
 		double* const out_end = out + result_length * batch_size;

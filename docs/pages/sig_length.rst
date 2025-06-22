@@ -1,4 +1,4 @@
 pysiglib.sig_length
 ========================
 
-.. autofunction:: pysiglib.poly_length
+.. autofunction:: pysiglib.sig_length
