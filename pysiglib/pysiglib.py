@@ -21,7 +21,7 @@ import sys
 import platform
 from typing import Union
 import ctypes
-from ctypes import c_float, c_double, c_int, c_int32, c_int64, c_bool, POINTER, cast
+from ctypes import c_float, c_double, c_int, c_int32, c_int64, c_uint64, c_bool, POINTER, cast
 
 import numpy as np
 import torch
@@ -75,44 +75,44 @@ else:
 # Set argtypes and restypes for all imported functions
 ######################################################
 
-cpsig.sig_length.argtypes = (c_int64, c_int64)
-cpsig.sig_length.restype = c_int64
+cpsig.sig_length.argtypes = (c_uint64, c_uint64)
+cpsig.sig_length.restype = c_uint64
 
-cpsig.sig_combine.argtypes = (POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int64, c_int64)
+cpsig.sig_combine.argtypes = (POINTER(c_double), POINTER(c_double), POINTER(c_double), c_uint64, c_uint64)
 cpsig.sig_combine.restype = c_int
 
-cpsig.batch_sig_combine.argtypes = (POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int)
+cpsig.batch_sig_combine.argtypes = (POINTER(c_double), POINTER(c_double), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_int)
 cpsig.batch_sig_combine.restype = c_int
 
-cpsig.signature_int32.argtypes = (POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
+cpsig.signature_int32.argtypes = (POINTER(c_int32), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_bool, c_bool, c_bool)
 cpsig.signature_int32.restype = c_int
 
-cpsig.signature_int64.argtypes = (POINTER(c_int64), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
+cpsig.signature_int64.argtypes = (POINTER(c_int64), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_bool, c_bool, c_bool)
 cpsig.signature_int64.restype = c_int
 
-cpsig.signature_float.argtypes = (POINTER(c_float), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
+cpsig.signature_float.argtypes = (POINTER(c_float), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_bool, c_bool, c_bool)
 cpsig.signature_float.restype = c_int
 
-cpsig.signature_double.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_bool, c_bool, c_bool)
+cpsig.signature_double.argtypes = (POINTER(c_double), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_bool, c_bool, c_bool)
 cpsig.signature_double.restype = c_int
 
-cpsig.batch_signature_int32.argtypes = (POINTER(c_int32), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_int)
+cpsig.batch_signature_int32.argtypes = (POINTER(c_int32), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_uint64, c_bool, c_bool, c_bool, c_int)
 cpsig.batch_signature_int32.restype = c_int
 
-cpsig.batch_signature_int64.argtypes = (POINTER(c_int64), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_int)
+cpsig.batch_signature_int64.argtypes = (POINTER(c_int64), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_uint64, c_bool, c_bool, c_bool, c_int)
 cpsig.batch_signature_int64.restype = c_int
 
-cpsig.batch_signature_float.argtypes = (POINTER(c_float), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_int)
+cpsig.batch_signature_float.argtypes = (POINTER(c_float), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_uint64, c_bool, c_bool, c_bool, c_int)
 cpsig.batch_signature_float.restype = c_int
 
-cpsig.batch_signature_double.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_bool, c_bool, c_bool, c_int)
+cpsig.batch_signature_double.argtypes = (POINTER(c_double), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_uint64, c_bool, c_bool, c_bool, c_int)
 cpsig.batch_signature_double.restype = c_int
 
-cpsig.batch_sig_kernel.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64, c_int)
+cpsig.batch_sig_kernel.argtypes = (POINTER(c_double), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_uint64, c_uint64, c_uint64, c_int)
 cpsig.batch_sig_kernel.restype = c_int
 
 if BUILT_WITH_CUDA:
-    cusig.batch_sig_kernel_cuda.argtypes = (POINTER(c_double), POINTER(c_double), c_int64, c_int64, c_int64, c_int64, c_int64, c_int64)
+    cusig.batch_sig_kernel_cuda.argtypes = (POINTER(c_double), POINTER(c_double), c_uint64, c_uint64, c_uint64, c_uint64, c_uint64, c_uint64)
     cusig.batch_sig_kernel_cuda.restype = c_int
 
 ######################################################
