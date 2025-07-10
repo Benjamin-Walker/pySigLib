@@ -307,6 +307,7 @@ void batch_signature_(T* path, double* out, uint64_t batch_size, uint64_t dimens
 template<typename T>
 void sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false) {
 	Path<T> path_obj(path, dimension, length, time_aug, lead_lag);
+	std::fill(out, out + path_obj.length() * path_obj.dimension(), 0.);//TODO: backprop through lead_lag??
 	const uint64_t sig_len_ = ::sig_length(dimension, degree);
 	auto sig_derivs_copy_uptr = std::make_unique<double[]>(sig_len_);
 	double* sig_derivs_copy = sig_derivs_copy_uptr.get();

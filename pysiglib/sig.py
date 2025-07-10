@@ -19,16 +19,18 @@ import numpy as np
 import torch
 
 from .load_siglib import CPSIG
-from .param_checks import check_type, check_non_neg
+from .param_checks import check_type, check_non_neg, check_cpu
 from .error_codes import err_msg
 from .dtypes import CPSIG_SIGNATURE, CPSIG_BATCH_SIGNATURE
+from .sig_length import sig_length
 
 
 ######################################################
 # Python wrappers
 ######################################################
 
-from .data_handlers import SigDataHandler, PolyDataHandler
+from .data_handlers import PathInputHandler, DoubleSigInputHandler, SigOutputHandler
+
 
 def sig_combine(
         sig1 : Union[np.ndarray, torch.tensor],
@@ -108,13 +110,18 @@ def sig_combine(
     if n_jobs == 0:
         raise ValueError("n_jobs cannot be 0")
 
-    data = PolyDataHandler(sig1, sig2, dimension, degree)
+    check_cpu(sig1, "sig1")
+    check_cpu(sig2, "sig2")
+
+    sig_len = sig_length(dimension, degree)
+    data = DoubleSigInputHandler(sig1, sig2, sig_len, "sig1", "sig2")
+    result = SigOutputHandler(data, sig_len)
 
     if data.is_batch:
         err_code = CPSIG.batch_sig_combine(
-            data.poly1_ptr,
-            data.poly2_ptr,
-            data.out_ptr,
+            data.sig1_ptr,
+            data.sig2_ptr,
+            result.data_ptr,
             data.batch_size,
             dimension,
             degree,
@@ -122,24 +129,24 @@ def sig_combine(
         )
     else:
         err_code = CPSIG.sig_combine(
-            data.poly1_ptr,
-            data.poly2_ptr,
-            data.out_ptr,
+            data.sig1_ptr,
+            data.sig2_ptr,
+            result.data_ptr,
             dimension,
             degree
         )
 
     if err_code:
         raise Exception("Error in pysiglib.signature: " + err_msg(err_code))
-    return data.out
+    return result.data
 
-def signature_(data, time_aug = False, lead_lag = False, horner = True):
+def signature_(data, result, degree, time_aug = False, lead_lag = False, horner = True):
     err_code = CPSIG_SIGNATURE[data.dtype](
         data.data_ptr,
-        data.out_ptr,
+        result.data_ptr,
         data.dimension,
         data.length,
-        data.degree,
+        degree,
         time_aug,
         lead_lag,
         horner
@@ -147,16 +154,16 @@ def signature_(data, time_aug = False, lead_lag = False, horner = True):
 
     if err_code:
         raise Exception("Error in pysiglib.signature: " + err_msg(err_code))
-    return data.out
+    return result.data
 
-def batch_signature_(data, time_aug = False, lead_lag = False, horner = True, n_jobs = 1):
+def batch_signature_(data, result, degree, time_aug = False, lead_lag = False, horner = True, n_jobs = 1):
     err_code = CPSIG_BATCH_SIGNATURE[data.dtype](
         data.data_ptr,
-        data.out_ptr,
+        result.data_ptr,
         data.batch_size,
         data.dimension,
         data.length,
-        data.degree,
+        degree,
         time_aug,
         lead_lag,
         horner,
@@ -165,7 +172,7 @@ def batch_signature_(data, time_aug = False, lead_lag = False, horner = True, n_
 
     if err_code:
         raise Exception("Error in pysiglib.signature: " + err_msg(err_code))
-    return data.out
+    return result.data
 
 def signature(
         path : Union[np.ndarray, torch.tensor],
@@ -213,12 +220,17 @@ def signature(
         inefficient.
 
     """
+    check_type(degree, "degree", int)
     check_type(horner, "horner", bool)
 
-    data = SigDataHandler(path, degree, time_aug, lead_lag)
+    check_cpu(path, "path")
+
+    data = PathInputHandler(path, time_aug, lead_lag, "path")
+    sig_len = sig_length(data.dimension, degree)
+    result = SigOutputHandler(data, sig_len)
     if data.is_batch:
         check_type(n_jobs, "n_jobs", int)
         if n_jobs == 0:
             raise ValueError("n_jobs cannot be 0")
-        return batch_signature_(data, time_aug, lead_lag, horner, n_jobs)
-    return signature_(data, time_aug, lead_lag, horner)
+        return batch_signature_(data, result, degree, time_aug, lead_lag, horner, n_jobs)
+    return signature_(data, result, degree, time_aug, lead_lag, horner)

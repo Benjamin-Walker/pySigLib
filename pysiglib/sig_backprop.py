@@ -19,9 +19,12 @@ from ctypes import c_double, POINTER
 import numpy as np
 import torch
 
+from .param_checks import check_cpu
 from .load_siglib import CPSIG
 from .error_codes import err_msg
-from .data_handlers import SigDataHandler
+from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, SigInputHandler, DoubleSigInputHandler
+from .sig_length import sig_length
+
 
 def sig_backprop(#TODO: batch
         path : Union[np.ndarray, torch.tensor],
@@ -67,23 +70,30 @@ def sig_backprop(#TODO: batch
         inefficient.#TODO
 
     """
-    data = SigDataHandler(path, degree, time_aug, lead_lag)
-    out = np.zeros(
-        shape=path.shape,
-        dtype=np.float64
-    )
+    if lead_lag or time_aug:#TODO
+        raise NotImplementedError()
+
+    check_cpu(path, "path")
+    check_cpu(sig, "sig")
+    check_cpu(sig_derivs, "sig_derivs")
+    path_data = PathInputHandler(path, time_aug, lead_lag, "path")
+    sig_len = sig_length(path_data.dimension, degree)
+    sig_data = DoubleSigInputHandler(sig, sig_derivs, sig_len, "sig", "sig_derivs")
+
+    result = PathOutputHandler(path_data)
+
     err_code = CPSIG.sig_backprop_double(
-        data.data_ptr,
-        out.ctypes.data_as(POINTER(c_double)),
-        sig_derivs.ctypes.data_as(POINTER(c_double)),
-        sig.ctypes.data_as(POINTER(c_double)),
-        data.dimension,
-        data.length,
-        data.degree,
+        path_data.data_ptr,
+        result.data_ptr,
+        sig_data.sig2_ptr,
+        sig_data.sig1_ptr,
+        path_data.dimension,
+        path_data.length,
+        degree,
         time_aug,
         lead_lag
     )
 
     if err_code:
         raise Exception("Error in pysiglib.sig_backprop: " + err_msg(err_code))
-    return out
+    return result.data

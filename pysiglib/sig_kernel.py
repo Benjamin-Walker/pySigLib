@@ -22,40 +22,41 @@ import torch
 from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
-from .data_handlers import SigKernelDataHandler
+from .data_handlers import DoublePathInputHandler, ScalarOutputHandler
 
-def sig_kernel_(data, n_jobs):
+
+def sig_kernel_(data, result, gram, dyadic_order_1, dyadic_order_2, n_jobs):
 
     err_code = CPSIG.batch_sig_kernel(
-        cast(data.gram.data_ptr(), POINTER(c_double)),
-        data.out_ptr,
+        cast(gram.data_ptr(), POINTER(c_double)),
+        result.data_ptr,
         data.batch_size,
         data.dimension,
         data.length_1,
         data.length_2,
-        data.dyadic_order_1,
-        data.dyadic_order_2,
+        dyadic_order_1,
+        dyadic_order_2,
         n_jobs
     )
 
     if err_code:
         raise Exception("Error in pysiglib.sig_kernel: " + err_msg(err_code))
-    return data.out
+    return result.data
 
-def sig_kernel_cuda_(data):
+def sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2,):
     err_code = CUSIG.batch_sig_kernel_cuda(
-        cast(data.gram.data_ptr(), POINTER(c_double)),
-        data.out_ptr, data.batch_size,
+        cast(gram.data_ptr(), POINTER(c_double)),
+        result.data_ptr, data.batch_size,
         data.dimension,
         data.length_1,
         data.length_2,
-        data.dyadic_order_1,
-        data.dyadic_order_2
+        dyadic_order_1,
+        dyadic_order_2
     )
 
     if err_code:
         raise Exception("Error in pysiglib.sig_kernel: " + err_msg(err_code))
-    return data.out
+    return result.data
 
 def sig_kernel(
         path1 : Union[np.ndarray, torch.tensor],
@@ -109,11 +110,37 @@ def sig_kernel(
     check_type(n_jobs, "n_jobs", int)
     if n_jobs == 0:
         raise ValueError("n_jobs cannot be 0")
-    data = SigKernelDataHandler(path1, path2, dyadic_order)
+
+    if isinstance(dyadic_order, tuple) and len(dyadic_order) == 2:
+        dyadic_order_1 = dyadic_order[0]
+        dyadic_order_2 = dyadic_order[1]
+    elif isinstance(dyadic_order, int):
+        dyadic_order_1 = dyadic_order
+        dyadic_order_2 = dyadic_order
+    else:
+        raise TypeError("dyadic_order must be an integer or a tuple of length 2")
+
+    if dyadic_order_1 < 0 or dyadic_order_2 < 0:
+        raise ValueError("dyadic_order must be a non-negative integer or tuple of non-negative integers")
+
+    data = DoublePathInputHandler(path1, path2, False, False, "path1", "path2")
+    result = ScalarOutputHandler(data)
+
+    torch_path1 = torch.as_tensor(data.path1)  # Avoids data copy
+    torch_path2 = torch.as_tensor(data.path2)
+
+    if data.is_batch:
+        x1 = torch_path1[:, 1:, :] - torch_path1[:, :-1, :]
+        y1 = torch_path2[:, 1:, :] - torch_path2[:, :-1, :]
+    else:
+        x1 = (torch_path1[1:, :] - torch_path1[:-1, :])[None, :, :]
+        y1 = (torch_path2[1:, :] - torch_path2[:-1, :])[None, :, :]
+
+    gram = torch.bmm(x1, y1.permute(0, 2, 1))
 
     if data.device == "cpu":
-        return sig_kernel_(data, n_jobs)
+        return sig_kernel_(data, result, gram, dyadic_order_1, dyadic_order_2, n_jobs)
 
     if not BUILT_WITH_CUDA:
         raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
-    return sig_kernel_cuda_(data)
+    return sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2,)

@@ -49,6 +49,11 @@ def check_dtype_double(arr, arr_name):
     if arr.dtype not in [np.float64, torch.float64]:
         raise TypeError(arr_name + ".dtype must be float64, got " + str(arr.dtype) + " instead")
 
+def check_cpu(arr, arr_name):
+    if isinstance(arr, torch.Tensor):
+        if not arr.device.type == "cpu":
+            raise ValueError(arr_name + " must be located on the cpu")
+
 WARNED_ONCE_ABOUT_MEMORY = False
 MEMORY_WARNING = "Detected a non-contiguous or view-based array. Such arrays will be cloned to ensure safe access. To avoid this overhead, pass arrays that are both contiguous and own their data. This warning will only appear once per session."
 
