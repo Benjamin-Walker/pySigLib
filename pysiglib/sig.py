@@ -195,7 +195,7 @@ def signature(
     :param time_aug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
         defined as the original path with an extra channel set to time, :math:`t`.
     :type time_aug: bool
-    :param lead_lag: If set to True, will compute the signatue of the path after applying the lead-lag transformation.
+    :param lead_lag: If set to True, will compute the signature of the path after applying the lead-lag transformation.
     :type lead_lag: bool
     :param horner: If True, will use Horner's algorithm for polynomial multiplication.
     :type horner: bool

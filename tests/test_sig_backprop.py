@@ -37,6 +37,6 @@ def test_sig_backprop_random(deg):
 
     sig = pysiglib.signature(X, deg)
 
-    sig_back1 = iisignature.sigbackprop(sig_derivs[1:], X, deg)
-    sig_back2 = pysiglib.sig_backprop(X, sig_derivs, sig, deg)
+    sig_back1 = pysiglib.sig_backprop(X, sig, sig_derivs, deg)
+    sig_back2 = iisignature.sigbackprop(sig_derivs[1:], X, deg)
     check_close(sig_back1, sig_back2)

@@ -31,5 +31,6 @@ pySigLib |release|
    /pages/installation
    /pages/sig_length
    /pages/signature
+   /pages/sig_backprop
    /pages/sig_combine
    /pages/sig_kernel

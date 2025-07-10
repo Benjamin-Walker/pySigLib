@@ -23,14 +23,50 @@ from .load_siglib import CPSIG
 from .error_codes import err_msg
 from .data_handlers import SigDataHandler
 
-def sig_backprop(#WARNING: sig_derivs and sig are non-const here #TODO: fix
+def sig_backprop(#TODO: batch
         path : Union[np.ndarray, torch.tensor],
-        sig_derivs : Union[np.ndarray, torch.tensor],
         sig : Union[np.ndarray, torch.tensor],
+        sig_derivs : Union[np.ndarray, torch.tensor],
         degree : int,
         time_aug : bool = False,
-        lead_lag : bool = False
+        lead_lag : bool = False#TODO: n_jobs
 ) -> Union[np.ndarray, torch.tensor]:
+    """
+    This function is required to backpropogate through the signature computation.
+    Given the derivatives of a scalar function :math:`F` with respect to the
+    signature, :math:`\\partial F / \\partial S(x)`, returns the
+    derivatives of :math:`F` with respect to the underlying path,
+    :math:`\\partial F / \\partial x`.
+
+    :param path: The underlying path or batch of paths, given as a `numpy.ndarray` or `torch.tensor`.
+        For a single path, this must be of shape (length, dimension). For a batch of paths, this must
+        be of shape (batch size, length, dimension).
+    :type path: numpy.ndarray | torch.tensor
+    :param sig: Signature(s) of the path or batch of paths.
+    :type sig: numpy.ndarray | torch.tensor
+    :param sig_derivs: Derivatives of the scalar function :math:`F` with respect to the signature(s),
+        :math:`\\partial F / \\partial S(x)`. This must be an array of the same shape as the
+        provided signature(s).
+    :type sig_derivs: numpy.ndarray | torch.tensor
+    :param degree: The truncation level of the signature, :math:`N`.
+    :type degree: int
+    :param time_aug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
+        defined as the original path with an extra channel set to time, :math:`t`.
+    :type time_aug: bool
+    :param lead_lag: If set to True, will compute the signature of the path after applying the lead-lag transformation.
+    :type lead_lag: bool
+    :return: Derivatives of the scalar function :math:`F` with respect to the path(s), :math:`\\partial F / \\partial x`.
+        This is an array of the same shape as the provided path(s).
+    :rtype: numpy.ndarray | torch.tensor
+
+
+    .. note::
+
+        Ideally, any array passed to ``pysiglib.sig_backprop`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.sig_backprop`` will internally create a contiguous copy, which may be
+        inefficient.#TODO
+
+    """
     data = SigDataHandler(path, degree, time_aug, lead_lag)
     out = np.zeros(
         shape=path.shape,

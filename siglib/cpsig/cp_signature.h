@@ -307,20 +307,22 @@ void batch_signature_(T* path, double* out, uint64_t batch_size, uint64_t dimens
 template<typename T>
 void sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false) {
 	Path<T> path_obj(path, dimension, length, time_aug, lead_lag);
-	sig_backprop__(path_obj, out, sig_derivs, sig, degree);
+	const uint64_t sig_len_ = ::sig_length(dimension, degree);
+	auto sig_derivs_copy_uptr = std::make_unique<double[]>(sig_len_);
+	double* sig_derivs_copy = sig_derivs_copy_uptr.get();
+	std::memcpy(sig_derivs_copy, sig_derivs, sig_len_ * sizeof(double));
+	sig_backprop_inplace_(path_obj, out, sig_derivs_copy, sig, degree, sig_len_);
 }
 
 template<typename T>
-void sig_backprop__(Path<T>& path, double* out, double* sig_derivs, double* sig, uint64_t degree) {
+void sig_backprop_inplace_(Path<T>& path, double* out, double* sig_derivs, double* sig, uint64_t degree, uint64_t sig_len) {
 
 	const uint64_t dimension = path.dimension();
 
-	const uint64_t sig_len_ = ::sig_length(dimension, degree);
-
-	auto local_derivs_uptr = std::make_unique<double[]>(sig_len_);
+	auto local_derivs_uptr = std::make_unique<double[]>(sig_len);
 	double* local_derivs = local_derivs_uptr.get();
 
-	auto linear_signature_uptr = std::make_unique<double[]>(sig_len_);
+	auto linear_signature_uptr = std::make_unique<double[]>(sig_len);
 	double* linear_signature = linear_signature_uptr.get();
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);

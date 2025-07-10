@@ -55,3 +55,17 @@ CPSIG_BATCH_SIGNATURE = {
     "float32": CPSIG.batch_signature_float,
     "float64": CPSIG.batch_signature_double
 }
+
+CPSIG_SIG_BACKPROP = {
+    "int32": CPSIG.sig_backprop_int32,
+    "int64": CPSIG.sig_backprop_int64,
+    "float32": CPSIG.sig_backprop_float,
+    "float64": CPSIG.sig_backprop_double
+}
+
+# CPSIG_BATCH_SIG_BACKPROP = {
+#     "int32": CPSIG.batch_sig_backprop_int32,
+#     "int64": CPSIG.batch_sig_backprop_int64,
+#     "float32": CPSIG.batch_sig_backprop_float,
+#     "float64": CPSIG.batch_sig_backprop_double
+# }
