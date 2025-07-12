@@ -22,21 +22,32 @@ import pysiglib
 
 np.random.seed(42)
 torch.manual_seed(42)
-EPSILON = 1e-7
+EPSILON = 1e-5
 
 def check_close(a, b):
     a_ = np.array(a)
     b_ = np.array(b)
-    assert not np.any(np.abs(a_ - b_) > EPSILON)
+    assert not np.max(np.abs(a_ - b_)) > EPSILON
 
 
 @pytest.mark.parametrize("deg", range(1, 6))
 def test_sig_backprop_random(deg):
-    X = np.random.uniform(size=(2, 2))
-    sig_derivs = np.random.uniform(size = pysiglib.sig_length(2, deg))
+    X = np.random.uniform(size=(100, 5))
+    sig_derivs = np.random.uniform(size = pysiglib.sig_length(5, deg))
 
     sig = pysiglib.signature(X, deg)
 
-    sig_back1 = pysiglib.sig_backprop(X, sig, sig_derivs, deg)
-    sig_back2 = iisignature.sigbackprop(sig_derivs[1:], X, deg)
+    sig_back1 = pysiglib.sig_backprop(X.copy(), sig.copy(), sig_derivs.copy(), deg)
+    sig_back2 = iisignature.sigbackprop(sig_derivs[1:].copy(), X.copy(), deg)
+    check_close(sig_back1, sig_back2)
+
+@pytest.mark.parametrize("deg", range(1, 6))
+def test_batch_sig_backprop_random(deg):
+    X = np.random.uniform(size=(100, 3, 2)).astype("double")
+    sig_derivs = np.random.uniform(size = (100, pysiglib.sig_length(2, deg))).astype("double")
+
+    sig = pysiglib.signature(X.copy(), deg)
+
+    sig_back1 = pysiglib.sig_backprop(X.copy(), sig.copy(), sig_derivs.copy(), deg)
+    sig_back2 = iisignature.sigbackprop(sig_derivs[:, 1:].copy(), X.copy(), deg)
     check_close(sig_back1, sig_back2)

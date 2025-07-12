@@ -85,4 +85,20 @@ extern "C" {
 		SAFE_CALL(sig_backprop_<int64_t>(path, out, sig_derivs, sig, dimension, length, degree, time_aug, lead_lag));
 	}
 
+	CPSIG_API int batch_sig_backprop_float(float* path, double* out, double* sig_derivs, double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, int n_jobs) noexcept {
+		SAFE_CALL(batch_sig_backprop_<float>(path, out, sig_derivs, sig, batch_size, dimension, length, degree, time_aug, lead_lag, n_jobs));
+	}
+
+	CPSIG_API int batch_sig_backprop_double(double* path, double* out, double* sig_derivs, double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, int n_jobs) noexcept {
+		SAFE_CALL(batch_sig_backprop_<double>(path, out, sig_derivs, sig, batch_size, dimension, length, degree, time_aug, lead_lag, n_jobs));
+	}
+
+	CPSIG_API int batch_sig_backprop_int32(int32_t* path, double* out, double* sig_derivs, double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, int n_jobs) noexcept {
+		SAFE_CALL(batch_sig_backprop_<int32_t>(path, out, sig_derivs, sig, batch_size, dimension, length, degree, time_aug, lead_lag, n_jobs));
+	}
+
+	CPSIG_API int batch_sig_backprop_int64(int64_t* path, double* out, double* sig_derivs, double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, int n_jobs) noexcept {
+		SAFE_CALL(batch_sig_backprop_<int64_t>(path, out, sig_derivs, sig, batch_size, dimension, length, degree, time_aug, lead_lag, n_jobs));
+	}
+
 }

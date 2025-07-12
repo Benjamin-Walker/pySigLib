@@ -670,6 +670,37 @@ namespace cpSigTests
             std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1. / 48, 1. / 24, 1. / 24, 1. / 12, 1. / 24, 1. / 12, 1. / 12, 1. / 6 };
             check_result(f, path, true_, deriv.data(), sig.data(), dimension, length, degree, false, false);
         }
+
+        TEST_METHOD(ManualTestAsBatch) {
+            auto f = batch_sig_backprop_double;
+            uint64_t dimension = 2, length = 3, degree = 2;
+            std::vector<double> path = { 0., 0., 1.,2., 0.5, 1. };
+            std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6. };
+            std::vector<double> true_ = { -7.5, -10., -0.5, 0.25, 8., 9.75 };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5 };
+            check_result(f, path, true_, deriv.data(), sig.data(), 1, dimension, length, degree, false, false, 1);
+        }
+
+        TEST_METHOD(ManualTest2AsBatch) {
+            auto f = batch_sig_backprop_double;
+            uint64_t dimension = 2, length = 3, degree = 3;
+            std::vector<double> path = { 0., 0., 1.,2., 0.5, 1. };
+            std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14. };
+            std::vector<double> true_ = { -19.625, -23.625, -1.25, 0.625, 20.875, 23. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1. / 48, 1. / 24, 1. / 24, 1. / 12, 1. / 24, 1. / 12, 1. / 12, 1. / 6 };
+            check_result(f, path, true_, deriv.data(), sig.data(), 1, dimension, length, degree, false, false, 1);
+        }
+
+        TEST_METHOD(ManualBatchTest) {
+            auto f = batch_sig_backprop_double;
+            uint64_t dimension = 2, length = 3, degree = 3, batch_size = 3;
+            std::vector<double> path = { 0., 0., 1., 2., 0.5, 1., 0., 0., 3., 2., 5., 2., 0., 0., -1., 2., 0.5, -1. };
+            std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 1., 1., -2., 3., -4., 5., -6., 7., -8., 9., -10., 11., -12., 13., -14., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1. };
+            std::vector<double> true_ = { -19.625, -23.625, -1.25, 0.625, 20.875, 23., -162.5, -103.5, -81.0, 245.5, 243.5, -142.0, -0.625, -0.625, 0., 0., 0.625, 0.625 };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1./48, 1./24, 1./24, 1./12, 1./24, 1./12, 1./12, 1./6, 1., 5., 2., 12.5, 3., 7., 2., 20. + 5./6, 3., 9., 2., 13., 2., 6., 1. + 1./3, 1., 0.5, -1., 0.125, -0.25, -0.25, 0.5, 1./48, -1./24, -1./24,  1./12, -1./24, 1./48, 1./48, -1./6 };
+            check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, false, false, 1);
+            check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, false, false, -1);
+        }
     };
 
     TEST_CLASS(sigKernelTest) {

@@ -67,11 +67,19 @@ else:
 # Set argtypes and restypes for all imported functions
 ######################################################
 
+######################################################
+# sig_length
+######################################################
+
 CPSIG.sig_length.argtypes = (
     c_uint64,
     c_uint64
 )
 CPSIG.sig_length.restype = c_uint64
+
+######################################################
+# sig_combine
+######################################################
 
 CPSIG.sig_combine.argtypes = (
     POINTER(c_double),
@@ -81,6 +89,10 @@ CPSIG.sig_combine.argtypes = (
     c_uint64
 )
 CPSIG.sig_combine.restype = c_int
+
+######################################################
+# batch_sig_combine
+######################################################
 
 CPSIG.batch_sig_combine.argtypes = (
     POINTER(c_double),
@@ -92,6 +104,10 @@ CPSIG.batch_sig_combine.argtypes = (
     c_int
 )
 CPSIG.batch_sig_combine.restype = c_int
+
+######################################################
+# signature
+######################################################
 
 CPSIG.signature_int32.argtypes = (
     POINTER(c_int32),
@@ -141,6 +157,10 @@ CPSIG.signature_double.argtypes = (
 )
 CPSIG.signature_double.restype = c_int
 
+######################################################
+# sig_backprop
+######################################################
+
 CPSIG.sig_backprop_float.argtypes = (
     POINTER(c_float),
     POINTER(c_double),
@@ -152,7 +172,7 @@ CPSIG.sig_backprop_float.argtypes = (
     c_bool,
     c_bool
 )
-CPSIG.batch_signature_double.restype = c_int
+CPSIG.sig_backprop_float.restype = c_int
 
 CPSIG.sig_backprop_double.argtypes = (
     POINTER(c_double),
@@ -165,7 +185,7 @@ CPSIG.sig_backprop_double.argtypes = (
     c_bool,
     c_bool
 )
-CPSIG.batch_signature_double.restype = c_int
+CPSIG.sig_backprop_double.restype = c_int
 
 CPSIG.sig_backprop_int32.argtypes = (
     POINTER(c_int32),
@@ -178,7 +198,7 @@ CPSIG.sig_backprop_int32.argtypes = (
     c_bool,
     c_bool
 )
-CPSIG.batch_signature_double.restype = c_int
+CPSIG.sig_backprop_int32.restype = c_int
 
 CPSIG.sig_backprop_int64.argtypes = (
     POINTER(c_int64),
@@ -191,7 +211,11 @@ CPSIG.sig_backprop_int64.argtypes = (
     c_bool,
     c_bool
 )
-CPSIG.batch_signature_double.restype = c_int
+CPSIG.sig_backprop_int64.restype = c_int
+
+######################################################
+# batch_signature
+######################################################
 
 CPSIG.batch_signature_int32.argtypes = (
     POINTER(c_int32),
@@ -248,6 +272,74 @@ CPSIG.batch_signature_double.argtypes = (
     c_int
 )
 CPSIG.batch_signature_double.restype = c_int
+
+######################################################
+# batch_sig_backprop
+######################################################
+
+CPSIG.batch_sig_backprop_float.argtypes = (
+    POINTER(c_float),
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_bool,
+    c_bool,
+    c_int
+)
+CPSIG.batch_sig_backprop_float.restype = c_int
+
+CPSIG.batch_sig_backprop_double.argtypes = (
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_bool,
+    c_bool,
+    c_int
+)
+CPSIG.batch_sig_backprop_double.restype = c_int
+
+CPSIG.batch_sig_backprop_int32.argtypes = (
+    POINTER(c_int32),
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_bool,
+    c_bool,
+    c_int
+)
+CPSIG.batch_sig_backprop_int32.restype = c_int
+
+CPSIG.batch_sig_backprop_int64.argtypes = (
+    POINTER(c_int64),
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_bool,
+    c_bool,
+    c_int
+)
+CPSIG.batch_sig_backprop_int64.restype = c_int
+
+######################################################
+# batch_sig_kernel
+######################################################
 
 CPSIG.batch_sig_kernel.argtypes = (
     POINTER(c_double),

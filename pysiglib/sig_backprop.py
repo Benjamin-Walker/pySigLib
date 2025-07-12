@@ -19,20 +19,57 @@ from ctypes import c_double, POINTER
 import numpy as np
 import torch
 
-from .param_checks import check_cpu
+from .param_checks import check_cpu, check_type
 from .load_siglib import CPSIG
 from .error_codes import err_msg
 from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, SigInputHandler, DoubleSigInputHandler
+from .dtypes import CPSIG_SIG_BACKPROP, CPSIG_BATCH_SIG_BACKPROP
 from .sig_length import sig_length
 
+def sig_backprop_(path_data, sig_data, result, degree, time_aug, lead_lag):
+    err_code = CPSIG_SIG_BACKPROP[path_data.dtype](
+        path_data.data_ptr,
+        result.data_ptr,
+        sig_data.sig2_ptr,
+        sig_data.sig1_ptr,
+        path_data.dimension,
+        path_data.length,
+        degree,
+        time_aug,
+        lead_lag
+    )
 
-def sig_backprop(#TODO: batch
+    if err_code:
+        raise Exception("Error in pysiglib.sig_backprop: " + err_msg(err_code))
+    return result.data
+
+def batch_sig_backprop_(path_data, sig_data, result, degree, time_aug, lead_lag, n_jobs):
+    err_code = CPSIG_BATCH_SIG_BACKPROP[path_data.dtype](
+        path_data.data_ptr,
+        result.data_ptr,
+        sig_data.sig2_ptr,
+        sig_data.sig1_ptr,
+        path_data.batch_size,
+        path_data.dimension,
+        path_data.length,
+        degree,
+        time_aug,
+        lead_lag,
+        n_jobs
+    )
+
+    if err_code:
+        raise Exception("Error in pysiglib.sig_backprop: " + err_msg(err_code))
+    return result.data
+
+def sig_backprop(
         path : Union[np.ndarray, torch.tensor],
         sig : Union[np.ndarray, torch.tensor],
         sig_derivs : Union[np.ndarray, torch.tensor],
         degree : int,
         time_aug : bool = False,
-        lead_lag : bool = False#TODO: n_jobs
+        lead_lag : bool = False,
+        n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     """
     This function is required to backpropogate through the signature computation.
@@ -79,21 +116,14 @@ def sig_backprop(#TODO: batch
     path_data = PathInputHandler(path, time_aug, lead_lag, "path")
     sig_len = sig_length(path_data.dimension, degree)
     sig_data = DoubleSigInputHandler(sig, sig_derivs, sig_len, "sig", "sig_derivs")
-
     result = PathOutputHandler(path_data)
 
-    err_code = CPSIG.sig_backprop_double(
-        path_data.data_ptr,
-        result.data_ptr,
-        sig_data.sig2_ptr,
-        sig_data.sig1_ptr,
-        path_data.dimension,
-        path_data.length,
-        degree,
-        time_aug,
-        lead_lag
-    )
+    if path_data.is_batch != sig_data.is_batch or path_data.batch_size != sig_data.batch_size:
+        raise ValueError("path, sig and sig_derivs must have the same batch sizes")
 
-    if err_code:
-        raise Exception("Error in pysiglib.sig_backprop: " + err_msg(err_code))
-    return result.data
+    if path_data.is_batch:
+        check_type(n_jobs, "n_jobs", int)
+        if n_jobs == 0:
+            raise ValueError("n_jobs cannot be 0")
+        return batch_sig_backprop_(path_data, sig_data, result, degree, time_aug, lead_lag, n_jobs)
+    return sig_backprop_(path_data, sig_data, result, degree, time_aug, lead_lag)

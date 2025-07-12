@@ -252,12 +252,39 @@ class PathOutputHandler:
     Handle output which is (shaped like) a path or a batch of paths
     """
     def __init__(self, data):
-        if data.type_ == "numpy":
+
+        self.length = data.length
+        self.dimension = data.dimension
+        self.batch_size = data.batch_size
+        self.is_batch = data.is_batch
+        self.type_ = data.type_
+
+        if self.type_ == "numpy":
             self.device = "cpu"
-            self.data = np.empty(shape=(data.length, data.dimension), dtype=np.float64)
+            if self.is_batch:
+                self.data = np.empty(
+                    shape=(self.batch_size, self.length, self.dimension),
+                    dtype=np.float64
+                )
+            else:
+                self.data = np.empty(
+                    shape=(self.length, self.dimension),
+                    dtype=np.float64
+                )
             self.data_ptr = self.data.ctypes.data_as(POINTER(c_double))
 
         else:
             self.device = data.path1.device.type
-            self.data = torch.empty((data.length, data.dimension), dtype=torch.float64, device = self.device)
+            if self.is_batch:
+                self.data = torch.empty(
+                    size=(self.batch_size, self.length, self.dimension),
+                    dtype=torch.float64,
+                    device = self.device
+                )
+            else:
+                self.data = torch.empty(
+                    size=(self.length, self.dimension),
+                    dtype=torch.float64,
+                    device = self.device
+                )
             self.data_ptr = cast(self.data.data_ptr(), POINTER(c_double))

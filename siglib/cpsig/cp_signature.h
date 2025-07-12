@@ -306,13 +306,95 @@ void batch_signature_(T* path, double* out, uint64_t batch_size, uint64_t dimens
 
 template<typename T>
 void sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false) {
+	
+	if (dimension == 0) { throw std::invalid_argument("sig_backprop received path of dimension 0"); }
+
 	Path<T> path_obj(path, dimension, length, time_aug, lead_lag);
+
+	if (path_obj.length() <= 1 || degree == 0) {
+		uint64_t result_length = dimension * length;
+		std::fill(out, out + result_length, 0.);
+		return;
+	}
+
 	std::fill(out, out + path_obj.length() * path_obj.dimension(), 0.);//TODO: backprop through lead_lag??
 	const uint64_t sig_len_ = ::sig_length(dimension, degree);
+
 	auto sig_derivs_copy_uptr = std::make_unique<double[]>(sig_len_);
 	double* sig_derivs_copy = sig_derivs_copy_uptr.get();
 	std::memcpy(sig_derivs_copy, sig_derivs, sig_len_ * sizeof(double));
-	sig_backprop_inplace_(path_obj, out, sig_derivs_copy, sig, degree, sig_len_);
+	
+	auto sig_copy_uptr = std::make_unique<double[]>(sig_len_);
+	double* sig_copy = sig_copy_uptr.get();
+	std::memcpy(sig_copy, sig, sig_len_ * sizeof(double));
+
+	sig_backprop_inplace_(path_obj, out, sig_derivs_copy, sig_copy, degree, sig_len_);
+}
+
+template<typename T>
+void batch_sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, int n_jobs = 1)
+{
+	std::fill(out, out + length * dimension * batch_size, 0.);
+	//Deal with trivial cases
+	if (dimension == 0) { throw std::invalid_argument("sig_backprop received path of dimension 0"); }
+
+	Path<T> dummy_path_obj(nullptr, dimension, length, time_aug, lead_lag); //Work with path_obj to capture time_aug, lead_lag transformations
+
+	const uint64_t flat_path_length = dimension * length;
+	const uint64_t sig_len_ = ::sig_length(dimension, degree);
+
+	if (dummy_path_obj.length() <= 1 || degree == 0) {
+		double* const out_end = out + flat_path_length * batch_size;
+		std::fill(out, out_end, 0.);
+		return;
+	}
+
+	//General case
+	T* const data_end = path + flat_path_length * batch_size;
+
+	auto sig_derivs_copy_uptr = std::make_unique<double[]>(sig_len_ * batch_size);
+	double* sig_derivs_copy = sig_derivs_copy_uptr.get();
+	std::memcpy(sig_derivs_copy, sig_derivs, sig_len_ * batch_size * sizeof(double));
+
+	auto sig_copy_uptr = std::make_unique<double[]>(sig_len_ * batch_size);
+	double* sig_copy = sig_copy_uptr.get();
+	std::memcpy(sig_copy, sig, sig_len_ * batch_size * sizeof(double));
+
+	std::function<void(T*, double*, double*, double*)> sig_backprop_func;
+
+	sig_backprop_func = [&](T* path_ptr, double* sig_derivs_ptr, double* sig_ptr, double* out_ptr) {
+		Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag);
+		sig_backprop_inplace_<T>(path_obj, out_ptr, sig_derivs_ptr, sig_ptr, degree, sig_len_);
+	};
+
+	T* path_ptr;
+	double* sig_derivs_ptr, * sig_ptr;
+	double* out_ptr;
+
+	if (n_jobs != 1) {
+		multi_threaded_batch_3(
+			sig_backprop_func,
+			path,
+			sig_derivs_copy,
+			sig_copy,
+			out, 
+			batch_size,
+			flat_path_length,
+			sig_len_,
+			sig_len_,
+			flat_path_length,
+			n_jobs
+		);
+	}
+	else {
+		for (path_ptr = path, sig_derivs_ptr = sig_derivs_copy, sig_ptr = sig_copy, out_ptr = out;
+			path_ptr < data_end;
+			path_ptr += flat_path_length, sig_derivs_ptr += sig_len_, sig_ptr += sig_len_, out_ptr += flat_path_length) {
+
+			sig_backprop_func(path_ptr, sig_derivs_ptr, sig_ptr, out_ptr);
+		}
+	}
+	return;
 }
 
 template<typename T>
