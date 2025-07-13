@@ -102,7 +102,7 @@ FORCE_INLINE void sig_uncombine_linear_inplace_(double* sig1, double* sig2, uint
 }
 
 FORCE_INLINE void uncombine_sig_deriv(double* sig1, double* sig2, double* sig_concat_deriv, double* sig2_deriv, uint64_t dimension, uint64_t degree, uint64_t* level_index) {
-	//sig1, sig2 are the signatures of two linear segments, and sig_concat is
+	//sig1, sig2 are two signatures, and sig_concat is
 	//the signature of the concatenated paths, sig1 * sig2.
 	//sig_concat_deriv is dF/d(sig_concat)
 	//This function computes dF/d(sig1) and dF/d(sig2) and writes these

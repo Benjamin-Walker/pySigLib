@@ -71,7 +71,7 @@ def timeiisig(batch_size, length, dimension, degree, device, N):
         best_time = min(best_time, time_)
     return best_time
 
-def timepysiglib(batch_size, length, dimension, degree, horner, parallel, device, N):
+def timepysiglib(batch_size, length, dimension, degree, horner, n_jobs, device, N):
     X = np.random.uniform(size=(batch_size, length, dimension)).astype("double")
     X = torch.tensor(X, device=device)
 
@@ -202,6 +202,23 @@ def timeiisig_sig_backprop(batch_size, length, dimension, degree, n_jobs, device
         torch.cuda.empty_cache()
         start = timeit.default_timer()
         iisignature.sigbackprop(sig_derivs, X, degree)
+        end = timeit.default_timer()
+        time_ = end - start
+        best_time = min(best_time, time_)
+    return best_time
+
+def timesignatory_sig_backprop(batch_size, length, dimension, degree, n_jobs, device, N):
+    X = np.random.uniform(size=(batch_size, length, dimension)).astype("double")
+    X = torch.tensor(X, device=device, requires_grad=True)
+    sig_derivs = np.random.uniform(size=(batch_size,pysiglib.sig_length(dimension, degree) - 1))
+    sig_derivs = torch.tensor(sig_derivs)
+
+    best_time = float('inf')
+    for _ in range(N):
+        torch.cuda.empty_cache()
+        sig = signatory.signature(X, degree)
+        start = timeit.default_timer()
+        sig.backward(sig_derivs)
         end = timeit.default_timer()
         time_ = end - start
         best_time = min(best_time, time_)

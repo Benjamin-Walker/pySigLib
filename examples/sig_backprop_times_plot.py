@@ -15,7 +15,7 @@
 
 from tqdm import tqdm
 
-from timing_utils import plot_times, timepysiglib_sig_backprop, timeiisig_sig_backprop
+from timing_utils import plot_times, timepysiglib_sig_backprop, timeiisig_sig_backprop, timesignatory_sig_backprop
 
 import plotting_params
 plotting_params.set_plotting_params(8, 10, 12)
@@ -33,23 +33,26 @@ if __name__ == '__main__':
     N = 5
     device = "cpu"
 
-    degree_arr = list(range(1, 6))
+    degree_arr = list(range(1, 8))
     iisigtime = []
     pysiglibtime = []
+    signatorytime = []
 
     for degree in tqdm(degree_arr):
         iisigtime.append(timeiisig_sig_backprop(batch_size, length, dimension, degree, 1,device, N))
-        pysiglibtime.append(timepysiglib_sig_backprop(batch_size, length, dimension, degree, 1, device, N))
+        pysiglibtime.append(timepysiglib_sig_backprop(batch_size, length, dimension, degree, -1, device, N))
+        signatorytime.append(timesignatory_sig_backprop(batch_size, length, dimension, degree, 1, device, N))
 
     print(iisigtime)
     print(pysiglibtime)
+    print(signatorytime)
 
     for scale in ["linear", "log"]:
         plot_times(
             x= degree_arr,
-            ys= [iisigtime, pysiglibtime],
-            legend = ["iisignature (Direct)", "pySigLib (Direct)", "pySigLib (Horner)"],
-            title = "Truncated Signatures (Serial)",
+            ys= [iisigtime, signatorytime, pysiglibtime],
+            legend = ["iisignature", "signatory", "pySigLib"],
+            title = "Sig Backprop",
             xlabel = "Truncation Level",
             ylabel = "Elapsed Time (s)",
             scale = scale,

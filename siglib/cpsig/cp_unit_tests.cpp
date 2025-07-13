@@ -29,7 +29,7 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-double dot_product(double* a, double* b, int n) {
+double dot_product(double* a, double* b, uint64_t n) {
     double res = 0;
     for (int i = 0; i < n; ++i) {
         res += *(a + i) * *(b + i);

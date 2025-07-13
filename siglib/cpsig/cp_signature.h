@@ -198,6 +198,8 @@ void signature_horner_(Path<T>& path, double* out, uint64_t degree)
 	}
 }
 
+void signature_horner_step_(double* sig, double* increments, uint64_t dimension, uint64_t degree, uint64_t* level_index, double* horner_step);
+
 template<typename T>
 void signature_(T* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, bool horner = true)
 {
@@ -327,7 +329,6 @@ void sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, uint64
 	auto sig_copy_uptr = std::make_unique<double[]>(sig_len_);
 	double* sig_copy = sig_copy_uptr.get();
 	std::memcpy(sig_copy, sig, sig_len_ * sizeof(double));
-
 	sig_backprop_inplace_(path_obj, out, sig_derivs_copy, sig_copy, degree, sig_len_);
 }
 
@@ -408,12 +409,18 @@ void sig_backprop_inplace_(Path<T>& path, double* out, double* sig_derivs, doubl
 	auto linear_signature_uptr = std::make_unique<double[]>(sig_len);
 	double* linear_signature = linear_signature_uptr.get();
 
+	auto increments_uptr = std::make_unique<double[]>(dimension);
+	double* increments = increments_uptr.get();
+
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
 
 	level_index[0] = 0UL;
 	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
 		level_index[i] = level_index[i - 1UL] * dimension + 1UL;
+
+	auto horner_step_uptr = std::make_unique<double[]>(level_index[degree + 1UL] - level_index[degree]);
+	double* horner_step = horner_step_uptr.get();
 
 	Point<T> prev_pt(path.end());
 	Point<T> next_pt(path.end());
@@ -424,11 +431,16 @@ void sig_backprop_inplace_(Path<T>& path, double* out, double* sig_derivs, doubl
 	Point<T> first_pt(path.begin());
 
 	for (double* pos = out + (path.length() - 1) * dimension; next_pt != first_pt; --prev_pt, --next_pt, pos -= dimension) {
+
+		for (uint64_t i = 0UL; i < dimension; ++i)
+			increments[i] = static_cast<double>(prev_pt[i] - next_pt[i]);
+
 		linear_signature_(prev_pt, next_pt, linear_signature, dimension, degree, level_index);
-		sig_uncombine_linear_inplace_(sig, linear_signature, degree, level_index);
+		//sig_uncombine_linear_inplace_(sig, linear_signature, degree, level_index);
+		signature_horner_step_(sig, increments, dimension, degree, level_index, horner_step); //Uncombine linear sig using horner
 		uncombine_sig_deriv(sig, linear_signature, sig_derivs, local_derivs, dimension, degree, level_index);
 		linear_sig_deriv_to_increment_deriv(linear_signature, local_derivs, dimension, degree, level_index);
-		
+
 		//double* pos = out + i * dimension;
 		double* neg = pos - dimension;
 		double* s = local_derivs + 1;
