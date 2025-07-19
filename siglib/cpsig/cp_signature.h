@@ -319,8 +319,8 @@ void sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, uint64
 		return;
 	}
 
-	std::fill(out, out + path_obj.length() * path_obj.dimension(), 0.);//TODO: backprop through lead_lag??
-	const uint64_t sig_len_ = ::sig_length(dimension, degree);
+	std::fill(out, out + length * dimension, 0.);//TODO: backprop through lead_lag??
+	const uint64_t sig_len_ = ::sig_length(path_obj.dimension(), degree);
 
 	auto sig_derivs_copy_uptr = std::make_unique<double[]>(sig_len_);
 	double* sig_derivs_copy = sig_derivs_copy_uptr.get();
@@ -342,7 +342,7 @@ void batch_sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, 
 	Path<T> dummy_path_obj(nullptr, dimension, length, time_aug, lead_lag); //Work with path_obj to capture time_aug, lead_lag transformations
 
 	const uint64_t flat_path_length = dimension * length;
-	const uint64_t sig_len_ = ::sig_length(dimension, degree);
+	const uint64_t sig_len_ = ::sig_length(dummy_path_obj.dimension(), degree);
 
 	if (dummy_path_obj.length() <= 1 || degree == 0) {
 		double* const out_end = out + flat_path_length * batch_size;
@@ -401,6 +401,7 @@ void batch_sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, 
 template<typename T>
 void sig_backprop_inplace_(Path<T>& path, double* out, double* sig_derivs, double* sig, uint64_t degree, uint64_t sig_len) {
 
+	const uint64_t data_dimension = path.data_dimension();
 	const uint64_t dimension = path.dimension();
 
 	auto local_derivs_uptr = std::make_unique<double[]>(sig_len);
@@ -430,7 +431,7 @@ void sig_backprop_inplace_(Path<T>& path, double* out, double* sig_derivs, doubl
 
 	Point<T> first_pt(path.begin());
 
-	for (double* pos = out + (path.length() - 1) * dimension; next_pt != first_pt; --prev_pt, --next_pt, pos -= dimension) {
+	for (double* pos = out + (path.length() - 1) * data_dimension; next_pt != first_pt; --prev_pt, --next_pt, pos -= data_dimension) {
 
 		for (uint64_t i = 0UL; i < dimension; ++i)
 			increments[i] = static_cast<double>(prev_pt[i] - next_pt[i]);
@@ -441,12 +442,17 @@ void sig_backprop_inplace_(Path<T>& path, double* out, double* sig_derivs, doubl
 		uncombine_sig_deriv(sig, linear_signature, sig_derivs, local_derivs, dimension, degree, level_index);
 		linear_sig_deriv_to_increment_deriv(linear_signature, local_derivs, dimension, degree, level_index);
 
-		//double* pos = out + i * dimension;
-		double* neg = pos - dimension;
-		double* s = local_derivs + 1;
-		for (uint64_t d = 0; d < dimension; ++d) {
-			pos[d] += s[d];
-			neg[d] -= s[d];
+		if (path.lead_lag()) {
+			//TODO
+		}
+		else {
+			//double* pos = out + i * dimension;
+			double* neg = pos - data_dimension;
+			double* s = local_derivs + 1;
+			for (uint64_t d = 0; d < data_dimension; ++d) {
+				pos[d] += s[d];
+				neg[d] -= s[d];
+			}
 		}
 
 	}

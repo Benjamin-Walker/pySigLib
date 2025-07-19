@@ -152,29 +152,29 @@ class PathInputHandler:
             self.dtype = str(self.path.dtype)[6:]
             self.data_ptr = cast(self.path.data_ptr(), POINTER(DTYPES[self.dtype]))
 
-        _, self.dimension = self.transformed_dims()
+        self.length, self.dimension = self.transformed_dims()
         self.device = self.path.device.type if self.type_ == "torch" else "cpu"
 
     def get_dims(self, path):
         if len(path.shape) == 2:
             self.is_batch = False
             self.batch_size = 1
-            self.length = path.shape[0]
-            self.dimension = path.shape[1]
+            self.data_length = path.shape[0]
+            self.data_dimension = path.shape[1]
 
 
         elif len(path.shape) == 3:
             self.is_batch = True
             self.batch_size = path.shape[0]
-            self.length = path.shape[1]
-            self.dimension = path.shape[2]
+            self.data_length = path.shape[1]
+            self.data_dimension = path.shape[2]
 
         else:
             raise ValueError(self.param_name + ".shape must have length 2 or 3, got length " + str(len(path.shape)) + " instead.")
 
     def transformed_dims(self):
-        length_ = self.length
-        dimension_ = self.dimension
+        length_ = self.data_length
+        dimension_ = self.data_dimension
         if self.lead_lag:
             length_ *= 2
             length_ -= 3
@@ -251,13 +251,13 @@ class PathOutputHandler:
     """
     Handle output which is (shaped like) a path or a batch of paths
     """
-    def __init__(self, data):
+    def __init__(self, length, dimension, batch_size, is_batch, type_, device):
 
-        self.length = data.length
-        self.dimension = data.dimension
-        self.batch_size = data.batch_size
-        self.is_batch = data.is_batch
-        self.type_ = data.type_
+        self.length = length
+        self.dimension = dimension
+        self.batch_size = batch_size
+        self.is_batch = is_batch
+        self.type_ = type_
 
         if self.type_ == "numpy":
             self.device = "cpu"
@@ -274,7 +274,7 @@ class PathOutputHandler:
             self.data_ptr = self.data.ctypes.data_as(POINTER(c_double))
 
         else:
-            self.device = data.device
+            self.device = device
             if self.is_batch:
                 self.data = torch.empty(
                     size=(self.batch_size, self.length, self.dimension),

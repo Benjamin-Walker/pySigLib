@@ -32,8 +32,8 @@ def sig_backprop_(path_data, sig_data, result, degree, time_aug, lead_lag):
         result.data_ptr,
         sig_data.sig2_ptr,
         sig_data.sig1_ptr,
-        path_data.dimension,
-        path_data.length,
+        path_data.data_dimension,
+        path_data.data_length,
         degree,
         time_aug,
         lead_lag
@@ -50,8 +50,8 @@ def batch_sig_backprop_(path_data, sig_data, result, degree, time_aug, lead_lag,
         sig_data.sig2_ptr,
         sig_data.sig1_ptr,
         path_data.batch_size,
-        path_data.dimension,
-        path_data.length,
+        path_data.data_dimension,
+        path_data.data_length,
         degree,
         time_aug,
         lead_lag,
@@ -107,7 +107,7 @@ def sig_backprop(
         inefficient.#TODO
 
     """
-    if lead_lag or time_aug:#TODO
+    if lead_lag:#TODO
         raise NotImplementedError()
 
     check_cpu(path, "path")
@@ -116,7 +116,7 @@ def sig_backprop(
     path_data = PathInputHandler(path, time_aug, lead_lag, "path")
     sig_len = sig_length(path_data.dimension, degree)
     sig_data = DoubleSigInputHandler(sig, sig_derivs, sig_len, "sig", "sig_derivs")
-    result = PathOutputHandler(path_data)
+    result = PathOutputHandler(path_data.data_length, path_data.data_dimension, path_data.batch_size, path_data.is_batch, path_data.type_, path_data.device)
 
     if path_data.is_batch != sig_data.is_batch or path_data.batch_size != sig_data.batch_size:
         raise ValueError("path, sig and sig_derivs must have the same batch sizes")

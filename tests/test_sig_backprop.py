@@ -51,3 +51,32 @@ def test_batch_sig_backprop_random(deg):
     sig_back1 = pysiglib.sig_backprop(X.copy(), sig.copy(), sig_derivs.copy(), deg)
     sig_back2 = iisignature.sigbackprop(sig_derivs[:, 1:].copy(), X.copy(), deg)
     check_close(sig_back1, sig_back2)
+
+@pytest.mark.parametrize("deg", range(1, 6))
+def test_sig_backprop_time_aug_random(deg):
+    length, dimension = 100, 5
+    X = np.random.uniform(size=(length, dimension))
+    t = np.array(list(range(length))).astype("double")[:, np.newaxis]
+    X_time_aug = np.concatenate([X, t], axis = 1)
+    sig_derivs = np.random.uniform(size=pysiglib.sig_length(dimension + 1, deg))
+
+    sig = pysiglib.signature(X, deg, time_aug = True)
+
+    sig_back1 = pysiglib.sig_backprop(X.copy(), sig.copy(), sig_derivs.copy(), deg, time_aug = True)
+    sig_back2 = pysiglib.sig_backprop(X_time_aug.copy(), sig.copy(), sig_derivs.copy(), deg)[:, :-1]
+    check_close(sig_back1, sig_back2)
+
+@pytest.mark.parametrize("deg", range(1, 6))
+def test_batch_sig_backprop_time_aug_random(deg):
+    batch_size, length, dimension = 10, 100, 5
+    X = np.random.uniform(size=(batch_size, length, dimension)).astype("double")
+    t = np.array(list(range(length))).astype("double")[np.newaxis, :, np.newaxis]
+    t = np.tile(t, (batch_size, 1, 1))
+    X_time_aug = np.concatenate([X, t], axis=2)
+    sig_derivs = np.random.uniform(size = (batch_size, pysiglib.sig_length(dimension + 1, deg)))
+
+    sig = pysiglib.signature(X.copy(), deg, time_aug = True)
+
+    sig_back1 = pysiglib.sig_backprop(X.copy(), sig.copy(), sig_derivs.copy(), deg, time_aug = True)
+    sig_back2 = pysiglib.sig_backprop(X_time_aug.copy(), sig.copy(), sig_derivs.copy(), deg)[:, :, :-1]
+    check_close(sig_back1, sig_back2)

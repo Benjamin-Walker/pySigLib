@@ -90,6 +90,7 @@ public:
 	Path<T>& operator=(const Path&) = delete;
 
 	inline uint64_t dimension() const { return _dimension; }
+	inline uint64_t data_dimension() const { return _data_dimension; }
 	inline uint64_t length() const { return _length; }
 	inline T* data() const { return _data.data(); }
 

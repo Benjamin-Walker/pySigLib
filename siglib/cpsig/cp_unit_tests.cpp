@@ -458,6 +458,26 @@ namespace cpSigTests
                 time += 2;
             }
         }
+
+        TEST_METHOD(ReverseTimeAugTest)
+        {
+            uint64_t dimension = 5, length = 10;
+            std::vector<int> data = int_test_data(dimension, length);
+
+            Path<int> path(data.data(), dimension, length, true);
+
+            int index = length - 1;
+
+            for (Point<int> pt = --path.end(); pt != --path.begin(); --pt) {
+                for (int i = 0; i < dimension; i++) {
+                    int val = data[index * dimension + i];
+                    Assert::AreEqual(val, pt[i]);
+                }
+                Assert::AreEqual(index, pt[dimension]);
+                --index;
+            }
+        }
+
 #ifdef _DEBUG
         TEST_METHOD(OutOfBoundsTest) 
         {
@@ -700,6 +720,28 @@ namespace cpSigTests
             std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1./48, 1./24, 1./24, 1./12, 1./24, 1./12, 1./12, 1./6, 1., 5., 2., 12.5, 3., 7., 2., 20. + 5./6, 3., 9., 2., 13., 2., 6., 1. + 1./3, 1., 0.5, -1., 0.125, -0.25, -0.25, 0.5, 1./48, -1./24, -1./24,  1./12, -1./24, 1./48, 1./48, -1./6 };
             check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, false, false, 1);
             check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, false, false, -1);
+        }
+
+        TEST_METHOD(TimeAugTest) {
+            auto f = sig_backprop_double;
+            uint64_t dimension = 1, length = 3, degree = 3;
+            std::vector<double> path = { 0., 2., 1. };
+            std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14. };
+            std::vector<double> true_ = { -54., -4.5, 58.5 };
+            std::vector<double> sig = { 1., 1., 2., 0.5, 2.5, -0.5, 2., 1./6, 1.5 + 1./3, -1-1./6, 2 + 1./6, 1./3, 2./3, -0.5-1./3, 1 + 1./3 };
+            check_result(f, path, true_, deriv.data(), sig.data(), dimension, length, degree, true, false);
+        }
+
+        TEST_METHOD(TimeAugBatchTest) {
+            auto f = batch_sig_backprop_double;
+            uint64_t dimension = 1, length = 3, degree = 3, batch_size = 2;
+            std::vector<double> path = { 0., 2., 1., 0., 3., 6. };
+            std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1. };
+            std::vector<double> true_ = { -54., -4.5, 58.5, -41., 0., 41. };
+            std::vector<double> sig = { 1., 1., 2., 0.5, 2.5, -0.5, 2., 1. / 6, 1.5 + 1. / 3, -1 - 1. / 6, 2 + 1. / 6, 1. / 3, 2. / 3, -0.5 - 1. / 3, 1 + 1. / 3,
+            1., 6., 2., 18., 6., 6., 2., 36., 12., 12., 4., 12., 4., 4., 4./3};
+            check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, true, false, 1);
+            check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, true, false, -1);
         }
     };
 
