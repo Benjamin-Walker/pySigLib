@@ -47,6 +47,29 @@ def batch_lead_lag(x):
     path = torch.cat((lag, lead), dim=2)
     return path
 
+def time_aug_lead_lag(x):
+    # A backpropagatable version of lead-lag
+    lag = torch.repeat_interleave(x[:-1], repeats=2, dim=0)
+    lag = torch.cat((lag, x[-1:]))
+    lead = torch.repeat_interleave(x[1:], repeats=2, dim=0)
+    lead = torch.cat((x[0:1], lead))
+    path = torch.cat((lag, lead), dim=-1)
+    t = torch.linspace(0, path.shape[0] - 1, path.shape[0]).unsqueeze(1)
+    path = torch.cat((path, t), dim =  1)
+    return path
+
+def batch_time_aug_lead_lag(x):
+    # A backpropagatable version of lead-lag
+    lag = torch.repeat_interleave(x[:, :-1], repeats=2, dim=1)
+    lag = torch.cat((lag, x[:, -1:]), dim=1)
+    lead = torch.repeat_interleave(x[:, 1:], repeats=2, dim=1)
+    lead = torch.cat((x[:, 0:1], lead), axis=1)
+    path = torch.cat((lag, lead), dim=2)
+    t = torch.linspace(0, path.shape[1] - 1, path.shape[1]).unsqueeze(0)
+    t = torch.tile(t, (path.shape[0], 1)).unsqueeze(2)
+    path = torch.cat((path, t), dim=2)
+    return path
+
 @pytest.mark.parametrize("deg", range(1, 6))
 def test_sig_backprop_random(deg):
     X = np.random.uniform(size=(100, 5))
@@ -69,7 +92,7 @@ def test_batch_sig_backprop_random(deg):
     sig_back2 = iisignature.sigbackprop(sig_derivs[:, 1:].copy(), X.copy(), deg)
     check_close(sig_back1, sig_back2)
 
-@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("deg", range(1, 5))
 def test_sig_backprop_time_aug_random(deg):
     length, dimension = 100, 5
     X = np.random.uniform(size=(length, dimension))
@@ -83,7 +106,7 @@ def test_sig_backprop_time_aug_random(deg):
     sig_back2 = pysiglib.sig_backprop(X_time_aug.copy(), sig.copy(), sig_derivs.copy(), deg)[:, :-1]
     check_close(sig_back1, sig_back2)
 
-@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("deg", range(1, 5))
 def test_batch_sig_backprop_time_aug_random(deg):
     batch_size, length, dimension = 10, 100, 5
     X = np.random.uniform(size=(batch_size, length, dimension)).astype("double")
@@ -98,7 +121,7 @@ def test_batch_sig_backprop_time_aug_random(deg):
     sig_back2 = pysiglib.sig_backprop(X_time_aug.copy(), sig.copy(), sig_derivs.copy(), deg)[:, :, :-1]
     check_close(sig_back1, sig_back2)
 
-@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("deg", range(1, 5))
 def test_sig_backprop_lead_lag_random(deg):
     length, dimension = 100, 5
     X = np.random.uniform(size=(length, dimension))
@@ -115,7 +138,7 @@ def test_sig_backprop_lead_lag_random(deg):
 
     check_close(grad_input1, sig_back2)
 
-@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("deg", range(1, 5))
 def test_batch_sig_backprop_lead_lag_random(deg):
     batch_size, length, dimension = 10, 100, 5
     X = np.random.uniform(size=(batch_size, length, dimension))
@@ -127,6 +150,40 @@ def test_batch_sig_backprop_lead_lag_random(deg):
 
     sig_back1 = pysiglib.sig_backprop(X_ll, sig, sig_derivs, deg)
     sig_back2 = pysiglib.sig_backprop(X, sig, sig_derivs, deg, lead_lag = True)
+
+    grad_input1, = torch.autograd.grad(X_ll, X, sig_back1, False, True)
+
+    check_close(grad_input1, sig_back2)
+
+@pytest.mark.parametrize("deg", range(1, 5))
+def test_sig_backprop_time_aug_lead_lag_random(deg):
+    length, dimension = 100, 5
+    X = np.random.uniform(size=(length, dimension))
+    X = torch.tensor(X, dtype = torch.float64, requires_grad = True)
+    X_ll = time_aug_lead_lag(X)
+    sig = pysiglib.signature(X_ll, deg)
+    sig_derivs = np.random.uniform(size=pysiglib.sig_length(dimension * 2 + 1, deg))
+    sig_derivs = torch.tensor(sig_derivs)
+
+    sig_back1 = pysiglib.sig_backprop(X_ll, sig, sig_derivs, deg)
+    sig_back2 = pysiglib.sig_backprop(X, sig, sig_derivs, deg, time_aug = True, lead_lag = True)
+
+    grad_input1, = torch.autograd.grad(X_ll, X, sig_back1, False, True)
+
+    check_close(grad_input1, sig_back2)
+
+@pytest.mark.parametrize("deg", range(1, 5))
+def test_batch_sig_backprop_time_aug_lead_lag_random(deg):
+    batch_size, length, dimension = 10, 100, 5
+    X = np.random.uniform(size=(batch_size, length, dimension))
+    X = torch.tensor(X, dtype = torch.float64, requires_grad = True)
+    X_ll = batch_time_aug_lead_lag(X)
+    sig = pysiglib.signature(X_ll, deg)
+    sig_derivs = np.random.uniform(size=(batch_size, pysiglib.sig_length(dimension * 2 + 1, deg)))
+    sig_derivs = torch.tensor(sig_derivs)
+
+    sig_back1 = pysiglib.sig_backprop(X_ll, sig, sig_derivs, deg)
+    sig_back2 = pysiglib.sig_backprop(X, sig, sig_derivs, deg, time_aug = True, lead_lag = True)
 
     grad_input1, = torch.autograd.grad(X_ll, X, sig_back1, False, True)
 

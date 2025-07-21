@@ -705,7 +705,7 @@ namespace cpSigTests
             check_result(f, path, true_, deriv.data(), sig.data(), dimension, length, degree, true, false);
         }
 
-        TEST_METHOD(TimeAugBatchTest) {
+        TEST_METHOD(BatchTimeAugTest) {
             auto f = batch_sig_backprop_double;
             uint64_t dimension = 1, length = 3, degree = 3, batch_size = 2;
             std::vector<double> path = { 0., 2., 1., 0., 3., 6. };
@@ -727,7 +727,7 @@ namespace cpSigTests
             check_result(f, path, true_, deriv.data(), sig.data(), dimension, length, degree, false, true);
         }
 
-        TEST_METHOD(LeadLagBatchTest) {
+        TEST_METHOD(BatchLeadLagTest) {
             auto f = batch_sig_backprop_double;
             uint64_t dimension = 1, length = 3, degree = 3, batch_size = 2;
             std::vector<double> path = { 0., 2., 1., 0., 3., 6. };
@@ -737,6 +737,28 @@ namespace cpSigTests
             1., 6., 6., 18., 9., 27., 18., 36., 13.5, 27., 13.5, 67.5, 27., 67.5, 36. };
             check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, false, true, 1);
             check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, false, true, -1);
+        }
+
+        TEST_METHOD(TimeAugLeadLagTest) {
+            auto f = sig_backprop_double;
+            uint64_t dimension = 1, length = 3, degree = 2;
+            std::vector<double> path = { 0., 2., 1. };
+            std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12. };
+            std::vector<double> true_ = { -98., -6., 104. };
+            std::vector<double> sig = { 1., 1., 1., 4., .5, -2., 4.5, 3., .5, 5.5, -.5, -1.5, 8. };
+            check_result(f, path, true_, deriv.data(), sig.data(), dimension, length, degree, true, true);
+        }
+
+        TEST_METHOD(BatchTimeAugLeadLagTest) {
+            auto f = batch_sig_backprop_double;
+            uint64_t dimension = 1, length = 3, degree = 2, batch_size = 2;
+            std::vector<double> path = { 0., 2., 1., 0., 3., 6. };
+            std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1. };
+            std::vector<double> true_ = { -98., -6., 104., -34., 0., 34. };
+            std::vector<double> sig = { 1., 1., 1., 4., .5, -2., 4.5, 3., .5, 5.5, -.5, -1.5, 8.,
+            1., 6., 6., 4., 18., 9., 9., 27., 18., 15., 15., 9., 8. };
+            check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, true, true, 1);
+            check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, true, true, -1);
         }
     };
 
