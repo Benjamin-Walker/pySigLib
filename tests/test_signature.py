@@ -24,6 +24,23 @@ np.random.seed(42)
 torch.manual_seed(42)
 EPSILON = 1e-10
 
+
+def lead_lag(X):
+    lag = []
+    lead = []
+
+    for val_lag, val_lead in zip(X[:-1], X[1:]):
+        lag.append(val_lag)
+        lead.append(val_lag)
+
+        lag.append(val_lag)
+        lead.append(val_lead)
+
+    lag.append(X[-1])
+    lead.append(X[-1])
+
+    return np.c_[lag, lead]
+
 def check_close(a, b):
     a_ = np.array(a)
     b_ = np.array(b)
@@ -97,3 +114,32 @@ def test_signature_non_contiguous():
     res1 = pysiglib.signature(X, degree)
     res2 = pysiglib.signature(X_non_cont, degree)
     check_close(res1, res2)
+
+@pytest.mark.parametrize("deg", range(1, 6))
+def test_signature_time_aug(deg):
+    X = np.random.uniform(size=(10, 4))
+    t = np.array(list(range(10))).astype("double")[:, np.newaxis]
+    X_aug = np.concatenate([X, t], axis = 1)
+    iisig = iisignature.sig(X_aug, deg)
+    sig = pysiglib.signature(X, deg, time_aug = True)
+    check_close(iisig, sig[1:])
+
+@pytest.mark.parametrize("deg", range(1, 6))
+def test_signature_lead_lag(deg):
+    X = np.random.uniform(size=(10, 2))
+    X_aug = lead_lag(X)
+    iisig = iisignature.sig(X_aug, deg)
+    sig = pysiglib.signature(X, deg, lead_lag = True)
+    check_close(iisig, sig[1:])
+
+@pytest.mark.parametrize("deg", range(1, 6))
+def test_signature_time_aug_lead_lag(deg):
+    X = np.random.uniform(size=(10, 2))
+    X_aug = lead_lag(X)
+    t = np.array(list(range(19))).astype("double")[:, np.newaxis]
+    X_aug = np.concatenate([X_aug, t], axis = 1)
+    iisig = iisignature.sig(X_aug, deg)
+    sig = pysiglib.signature(X, deg, lead_lag = True, time_aug = True)
+    check_close(iisig, sig[1:])
+
+#TODO: add time_aug and lead_lag tests

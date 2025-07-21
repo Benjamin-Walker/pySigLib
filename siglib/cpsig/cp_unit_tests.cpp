@@ -395,8 +395,9 @@ namespace cpSigTests
         }
         TEST_METHOD(LeadLagTest)
         {
-            uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            uint64_t dimension = 2, length = 5;
+            std::vector<int> data = {2, 6, 7, 1, 7, 0, 1, 7, 6, 3};
+            std::vector<int> true_ = { 2, 6, 2, 6, 2, 6, 7, 1, 7, 1, 7, 1, 7, 1, 7, 0, 7, 0, 7, 0, 7, 0, 1, 7, 1, 7, 1, 7, 1, 7, 6, 3, 6, 3, 6, 3};
 
             Path<int> path(data.data(), dimension, length, false, true);
 
@@ -404,58 +405,30 @@ namespace cpSigTests
             bool parity = false;
 
             for (Point<int> pt = path.begin(); pt != path.end(); ++pt) {
-                for (int i = 0; i < dimension; i++) {
-                    int val = data[index * dimension + i];
-                    Assert::AreEqual(val, pt[i]);
+                for (int i = 0; i < path.dimension(); ++i) {
+                    int val = pt[i];
+                    Assert::AreEqual(true_[index], pt[i]);
+                    ++index;
                 }
-
-                for (int i = 0; i < dimension; i++) {
-                    int val = 0;
-                    if (!parity)
-                        val = data[(index + 1) * dimension + i];
-                    else
-                        val = data[(index + 2) * dimension + i];
-                    Assert::AreEqual(val, pt[dimension + i]);
-                }
-                if(parity)
-                    index++;
-                parity = !parity;
             }
         }
         TEST_METHOD(TimeAugLeadLagTest)
         {
-            uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            uint64_t dimension = 2, length = 5;
+            std::vector<int> data = { 2, 6, 7, 1, 7, 0, 1, 7, 6, 3 };
+            std::vector<int> true_ = { 2, 6, 2, 6, 0, 2, 6, 7, 1, 1, 7, 1, 7, 1, 2, 7, 1, 7, 0, 3, 7, 0, 7, 0, 4, 7, 0, 1, 7, 5, 1, 7, 1, 7, 6, 1, 7, 6, 3, 7, 6, 3, 6, 3, 8 };
 
             Path<int> path(data.data(), dimension, length, true, true);
 
-            int time = 0;
             int index = 0;
             bool parity = false;
 
             for (Point<int> pt = path.begin(); pt != path.end(); ++pt) {
-                for (int i = 0; i < dimension; i++) {
-                    int val = data[index * dimension + i];
-                    Assert::AreEqual(val, pt[i]);
+                for (int i = 0; i < path.dimension(); ++i) {
+                    int val = pt[i];
+                    Assert::AreEqual(true_[index], pt[i]);
+                    ++index;
                 }
-
-                for (int i = 0; i < dimension; i++) {
-                    int val = 0;
-                    if (!parity)
-                        val = data[(index + 1) * dimension + i];
-                    else
-                        val = data[(index + 2) * dimension + i];
-                    Assert::AreEqual(val, pt[dimension + i]);
-                }
-
-                Assert::AreEqual(time, pt[2 * dimension]);
-
-                if (parity) {
-                    index++;
-                    time--;
-                }
-                parity = !parity;
-                time += 2;
             }
         }
 
@@ -644,7 +617,7 @@ namespace cpSigTests
             auto f = signature_int32;
             uint64_t dimension = 1, length = 5, degree = 3;
             std::vector<int> path = { 0, 5, 2, 4, 9 };
-            std::vector<double> true_sig = { 1., 4., 4., 8., 20., -4., 8., 10. + 2./3, 35., 10., 85., -13., -90., 37., 10. + 2./3};
+            std::vector<double> true_sig = { 1., 9., 9., 40.5, 9., 72., 40.5, 121.5, 6.5, 68., -8.5, 290., 98., 275., 121.5 };
             check_result(f, path, true_sig, dimension, length, degree, false, true, true);
         }
 

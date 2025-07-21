@@ -41,7 +41,7 @@ public:
 
 	Path(T* data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false) :
 		_dimension{ (lead_lag_ ? 2 * dimension_ : dimension_) + (time_aug_ ? 1 : 0) },
-		_length{ lead_lag_ ? length_ * 2 - 3 : length_ },
+		_length{ lead_lag_ ? length_ * 2 - 1 : length_ },
 		_data{ std::span<T>(data_, dimension_ * length_) },
 		_data_dimension{ dimension_ },
 		_data_length{ length_ },
@@ -52,7 +52,7 @@ public:
 
 	Path(const std::span<T> data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false) :
 		_dimension{ (lead_lag_ ? 2 * dimension_ : dimension_) + (time_aug_ ? 1 : 0) },
-		_length{ lead_lag_ ? length_ * 2 - 3 : length_ },
+		_length{ lead_lag_ ? length_ * 2 - 1 : length_ },
 		_data{ data_ },
 		_data_dimension{ dimension_ },
 		_data_length{ length_ },
@@ -76,7 +76,7 @@ public:
 
 	Path(const Path& other, bool time_aug_, bool lead_lag_) :
 		_dimension{ (lead_lag_ ? 2 * other._data_dimension : other._data_dimension) + (time_aug_ ? 1 : 0) },
-		_length{ lead_lag_ ? other._data_length * 2 - 3 : other._data_length },
+		_length{ lead_lag_ ? other._data_length * 2 - 1 : other._data_length },
 		_data{ other._data },
 		_data_dimension{ other._data_dimension },
 		_data_length{ other._data_length },
@@ -237,7 +237,7 @@ public:
 		if (i < this->path->_data_dimension)
 			return this->ptr[i];
 		else {
-			uint64_t leadIdx = parity ? this->path->_data_dimension + i : i;
+			uint64_t leadIdx = parity ? i : i - this->path->_data_dimension;
 			return this->ptr[leadIdx];
 		}
 	}
@@ -261,7 +261,7 @@ public:
 	PointImplTimeAugLeadLag(const Path<T>* path_, uint64_t index) : 
 		PointImpl<T>(path_, index / 2), 
 		parity{ static_cast<bool>(index % 2) },
-		time{ static_cast<T>((index / 2) * 3 + (index % 2) * 2)},
+		time{ static_cast<T>(index)},
 		_data_dimension_times_2{ path_->_data_dimension * 2 }
 	{}
 	PointImplTimeAugLeadLag(const PointImplTimeAugLeadLag& other) :
@@ -285,33 +285,33 @@ public:
 		if (i < this->path->_data_dimension)
 			return this->ptr[i];
 		else if (i < this->_data_dimension_times_2) {
-			uint64_t lead_idx = parity ? this->path->_data_dimension + i : i;
+			uint64_t lead_idx = parity ? i : i - this->path->_data_dimension;
 			return this->ptr[lead_idx];
 		}
 		else
 			return time;
 	}
 	inline void operator++() override {
-		if (parity) { this->ptr += this->path->_data_dimension; time += 1; }
-		else time += 2;
+		if (parity) { this->ptr += this->path->_data_dimension; }
+		++time;
 		parity = !parity;
 	}
 	inline void operator--() override {
-		if (!parity) { this->ptr -= this->path->_data_dimension; time -= 1; }
-		else time -= 2;
+		if (!parity) { this->ptr -= this->path->_data_dimension; }
+		--time;
 		parity = !parity;
 	}
 	inline void advance(int64_t n) override { 
 		this->ptr += (n / 2) * this->path->_data_dimension; 
 		parity = (parity != static_cast<bool>(n % 2)); 
-		time += (parity) ? static_cast<T>((n / 2) * 3 + (n % 2)) : static_cast<T>((n / 2) * 3 + (n % 2) * 2);
+		time += static_cast<T>(n);
 	}
 	inline void set_to_start() override { this->ptr = this->path->_data.data(); parity = false; time = 0; }
 	inline void set_to_end() override { this->ptr = this->path->_data.data() + this->path->_data_size; parity = true; time = static_cast<T>(this->path->_length); }
 	inline void set_to_index(int64_t n) override { 
 		this->ptr = this->path->_data.data() + (n / 2) * this->path->_data_dimension;
 		parity = static_cast<bool>(n % 2);
-		time = static_cast<T>( (n / 2) * 3 + (n % 2) * 2 );
+		time = static_cast<T>(n);
 	}
 
 	inline uint64_t index() const override { return 2UL * static_cast<uint64_t>(this->ptr - this->path->_data.data()) + static_cast<uint64_t>(parity); }

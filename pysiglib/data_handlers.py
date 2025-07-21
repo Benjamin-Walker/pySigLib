@@ -177,7 +177,7 @@ class PathInputHandler:
         dimension_ = self.data_dimension
         if self.lead_lag:
             length_ *= 2
-            length_ -= 3
+            length_ -= 1
             dimension_ *= 2
         if self.time_aug:
             dimension_ += 1
