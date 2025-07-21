@@ -716,6 +716,28 @@ namespace cpSigTests
             check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, true, false, 1);
             check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, true, false, -1);
         }
+
+        TEST_METHOD(LeadLagTest) {
+            auto f = sig_backprop_double;
+            uint64_t dimension = 1, length = 3, degree = 3;
+            std::vector<double> path = { 0., 2., 1. };
+            std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14. };
+            std::vector<double> true_ = { -76., 5.5, 70.5 };
+            std::vector<double> sig = { 1., 1., 1., .5, -2., 3., .5, 1./6, -2., 2., 1., .5, -4., 3.5, 1./6 };
+            check_result(f, path, true_, deriv.data(), sig.data(), dimension, length, degree, false, true);
+        }
+
+        TEST_METHOD(LeadLagBatchTest) {
+            auto f = batch_sig_backprop_double;
+            uint64_t dimension = 1, length = 3, degree = 3, batch_size = 2;
+            std::vector<double> path = { 0., 2., 1., 0., 3., 6. };
+            std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1. };
+            std::vector<double> true_ = { -76., 5.5, 70.5, -170., 0., 170. };
+            std::vector<double> sig = { 1., 1., 1., .5, -2., 3., .5, 1. / 6, -2., 2., 1., .5, -4., 3.5, 1. / 6,
+            1., 6., 6., 18., 9., 27., 18., 36., 13.5, 27., 13.5, 67.5, 27., 67.5, 36. };
+            check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, false, true, 1);
+            check_result(f, path, true_, deriv.data(), sig.data(), batch_size, dimension, length, degree, false, true, -1);
+        }
     };
 
     TEST_CLASS(sigKernelTest) {
@@ -752,3 +774,4 @@ namespace cpSigTests
         }
     };
 }
+//TODO: add tests for transform_path

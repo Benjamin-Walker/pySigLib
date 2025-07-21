@@ -107,8 +107,6 @@ def sig_backprop(
         inefficient.#TODO
 
     """
-    if lead_lag:#TODO
-        raise NotImplementedError()
 
     check_cpu(path, "path")
     check_cpu(sig, "sig")

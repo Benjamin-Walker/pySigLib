@@ -319,7 +319,7 @@ void sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, uint64
 		return;
 	}
 
-	std::fill(out, out + length * dimension, 0.);//TODO: backprop through lead_lag??
+	std::fill(out, out + length * dimension, 0.);
 	const uint64_t sig_len_ = ::sig_length(path_obj.dimension(), degree);
 
 	auto sig_derivs_copy_uptr = std::make_unique<double[]>(sig_len_);
@@ -404,6 +404,8 @@ void sig_backprop_inplace_(Path<T>& path, double* out, double* sig_derivs, doubl
 	const uint64_t data_dimension = path.data_dimension();
 	const uint64_t dimension = path.dimension();
 
+	const uint64_t data_length = path.data_length();
+
 	auto local_derivs_uptr = std::make_unique<double[]>(sig_len);
 	double* local_derivs = local_derivs_uptr.get();
 
@@ -431,21 +433,48 @@ void sig_backprop_inplace_(Path<T>& path, double* out, double* sig_derivs, doubl
 
 	Point<T> first_pt(path.begin());
 
-	for (double* pos = out + (path.length() - 1) * data_dimension; next_pt != first_pt; --prev_pt, --next_pt, pos -= data_dimension) {
+	if (path.lead_lag()) {
+		double* pos = out + (data_length - 1) * data_dimension;
+		double* neg = pos - data_dimension;
+		bool parity = false;
 
-		for (uint64_t i = 0UL; i < dimension; ++i)
-			increments[i] = static_cast<double>(prev_pt[i] - next_pt[i]);
+		for (; next_pt != first_pt; --prev_pt, --next_pt, parity = !parity) {
 
-		linear_signature_(prev_pt, next_pt, linear_signature, dimension, degree, level_index);
-		//sig_uncombine_linear_inplace_(sig, linear_signature, degree, level_index);
-		signature_horner_step_(sig, increments, dimension, degree, level_index, horner_step); //Uncombine linear sig using horner
-		uncombine_sig_deriv(sig, linear_signature, sig_derivs, local_derivs, dimension, degree, level_index);
-		linear_sig_deriv_to_increment_deriv(linear_signature, local_derivs, dimension, degree, level_index);
+			for (uint64_t i = 0UL; i < dimension; ++i)
+				increments[i] = static_cast<double>(prev_pt[i] - next_pt[i]);
 
-		if (path.lead_lag()) {
-			//TODO
+			linear_signature_(prev_pt, next_pt, linear_signature, dimension, degree, level_index);
+			//sig_uncombine_linear_inplace_(sig, linear_signature, degree, level_index);
+			signature_horner_step_(sig, increments, dimension, degree, level_index, horner_step); //Uncombine linear sig using horner
+			uncombine_sig_deriv(sig, linear_signature, sig_derivs, local_derivs, dimension, degree, level_index);
+			linear_sig_deriv_to_increment_deriv(linear_signature, local_derivs, dimension, degree, level_index);
+
+
+			//TODO: can we exploit the structure and avoid computing derivatives which are a priori zero?
+
+			double* s = parity ? local_derivs + 1 + data_dimension : local_derivs + 1;
+			for (uint64_t d = 0; d < data_dimension; ++d) {
+				pos[d] += s[d];
+				neg[d] -= s[d];
+			}
+			if (parity) {
+				pos -= data_dimension;
+				neg -= data_dimension;
+			}
 		}
-		else {
+	}
+	else {
+		for (double* pos = out + (path.length() - 1) * data_dimension; next_pt != first_pt; --prev_pt, --next_pt, pos -= data_dimension) {
+
+			for (uint64_t i = 0UL; i < dimension; ++i)
+				increments[i] = static_cast<double>(prev_pt[i] - next_pt[i]);
+
+			linear_signature_(prev_pt, next_pt, linear_signature, dimension, degree, level_index);
+			//sig_uncombine_linear_inplace_(sig, linear_signature, degree, level_index);
+			signature_horner_step_(sig, increments, dimension, degree, level_index, horner_step); //Uncombine linear sig using horner
+			uncombine_sig_deriv(sig, linear_signature, sig_derivs, local_derivs, dimension, degree, level_index);
+			linear_sig_deriv_to_increment_deriv(linear_signature, local_derivs, dimension, degree, level_index);
+
 			//double* pos = out + i * dimension;
 			double* neg = pos - data_dimension;
 			double* s = local_derivs + 1;
@@ -453,7 +482,7 @@ void sig_backprop_inplace_(Path<T>& path, double* out, double* sig_derivs, doubl
 				pos[d] += s[d];
 				neg[d] -= s[d];
 			}
-		}
 
+		}
 	}
 }
