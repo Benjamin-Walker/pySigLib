@@ -22,9 +22,102 @@ import torch
 from .param_checks import check_cpu, check_type
 from .load_siglib import CPSIG
 from .error_codes import err_msg
-from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, SigInputHandler, DoubleSigInputHandler
+from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, SigInputHandler, DoubleSigInputHandler, TripleSigInputHandler
 from .dtypes import CPSIG_SIG_BACKPROP, CPSIG_BATCH_SIG_BACKPROP
 from .sig_length import sig_length
+
+def sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree):
+    err_code = CPSIG.sig_combine_backprop(
+        sig_data.sig3_ptr,
+        sig1_deriv.data_ptr,
+        sig2_deriv.data_ptr,
+        sig_data.sig1_ptr,
+        sig_data.sig2_ptr,
+        dimension,
+        degree
+    )
+
+    if err_code:
+        raise Exception("Error in pysiglib.sig_combine_backprop: " + err_msg(err_code))
+    return sig1_deriv.data, sig2_deriv.data
+
+def batch_sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree, n_jobs):
+    err_code = CPSIG.batch_sig_combine_backprop(
+        sig_data.sig3_ptr,
+        sig1_deriv.data_ptr,
+        sig2_deriv.data_ptr,
+        sig_data.sig1_ptr,
+        sig_data.sig2_ptr,
+        sig_data.batch_size,
+        dimension,
+        degree,
+        n_jobs
+    )
+
+    if err_code:
+        raise Exception("Error in pysiglib.sig_combine_backprop: " + err_msg(err_code))
+    return sig1_deriv.data, sig2_deriv.data
+
+def sig_combine_backprop(
+        sig_combined_deriv : Union[np.ndarray, torch.tensor],
+        sig1 : Union[np.ndarray, torch.tensor],
+        sig2 : Union[np.ndarray, torch.tensor],
+        dimension : int,
+        degree : int,
+        n_jobs : int = 1
+):
+    """
+    This function is required to backpropogate through ``pysiglib.sig_combine``.
+    Given the derivatives of a scalar function :math:`F` with respect to the
+    result of ``pysiglib.sig_combine``, :math:`\\partial F / \\partial S(x_1 * x_2)`,
+    returns the derivatives of :math:`F` with respect to the original two signatures,
+    :math:`\\partial F / \\partial S(x_1)` and :math:`\\partial F / \\partial S(x_2)`.
+
+    :param sig_combined_deriv: Derivative with respect to the combined signature,
+        :math:`\\partial F / \\partial S(x_1 * x_2)`
+    :type sig_combine_deriv: numpy.ndarray | torch.tensor
+    :param sig1: The first truncated signature
+    :type sig1: numpy.ndarray | torch.tensor
+    :param sig2: The second truncated signature. Must have the same degree and dimension as the first.
+    :type sig2: numpy.ndarray | torch.tensor
+    :param dimension: Dimension of the underlying space, :math:`d`.
+    :type dimension: int
+    :param degree: Truncation level of the signatures, :math:`N`
+    :type degree: int
+    :param n_jobs: Number of threads to run in parallel. If n_jobs = 1, the computation is run serially.
+        If set to -1, all available threads are used. For n_jobs below -1, (max_threads + 1 + n_jobs)
+        threads are used. For example if n_jobs = -2, all threads but one are used.
+    :type n_jobs: int
+    :return: Derivatives with respect to sig1 and sig2
+    :rtype: Tuple[numpy.ndarray | torch.tensor, numpy.ndarray | torch.tensor]
+
+    .. note::
+
+        Ideally, any array passed to ``pysiglib.sig_combine_backprop`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.sig_combine_backprop`` will internally create a contiguous copy, which may be
+        inefficient.
+
+    """
+
+    check_cpu(sig_combined_deriv, "sig_combined_deriv")
+    check_cpu(sig1, "sig1")
+    check_cpu(sig2, "sig2")
+
+    check_type(dimension, "dimension", int)
+    check_type(degree, "degree", int)
+
+    sig_len = sig_length(dimension, degree)
+    sig_data = TripleSigInputHandler(sig1, sig2, sig_combined_deriv, sig_len, "sig1", "sig2", "sig_combined_deriv")
+
+    sig1_deriv = SigOutputHandler(sig_data, sig_len)
+    sig2_deriv = SigOutputHandler(sig_data, sig_len)
+
+    if sig_data.is_batch:
+        check_type(n_jobs, "n_jobs", int)
+        if n_jobs == 0:
+            raise ValueError("n_jobs cannot be 0")
+        return batch_sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree, n_jobs)
+    return sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree)
 
 def sig_backprop_(path_data, sig_data, result, degree, time_aug, lead_lag):
     err_code = CPSIG_SIG_BACKPROP[path_data.dtype](
@@ -104,7 +197,7 @@ def sig_backprop(
 
         Ideally, any array passed to ``pysiglib.sig_backprop`` should be both contiguous and own its data.
         If this is not the case, ``pysiglib.sig_backprop`` will internally create a contiguous copy, which may be
-        inefficient.#TODO
+        inefficient.
 
     """
 

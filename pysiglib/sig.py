@@ -51,19 +51,19 @@ def sig_combine(
 
     where :math:`x_1 * x_2` is the concatenation of the two paths :math:`x_1, x_2`.
 
-    :param sig1: The first truncated tensor polynomial
+    :param sig1: The first truncated signature
     :type sig1: numpy.ndarray | torch.tensor
-    :param sig2: The second truncated tensor polynomial. Must have the same degree and dimension as the first.
+    :param sig2: The second truncated signature. Must have the same degree and dimension as the first.
     :type sig2: numpy.ndarray | torch.tensor
     :param dimension: Dimension of the underlying space, :math:`d`.
     :type dimension: int
-    :param degree: Truncation level of the tensor polynomial, :math:`N`
+    :param degree: Truncation level of the signatures, :math:`N`
     :type degree: int
     :param n_jobs: Number of threads to run in parallel. If n_jobs = 1, the computation is run serially.
         If set to -1, all available threads are used. For n_jobs below -1, (max_threads + 1 + n_jobs)
         threads are used. For example if n_jobs = -2, all threads but one are used.
     :type n_jobs: int
-    :return: Tensor product of the truncated tensor polynomials
+    :return: Combined signature, :math:`S(x_1 * x_2)`
     :rtype: numpy.ndarray | torch.tensor
 
     .. note::

@@ -87,6 +87,35 @@ class DoubleSigInputHandler:
         if self.type_ == "torch" and not (sig1.device.type == "cpu" and sig2.device.type == "cpu"):
             raise ValueError(sig1_name + ", " + sig2_name + " must be located on the cpu")
 
+class TripleSigInputHandler:
+    """
+    Handle a triple of inputs which are (shaped like) signatures or batches of signatures
+    """
+    def __init__(self, sig1, sig2, sig3, sig_len, sig1_name, sig2_name, sig3_name):
+
+        check_type(sig_len, "sig_len", int)
+        self.sig_len = sig_len
+
+        self.data1 = SigInputHandler(sig1, sig_len, sig1_name, 5)
+        self.data2 = SigInputHandler(sig2, sig_len, sig2_name, 5)
+        self.data3 = SigInputHandler(sig3, sig_len, sig3_name, 5)
+
+        if self.data1.batch_size != self.data2.batch_size or self.data2.batch_size != self.data3.batch_size:
+            raise ValueError(sig1_name + ", " + sig2_name + ", " + sig3_name + " have different batch sizes")
+
+        if self.data1.type_ != self.data2.type_ or self.data2.type_ != self.data3.type_:
+            raise ValueError(sig1_name + ", " + sig2_name + ", " + sig3_name + " must both be numpy arrays or both torch arrays")
+
+        self.batch_size = self.data1.batch_size
+        self.is_batch = self.data1.is_batch
+        self.type_ = self.data1.type_
+        self.sig1_ptr = self.data1.data_ptr
+        self.sig2_ptr = self.data2.data_ptr
+        self.sig3_ptr = self.data3.data_ptr
+
+        if self.type_ == "torch" and (sig1.device.type != "cpu" or sig2.device.type != "cpu" or sig3.device.type != "cpu"):
+            raise ValueError(sig1_name + ", " + sig2_name + ", " + sig3_name + " must be located on the cpu")
+
 class SigOutputHandler:
     """
     Handle output which is (shaped like) a signature or a batch of signatures

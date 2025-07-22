@@ -762,6 +762,50 @@ namespace cpSigTests
         }
     };
 
+    TEST_CLASS(sigCombineBackpropTest) {
+    public:
+        TEST_METHOD(ManualTest) {
+            auto f = sig_combine_backprop;
+            uint64_t dimension = 2, degree = 2;
+            uint64_t result_length = 7;
+            std::vector<double> sig1 = { 1., 1., 1., .5, .5, .5, .5 };
+            std::vector<double> sig2 = { 1., 0., 1., 0., 1., -1., .5 };
+            std::vector<double> derivs = {1., 1., 2., 3., 4., 5., 6.};
+            std::vector<double> true_ = { 1., 5., 8., 3., 4., 5., 6., 1., 9., 12., 3., 4., 5., 6. };
+
+            auto func = [&](double* sig_combined_derivs, double* out, double* sig1, double* sig2, uint64_t dimension, uint64_t degree) {
+                f(sig_combined_derivs, out, out + result_length, sig1, sig2, dimension, degree);
+                };
+
+
+            check_result(func, derivs, true_, sig1.data(), sig2.data(), dimension, degree);
+        }
+
+        TEST_METHOD(ManualBatchTest) {
+            auto f = batch_sig_combine_backprop;
+            uint64_t dimension = 2, degree = 2, batch_size = 2;
+            uint64_t result_length = 7 * batch_size;
+            std::vector<double> sig1 = { 1., 1., 1., .5, .5, .5, .5, 
+                1., 0., 1., 0., 1., -1., .5 };
+            std::vector<double> sig2 = { 1., 0., 1., 0., 1., -1., .5, 
+                1., 1., 1., .5, .5, .5, .5 };
+            std::vector<double> derivs = { 1., 1., 2., 3., 4., 5., 6., 
+                1., 1., 2., 3., 4., 5., 6. };
+            std::vector<double> true_ = { 1., 5., 8., 3., 4., 5., 6., 
+                1., 8., 13., 3., 4., 5., 6., 
+                1., 9., 12., 3., 4., 5., 6., 
+                1., 6., 8., 3., 4., 5., 6. };
+
+            auto func = [&](double* sig_combined_derivs, double* out, double* sig1, double* sig2, uint64_t batch_size, uint64_t dimension, uint64_t degree, int n_jobs) {
+                f(sig_combined_derivs, out, out + result_length, sig1, sig2, batch_size, dimension, degree, n_jobs);
+                };
+
+
+            check_result(func, derivs, true_, sig1.data(), sig2.data(), batch_size, dimension, degree, 1);
+            check_result(func, derivs, true_, sig1.data(), sig2.data(), batch_size, dimension, degree, -1);
+        }
+    };
+
     TEST_CLASS(sigKernelTest) {
     public:
         TEST_METHOD(LinearPathTest) {

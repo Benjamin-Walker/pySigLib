@@ -34,5 +34,6 @@ pySigLib |release|
    /pages/signature
    /pages/sig_backprop
    /pages/sig_combine
+   /pages/sig_combine_backprop
    /pages/sig_kernel
    /pages/torch_api

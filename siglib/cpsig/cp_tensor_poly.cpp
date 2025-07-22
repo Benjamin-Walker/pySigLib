@@ -102,6 +102,69 @@ void batch_sig_combine_(double* sig1, double* sig2, double* out, uint64_t batch_
 	return;
 }
 
+void sig_combine_backprop_(double* sig_combined_deriv, double* sig1_deriv, double* sig2_deriv, double* sig1, double* sig2, uint64_t dimension, uint64_t degree)
+{
+	if (dimension == 0) { throw std::invalid_argument("sig_combine_backprop received dimension 0"); }
+
+	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
+	uint64_t* level_index = level_index_uptr.get();
+
+	level_index[0] = 0UL;
+	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
+		level_index[i] = level_index[i - 1UL] * dimension + 1;
+
+	std::memcpy(sig1_deriv, sig_combined_deriv, sizeof(double) * level_index[degree + 1]);
+
+	uncombine_sig_deriv(sig1, sig2, sig1_deriv, sig2_deriv, dimension, degree, level_index);
+	return;
+}
+
+void batch_sig_combine_backprop_(double* sig_combined_deriv, double* sig1_deriv, double* sig2_deriv, double* sig1, double* sig2, uint64_t batch_size, uint64_t dimension, uint64_t degree, int n_jobs = 1)
+{
+	if (dimension == 0) { throw std::invalid_argument("sig_combine_backprop received dimension 0"); }
+
+	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
+	uint64_t* level_index = level_index_uptr.get();
+
+	level_index[0] = 0UL;
+	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
+		level_index[i] = level_index[i - 1UL] * dimension + 1;
+
+	const uint64_t siglength = level_index[degree + 1];
+
+	std::memcpy(sig1_deriv, sig_combined_deriv, sizeof(double) * siglength * batch_size);
+
+	std::function<void(double*, double*, double*, double*, double*)> sig_combine_backprop_func;
+
+	sig_combine_backprop_func = [&](double* sig_combined_deriv_ptr, double* sig1_deriv_ptr, double* sig2_deriv_ptr, double* sig1_ptr, double* sig2_ptr) {
+		sig_combine_backprop_(sig_combined_deriv_ptr, sig1_deriv_ptr, sig2_deriv_ptr, sig1_ptr, sig2_ptr, dimension, degree);
+		};
+
+	if (n_jobs != 1) {
+		multi_threaded_batch_4(sig_combine_backprop_func, sig_combined_deriv, sig1_deriv, sig2_deriv, sig1, sig2, batch_size, siglength, siglength, siglength, siglength, siglength, n_jobs);
+	}
+	else {
+		double* sig_combined_derivs_ptr = sig_combined_deriv;
+		double* sig1_deriv_ptr = sig1_deriv;
+		double* sig2_deriv_ptr = sig2_deriv;
+		double* sig1_ptr = sig1;
+		double* sig2_ptr = sig2;
+		double* sig1_end = sig1 + batch_size * siglength;
+		for (;
+			sig1_ptr < sig1_end;
+			sig_combined_derivs_ptr += siglength,
+			sig1_deriv_ptr += siglength,
+			sig2_deriv_ptr += siglength,
+			sig1_ptr += siglength,
+			sig2_ptr += siglength
+			) {
+
+			sig_combine_backprop_func(sig_combined_derivs_ptr, sig1_deriv_ptr, sig2_deriv_ptr, sig1_ptr, sig2_ptr);
+		}
+	}
+	return;
+}
+
 extern "C" {
 
 	CPSIG_API int sig_combine(double* sig1, double* sig2, double* out, uint64_t dimension, uint64_t degree) noexcept {
@@ -110,5 +173,13 @@ extern "C" {
 
 	CPSIG_API int batch_sig_combine(double* sig1, double* sig2, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, int n_jobs) noexcept {
 		SAFE_CALL(batch_sig_combine_(sig1, sig2, out, batch_size, dimension, degree, n_jobs));
+	}
+
+	CPSIG_API int sig_combine_backprop(double* sig_combined_deriv, double* sig1_deriv, double* sig2_deriv, double* sig1, double* sig2, uint64_t dimension, uint64_t degree) noexcept {
+		SAFE_CALL(sig_combine_backprop_(sig_combined_deriv, sig1_deriv, sig2_deriv, sig1, sig2, dimension, degree));
+	}
+
+	CPSIG_API int batch_sig_combine_backprop(double* sig_combined_deriv, double* sig1_deriv, double* sig2_deriv, double* sig1, double* sig2, uint64_t batch_size, uint64_t dimension, uint64_t degree, int n_jobs) noexcept {
+		SAFE_CALL(batch_sig_combine_backprop_(sig_combined_deriv, sig1_deriv, sig2_deriv, sig1, sig2, batch_size, dimension, degree, n_jobs));
 	}
 }

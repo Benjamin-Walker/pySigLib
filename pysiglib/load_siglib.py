@@ -202,6 +202,38 @@ CPSIG.batch_sig_combine.argtypes = (
 CPSIG.batch_sig_combine.restype = c_int
 
 ######################################################
+# sig_combine_backprop
+######################################################
+
+CPSIG.sig_combine_backprop.argtypes = (
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    c_uint64,
+    c_uint64
+)
+CPSIG.sig_combine_backprop.restype = c_int
+
+######################################################
+# batch_sig_combine_backprop
+######################################################
+
+CPSIG.batch_sig_combine_backprop.argtypes = (
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_int
+)
+CPSIG.batch_sig_combine_backprop.restype = c_int
+
+######################################################
 # signature
 ######################################################
 

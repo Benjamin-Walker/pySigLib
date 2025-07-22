@@ -50,6 +50,10 @@ extern "C" {
 	CPSIG_API uint64_t sig_length(uint64_t dimension, uint64_t degree) noexcept;
 	CPSIG_API int sig_combine(double* sig1, double* sig2, double* out, uint64_t dimension, uint64_t degree) noexcept;
 	CPSIG_API int batch_sig_combine(double* sig1, double* sig2, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, int n_jobs = 1) noexcept;
+
+	CPSIG_API int sig_combine_backprop(double* sig_combined_derivs, double* sig1_deriv, double* sig2_deriv, double* sig1, double* sig2, uint64_t dimension, uint64_t degree) noexcept;
+	CPSIG_API int batch_sig_combine_backprop(double* sig_combined_derivs, double* sig1_deriv, double* sig2_deriv, double* sig1, double* sig2, uint64_t batch_size, uint64_t dimension, uint64_t degree, int n_jobs = 1) noexcept;
+
 	CPSIG_API double get_path_element(double* data_ptr, int data_length, int data_dimension, int length_index, int dim_index);
 
 	CPSIG_API int signature_float(float* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, bool horner) noexcept; //bool time_aug = false, bool lead_lag = false, bool horner = true);
