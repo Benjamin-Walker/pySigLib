@@ -17,7 +17,8 @@ from typing import Union
 import numpy as np
 import torch
 from ..sig import signature as sig_forward
-from ..sig_backprop import sig_backprop
+from ..sig import sig_combine as sig_combine_forward
+from ..sig_backprop import sig_backprop, sig_combine_backprop
 
 class Signature(torch.autograd.Function):
     @staticmethod
@@ -51,3 +52,33 @@ def signature(
 
 
 signature.__doc__ = sig_forward.__doc__
+
+class SigCombine(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, sig1, sig2, dimension ,degree, n_jobs):
+        sig_combined = sig_combine_forward(sig1, sig2, dimension ,degree, n_jobs)
+
+        ctx.save_for_backward(sig1, sig2)
+        ctx.dimension = dimension
+        ctx.degree = degree
+        ctx.n_jobs = n_jobs
+
+        return sig_combined
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        sig1, sig2 = ctx.saved_tensors
+        sig1_grad, sig2_grad = sig_combine_backprop(grad_output, sig1, sig2, ctx.dimension, ctx.degree, ctx.n_jobs)
+        return sig1_grad, sig2_grad, None, None, None
+
+def sig_combine(
+        sig1 : Union[np.ndarray, torch.tensor],
+        sig2 : Union[np.ndarray, torch.tensor],
+        dimension : int,
+        degree : int,
+        n_jobs : int = 1
+) -> Union[np.ndarray, torch.tensor]:
+    return SigCombine.apply(sig1, sig2, dimension ,degree, n_jobs)
+
+
+sig_combine.__doc__ = sig_combine_forward.__doc__

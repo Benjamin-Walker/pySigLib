@@ -16,8 +16,6 @@
 from ..load_siglib import SYSTEM, BUILT_WITH_CUDA, BUILT_WITH_AVX
 from ..transform_path import transform_path
 from ..sig_length import sig_length
-from .torch_api import signature
+from .torch_api import signature, sig_combine
 
-# from ..sig import sig_combine, signature
-# from ..sig_backprop import sig_backprop
 # from ..sig_kernel import sig_kernel
