@@ -140,6 +140,9 @@ def transform_path(
     check_type(time_aug, "time_aug", bool)
     check_type(lead_lag, "lead_lag", bool)
 
+    if (not time_aug) and (not lead_lag):
+        return path
+
     check_cpu(path, "path")
 
     data = PathInputHandler(path, time_aug, lead_lag, "path")

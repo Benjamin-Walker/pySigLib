@@ -14,7 +14,6 @@
 # =========================================================================
 
 from typing import Union
-from ctypes import c_double, POINTER
 
 import numpy as np
 import torch
@@ -22,7 +21,7 @@ import torch
 from .param_checks import check_cpu, check_type
 from .load_siglib import CPSIG
 from .error_codes import err_msg
-from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, SigInputHandler, DoubleSigInputHandler, TripleSigInputHandler
+from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, DoubleSigInputHandler, TripleSigInputHandler
 from .dtypes import CPSIG_SIG_BACKPROP, CPSIG_BATCH_SIG_BACKPROP
 from .sig_length import sig_length
 
@@ -59,7 +58,7 @@ def batch_sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, deg
     return sig1_deriv.data, sig2_deriv.data
 
 def sig_combine_backprop(
-        sig_combined_deriv : Union[np.ndarray, torch.tensor],
+        deriv : Union[np.ndarray, torch.tensor],
         sig1 : Union[np.ndarray, torch.tensor],
         sig2 : Union[np.ndarray, torch.tensor],
         dimension : int,
@@ -73,7 +72,7 @@ def sig_combine_backprop(
     returns the derivatives of :math:`F` with respect to the original two signatures,
     :math:`\\partial F / \\partial S(x_1)` and :math:`\\partial F / \\partial S(x_2)`.
 
-    :param sig_combined_deriv: Derivative with respect to the combined signature,
+    :param deriv: Derivative with respect to the combined signature,
         :math:`\\partial F / \\partial S(x_1 * x_2)`
     :type sig_combine_deriv: numpy.ndarray | torch.tensor
     :param sig1: The first truncated signature
@@ -88,7 +87,7 @@ def sig_combine_backprop(
         If set to -1, all available threads are used. For n_jobs below -1, (max_threads + 1 + n_jobs)
         threads are used. For example if n_jobs = -2, all threads but one are used.
     :type n_jobs: int
-    :return: Derivatives with respect to sig1 and sig2
+    :return: Derivatives with respect to ``sig1`` and ``sig2``
     :rtype: Tuple[numpy.ndarray | torch.tensor, numpy.ndarray | torch.tensor]
 
     .. note::
@@ -99,7 +98,7 @@ def sig_combine_backprop(
 
     """
 
-    check_cpu(sig_combined_deriv, "sig_combined_deriv")
+    check_cpu(deriv, "sig_combined_deriv")
     check_cpu(sig1, "sig1")
     check_cpu(sig2, "sig2")
 
@@ -107,7 +106,7 @@ def sig_combine_backprop(
     check_type(degree, "degree", int)
 
     sig_len = sig_length(dimension, degree)
-    sig_data = TripleSigInputHandler(sig1, sig2, sig_combined_deriv, sig_len, "sig1", "sig2", "sig_combined_deriv")
+    sig_data = TripleSigInputHandler(sig1, sig2, deriv, sig_len, "sig1", "sig2", "sig_combined_deriv")
 
     sig1_deriv = SigOutputHandler(sig_data, sig_len)
     sig2_deriv = SigOutputHandler(sig_data, sig_len)

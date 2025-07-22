@@ -19,6 +19,7 @@ from ctypes import c_double, POINTER, cast
 import numpy as np
 import torch
 
+from .transform_path import transform_path
 from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
@@ -62,8 +63,10 @@ def sig_kernel(
         path1 : Union[np.ndarray, torch.tensor],
         path2 : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
+        time_aug : bool = False,
+        lead_lag : bool = False,
         n_jobs : int = 1
-) -> Union[np.ndarray, torch.tensor]: #TODO: add time-aug and lead-lag
+) -> Union[np.ndarray, torch.tensor]:
     """
     Computes a single signature kernel or a batch of signature kernels.
     The signature kernel of two :math:`d`-dimensional paths :math:`x,y`
@@ -93,6 +96,11 @@ def sig_kernel(
     :param dyadic_order: If set to a positive integer :math:`\\lambda`, will refine the
         PDE grid by a factor of :math:`2^\\lambda`.
     :type dyadic_order: int | tuple
+    :param time_aug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
+        defined as the original path with an extra channel set to time, :math:`t`.
+    :type time_aug: bool
+    :param lead_lag: If set to True, will compute the signature of the path after applying the lead-lag transformation.
+    :type lead_lag: bool
     :param n_jobs: (Only applicable to CPU computation) Number of threads to run in parallel.
         If n_jobs = 1, the computation is run serially. If set to -1, all available threads
         are used. For n_jobs below -1, (max_threads + 1 + n_jobs) threads are used. For example
@@ -122,6 +130,10 @@ def sig_kernel(
 
     if dyadic_order_1 < 0 or dyadic_order_2 < 0:
         raise ValueError("dyadic_order must be a non-negative integer or tuple of non-negative integers")
+
+    if time_aug or lead_lag:
+        path1 = transform_path(path1, time_aug, lead_lag, n_jobs)
+        path2 = transform_path(path2, time_aug, lead_lag, n_jobs)
 
     data = DoublePathInputHandler(path1, path2, False, False, "path1", "path2")
     result = ScalarOutputHandler(data)

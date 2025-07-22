@@ -29,6 +29,47 @@ def check_close(a, b):
     b_ = np.array(b)
     assert not np.any(np.abs(a_ - b_) > EPSILON)
 
+def lead_lag(x):
+    # A backpropagatable version of lead-lag
+    lag = torch.repeat_interleave(x[:-1], repeats=2, dim=0)
+    lag = torch.cat((lag, x[-1:]))
+    lead = torch.repeat_interleave(x[1:], repeats=2, dim=0)
+    lead = torch.cat((x[0:1], lead))
+    path = torch.cat((lag, lead), dim=-1)
+    return path
+
+def batch_lead_lag(x):
+    # A backpropagatable version of lead-lag
+    lag = torch.repeat_interleave(x[:, :-1], repeats=2, dim=1)
+    lag = torch.cat((lag, x[:, -1:]), dim=1)
+    lead = torch.repeat_interleave(x[:, 1:], repeats=2, dim=1)
+    lead = torch.cat((x[:, 0:1], lead), axis=1)
+    path = torch.cat((lag, lead), dim=2)
+    return path
+
+def time_aug_lead_lag(x):
+    # A backpropagatable version of lead-lag
+    lag = torch.repeat_interleave(x[:-1], repeats=2, dim=0)
+    lag = torch.cat((lag, x[-1:]))
+    lead = torch.repeat_interleave(x[1:], repeats=2, dim=0)
+    lead = torch.cat((x[0:1], lead))
+    path = torch.cat((lag, lead), dim=-1)
+    t = torch.linspace(0, path.shape[0] - 1, path.shape[0]).unsqueeze(1)
+    path = torch.cat((path, t), dim =  1)
+    return path
+
+def batch_time_aug_lead_lag(x):
+    # A backpropagatable version of lead-lag
+    lag = torch.repeat_interleave(x[:, :-1], repeats=2, dim=1)
+    lag = torch.cat((lag, x[:, -1:]), dim=1)
+    lead = torch.repeat_interleave(x[:, 1:], repeats=2, dim=1)
+    lead = torch.cat((x[:, 0:1], lead), axis=1)
+    path = torch.cat((lag, lead), dim=2)
+    t = torch.linspace(0, path.shape[1] - 1, path.shape[1]).unsqueeze(0)
+    t = torch.tile(t, (path.shape[0], 1)).unsqueeze(2)
+    path = torch.cat((path, t), dim=2)
+    return path
+
 def run_random(device):
     for _ in range(5):
         for dyadic_order in range(3):
@@ -81,3 +122,18 @@ def test_sig_kernel_non_contiguous():
     res1 = pysiglib.sig_kernel(X, X, 0)
     res2 = pysiglib.sig_kernel(X_non_cont, X_non_cont, 0)
     check_close(res1, res2)
+
+@pytest.mark.parametrize("dyadic_order", range(3))
+def test_sig_kernel_lead_lag(dyadic_order):
+    X = torch.rand(size=(32, 50, 5))
+    Y = torch.rand(size=(32, 100, 5))
+
+    X_ll = batch_lead_lag(X).double()
+    Y_ll = batch_lead_lag(Y).double()
+
+    static_kernel = sigkernel.LinearKernel()
+    signature_kernel = sigkernel.SigKernel(static_kernel, dyadic_order)
+    kernel1 = signature_kernel.compute_kernel(X_ll, Y_ll, 100)
+    kernel2 = pysiglib.sig_kernel(X, Y, dyadic_order, lead_lag = True)
+
+    check_close(kernel1.cpu(), kernel2.cpu())
