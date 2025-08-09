@@ -33,6 +33,15 @@ void get_sig_kernel_(
 	const uint64_t dyadic_order_2
 );
 
+void get_sig_kernel_diag_(
+	double* gram,
+	const uint64_t length1,
+	const uint64_t length2,
+	double* out,
+	const uint64_t dyadic_order_1,
+	const uint64_t dyadic_order_2
+);
+
 void sig_kernel_(
 	double* gram,
 	double* out,
