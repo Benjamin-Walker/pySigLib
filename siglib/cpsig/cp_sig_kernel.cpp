@@ -96,8 +96,6 @@ void get_sig_kernel_diag_(
 	const double twelth = 1. / 12;
 
 	// Dyadically refined grid dimensions
-	const uint64_t grid_size_1 = 1ULL << dyadic_order_1;
-	const uint64_t grid_size_2 = 1ULL << dyadic_order_2;
 	const uint64_t dyadic_length_1 = ((length1 - 1) << dyadic_order_1) + 1;
 	const uint64_t dyadic_length_2 = ((length2 - 1) << dyadic_order_2) + 1;
 	const uint64_t num_anti_diag = dyadic_length_1 + dyadic_length_2 - 1;
@@ -173,6 +171,10 @@ void batch_sig_kernel_(
 	int n_jobs
 ) {
 	if (dimension == 0) { throw std::invalid_argument("signature kernel received path of dimension 0"); }
+	if (!gram) {
+		std::fill(out, out + batch_size, 1.);
+		return;
+	}
 
 	const uint64_t gram_length = (length1 - 1) * (length2 - 1);
 	double* const data_end_1 = gram + gram_length * batch_size;

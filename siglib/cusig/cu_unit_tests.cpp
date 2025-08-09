@@ -141,6 +141,24 @@ namespace MyTest
 {
     TEST_CLASS(sigKernelTest) {
 public:
+
+    TEST_METHOD(Trivial) {
+        auto f = sig_kernel_cuda;
+        uint64_t dimension = 1, length = 1, batch_size = 1;
+        std::vector<double> path = { 0. };
+        std::vector<double> true_sig = { 1. };
+        std::vector<double> gram = {};
+        check_result(f, gram, true_sig, dimension, length, length, 0, 0);
+    }
+
+    TEST_METHOD(TrivialBatch) {
+        auto f = batch_sig_kernel_cuda;
+        uint64_t dimension = 1, length = 1, batch_size = 5;
+        std::vector<double> path = { 0. };
+        std::vector<double> true_sig = { 1., 1., 1., 1., 1. };
+        std::vector<double> gram = {};
+        check_result(f, gram, true_sig, batch_size, dimension, length, length, 0, 0);
+    }
     TEST_METHOD(LinearPathTest) {
         auto f = sig_kernel_cuda;
         uint64_t dimension = 2, length = 3;

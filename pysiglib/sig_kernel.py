@@ -163,4 +163,4 @@ def sig_kernel(
 
     if not BUILT_WITH_CUDA:
         raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
-    return sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2,)
+    return sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2)

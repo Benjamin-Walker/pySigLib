@@ -83,6 +83,12 @@ def run_random(device, batch = 32, len1 = 100, len2 = 100, dim = 5):
 
             check_close(kernel1.cpu(), kernel2.cpu())
 
+def test_sig_kernel_trivial():
+    X = torch.tensor([[0.]])
+
+    kernel2 = pysiglib.sig_kernel(X, X, 0)
+
+    check_close(torch.tensor([1.]), kernel2)
 
 def test_sig_kernel_random_cpu():
     run_random("cpu")
