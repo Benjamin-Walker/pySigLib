@@ -38,93 +38,33 @@ __global__ void goursat_pde(
 	double* gram
 ) {
 	int blockId = blockIdx.x;
-
-	double* initial_condition_ = initial_condition + blockId * dyadic_length_1;
 	double* gram_ = gram + blockId * gram_length;
 
 	__shared__ double diagonals[99]; // Three diagonals of length 33 (32 + initial condition) are rotated and reused
 
-	uint64_t num_full_runs = (dyadic_length_2 - 1) / 32;
-	uint64_t remainder = (dyadic_length_2 - 1) % 32;
+	if (dyadic_length_2 <= dyadic_length_1) {
+		double* initial_condition_ = initial_condition + blockId * dyadic_length_1;
 
-	for (int i = 0; i < num_full_runs; ++i)
-		goursat_pde_32(initial_condition_, diagonals, gram_, i, 32);
+		uint64_t num_full_runs = (dyadic_length_2 - 1) / 32;
+		uint64_t remainder = (dyadic_length_2 - 1) % 32;
 
-	if (remainder)
-		goursat_pde_32(initial_condition_, diagonals, gram_, num_full_runs, remainder);
-}
+		for (int i = 0; i < num_full_runs; ++i)
+			goursat_pde_32<true>(initial_condition_, diagonals, gram_, i, 32);
 
-__device__ void goursat_pde_32(
-	double* initial_condition, //This is the top row of the grid, which will be overwritten to become the bottom row of this grid.
-	double* diagonals,
-	double* gram,
-	uint64_t iteration,
-	int num_threads
-) {
-	int thread_id = threadIdx.x;
-
-	// Initialise to 1
-	for (int i = 0; i < 3; ++i)
-		diagonals[i * 33 + thread_id + 1] = 1.;
-
-	// Indices determine the start points of the antidiagonals in memory
-	// Instead of swaping memory, we swap indices to avoid memory copy
-	int prev_prev_diag_idx = 0;
-	int prev_diag_idx = 33;
-	int next_diag_idx = 66;
-
-	if (thread_id == 0) {
-		diagonals[prev_prev_diag_idx] = initial_condition[0];
-		diagonals[prev_diag_idx] = initial_condition[1];
+		if (remainder)
+			goursat_pde_32<true>(initial_condition_, diagonals, gram_, num_full_runs, remainder);
 	}
+	else {
+		double* initial_condition_ = initial_condition + blockId * dyadic_length_2;
 
-	__syncthreads();
+		uint64_t num_full_runs = (dyadic_length_1 - 1) / 32;
+		uint64_t remainder = (dyadic_length_1 - 1) % 32;
 
-	for (uint64_t p = 2; p < num_anti_diag; ++p) { // First two antidiagonals are initialised to 1
+		for (int i = 0; i < num_full_runs; ++i)
+			goursat_pde_32<false>(initial_condition_, diagonals, gram_, i, 32);
 
-		uint64_t startj, endj;
-		if (dyadic_length_1 > p) startj = 1ULL;
-		else startj = p - dyadic_length_1 + 1;
-		if (num_threads + 1 > p) endj = p;
-		else endj = num_threads + 1;
-
-		uint64_t j = startj + thread_id;
-
-		if (j < endj) {
-
-			// Make sure correct initial condition is filled in for first thread
-			if (thread_id == 0 && p < dyadic_length_1) {
-				diagonals[next_diag_idx] = initial_condition[p];
-			}
-
-			uint64_t i = p - j;  // Calculate corresponding i (since i + j = p)
-			uint64_t ii = ((i - 1) >> dyadic_order_1);
-			uint64_t jj = ((j + iteration * 32 - 1) >> dyadic_order_2);
-
-			double deriv = gram[ii * (length2 - 1) + jj];
-			deriv *= dyadic_frac;
-			double deriv2 = deriv * deriv * twelth;
-
-			diagonals[next_diag_idx + j] = (diagonals[prev_diag_idx + j] + diagonals[prev_diag_idx + j - 1]) * (
-				1. + 0.5 * deriv + deriv2) - diagonals[prev_prev_diag_idx + j - 1] * (1. - deriv2);
-
-		}
-		// Wait for all threads to finish
-		__syncthreads();
-
-		// Overwrite initial condition with result
-		// Safe to do since we won't be using initial_condition[p-num_threads] any more
-		if (thread_id == 0 && p >= num_threads && p - num_threads < dyadic_length_1)
-			initial_condition[p - num_threads] = diagonals[next_diag_idx + num_threads];
-
-		// Rotate the diagonals (swap indices, no data copying)
-		int temp = prev_prev_diag_idx;
-		prev_prev_diag_idx = prev_diag_idx;
-		prev_diag_idx = next_diag_idx;
-		next_diag_idx = temp;
-
-		// Make sure all threads wait for the rotation of diagonals
-		__syncthreads();
+		if (remainder)
+			goursat_pde_32<false>(initial_condition_, diagonals, gram_, num_full_runs, remainder);
 	}
 }
 
@@ -204,12 +144,11 @@ void sig_kernel_cuda_(
 	static const double twelth_ = 1. / 12;
 	const uint64_t dyadic_length_1_ = ((length1_ - 1) << dyadic_order_1_) + 1;
 	const uint64_t dyadic_length_2_ = ((length2_ - 1) << dyadic_order_2_) + 1;
-	const uint64_t num_anti_diag_ = 33 + dyadic_length_1_ - 1;
+	const uint64_t main_dyadic_length_ = dyadic_length_2_ <= dyadic_length_1_ ? dyadic_length_1_ : dyadic_length_2_;
+	const uint64_t num_anti_diag_ = 33 + main_dyadic_length_ - 1;
 	const double dyadic_frac_ = 1. / (1ULL << (dyadic_order_1_ + dyadic_order_2_));
 	const uint64_t gram_length_ = (length1_ - 1) * (length2_ - 1);
 	const uint64_t grid_length_ = dyadic_length_1_ * dyadic_length_2_;
-
-	if (dyadic_length_2_ > dyadic_length_1_) { throw std::invalid_argument("The dyadically refined length of path2 must be less than or equal to that of path1. Please swap path1 and path2."); }
 
 	// Allocate constant memory
 	cudaMemcpyToSymbol(dimension, &dimension_, sizeof(uint64_t));
@@ -228,19 +167,19 @@ void sig_kernel_cuda_(
 
 	if (!return_grid) {
 		// Allocate initial condition
-		auto ones_uptr = std::make_unique<double[]>(dyadic_length_1_ * batch_size_);
+		auto ones_uptr = std::make_unique<double[]>(main_dyadic_length_ * batch_size_);
 		double* ones = ones_uptr.get();
-		std::fill(ones, ones + dyadic_length_1_ * batch_size_, 1.);
+		std::fill(ones, ones + main_dyadic_length_ * batch_size_, 1.);
 
 		double* initial_condition;
-		cudaMalloc((void**)&initial_condition, dyadic_length_1_ * batch_size_ * sizeof(double));
-		cudaMemcpy(initial_condition, ones, dyadic_length_1_ * batch_size_ * sizeof(double), cudaMemcpyHostToDevice);
+		cudaMalloc((void**)&initial_condition, main_dyadic_length_ * batch_size_ * sizeof(double));
+		cudaMemcpy(initial_condition, ones, main_dyadic_length_ * batch_size_ * sizeof(double), cudaMemcpyHostToDevice);
 		ones_uptr.reset();
 
 		goursat_pde << <static_cast<unsigned int>(batch_size_), 32U >> > (initial_condition, gram);
 
 		for (uint64_t i = 0; i < batch_size_; ++i)
-			cudaMemcpy(out + i, initial_condition + (i + 1) * dyadic_length_1_ - 1, sizeof(double), cudaMemcpyDeviceToDevice);
+			cudaMemcpy(out + i, initial_condition + (i + 1) * main_dyadic_length_ - 1, sizeof(double), cudaMemcpyDeviceToDevice);
 		cudaFree(initial_condition);
 	}
 	else {

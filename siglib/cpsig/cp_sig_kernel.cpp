@@ -99,58 +99,14 @@ void get_sig_kernel_diag_(
 	const uint64_t dyadic_order_1,
 	const uint64_t dyadic_order_2
 ) {
-	const double dyadic_frac = 1. / (1ULL << (dyadic_order_1 + dyadic_order_2));
-	const double twelth = 1. / 12;
-
 	// Dyadically refined grid dimensions
 	const uint64_t dyadic_length_1 = ((length1 - 1) << dyadic_order_1) + 1;
 	const uint64_t dyadic_length_2 = ((length2 - 1) << dyadic_order_2) + 1;
-	const uint64_t num_anti_diag = dyadic_length_1 + dyadic_length_2 - 1;
-
-	if (dyadic_length_2 > dyadic_length_1) { throw std::invalid_argument("The dyadically refined length of path2 must be less than or equal to that of path1. Please swap path1 and path2."); }
-
-	// Allocate three diagonals
-	const uint64_t diag_len = std::min(dyadic_length_1, dyadic_length_2);
-	auto diagonals_uptr = std::make_unique<double[]>(diag_len * 3);
-	double* diagonals = diagonals_uptr.get();
-
-	double* prev_prev_diag = diagonals;
-	double* prev_diag = diagonals + diag_len;
-	double* next_diag = diagonals + 2 * diag_len;
-
-	// Initialization
-	std::fill(diagonals, diagonals + 3 * diag_len, 1.);
-
-	for (uint64_t p = 2; p < num_anti_diag; ++p) { // First two antidiagonals are initialised to 1
-
-		uint64_t startj, endj;
-		if (dyadic_length_1 > p) startj = 1ULL;
-		else startj = p - dyadic_length_1 + 1;
-		if (dyadic_length_2 > p) endj = p;
-		else endj = dyadic_length_2;
-
-		for (uint64_t j = startj; j < endj; ++j) {
-			uint64_t i = p - j;  // Calculate corresponding i (since i + j = p)
-			uint64_t ii = ((i - 1) >> dyadic_order_1);
-			uint64_t jj = ((j - 1) >> dyadic_order_2);
-
-			double deriv = gram[ii * (length2 - 1) + jj];
-			deriv *= dyadic_frac;
-			double deriv2 = deriv * deriv * twelth;
-
-			*(next_diag + j) = (*(prev_diag + j) + *(prev_diag + j - 1)) * (
-				1. + 0.5 * deriv + deriv2) - *(prev_prev_diag + j - 1) * (1. - deriv2);
-
-		}
-
-		// Rotate the diagonals (swap pointers, no data copying)
-		double* temp = prev_prev_diag;
-		prev_prev_diag = prev_diag;
-		prev_diag = next_diag;
-		next_diag = temp;
-	}
-
-	*out = prev_diag[diag_len - 1];
+	
+	if (dyadic_length_2 <= dyadic_length_1)
+		get_sig_kernel_diag_internal_<true>(gram, length1, length2, out, dyadic_order_1, dyadic_order_2, dyadic_length_1, dyadic_length_2);
+	else
+		get_sig_kernel_diag_internal_<false>(gram, length1, length2, out, dyadic_order_1, dyadic_order_2, dyadic_length_1, dyadic_length_2);
 }
 
 void sig_kernel_(

@@ -239,7 +239,7 @@ def test_sig_kernel_full_grid_time_aug_lead_lag():
     check_close(kernel1, kernel2)
 
 @pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
-def test_sig_kernel_full_grid():
+def test_sig_kernel_full_grid_cuda():
     X = torch.rand(size=(10, 5, 5), device = "cuda", dtype = torch.double)
     Y = torch.rand(size=(10, 10, 5), device = "cuda", dtype = torch.double)
 
@@ -249,7 +249,7 @@ def test_sig_kernel_full_grid():
     check_close(kernel1, kernel2.cpu())
 
 @pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
-def test_sig_kernel_full_grid_time_aug():
+def test_sig_kernel_full_grid_time_aug_cuda():
     X = torch.rand(size=(10, 5, 5), device="cpu", dtype = torch.double)
     Y = torch.rand(size=(10, 10, 5), device="cpu", dtype = torch.double)
 
@@ -262,7 +262,7 @@ def test_sig_kernel_full_grid_time_aug():
     check_close(kernel1, kernel2.cpu())
 
 @pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
-def test_sig_kernel_full_grid_lead_lag():
+def test_sig_kernel_full_grid_lead_lag_cuda():
     X = torch.rand(size=(10, 5, 5), device="cpu", dtype = torch.double)
     Y = torch.rand(size=(10, 10, 5), device="cpu", dtype = torch.double)
 
@@ -275,7 +275,7 @@ def test_sig_kernel_full_grid_lead_lag():
     check_close(kernel1, kernel2.cpu())
 
 @pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
-def test_sig_kernel_full_grid_time_aug_lead_lag():
+def test_sig_kernel_full_grid_time_aug_lead_lag_cuda():
     X = torch.rand(size=(10, 5, 5), device="cpu", dtype = torch.double)
     Y = torch.rand(size=(10, 10, 5), device="cpu", dtype = torch.double)
 

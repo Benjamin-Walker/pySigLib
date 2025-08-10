@@ -144,17 +144,12 @@ def sig_kernel(
 
     data = DoublePathInputHandler(path1, path2, False, False, 0., "path1", "path2")
 
-    # Make sure dyadic_len_1 <= dyadic_len_2
-    dyadic_len_1 = ((data.length_1 - 1) << dyadic_order_1) + 1
-    dyadic_len_2 = ((data.length_2 - 1) << dyadic_order_2) + 1
-    swap = False
-    if dyadic_len_1 < dyadic_len_2:
-        swap = True
-        data.swap_paths()
-        dyadic_order_1, dyadic_order_2 = dyadic_order_2, dyadic_order_1
-        dyadic_len_1, dyadic_len_2 = dyadic_len_2, dyadic_len_1
-
-    result = ScalarOutputHandler(data) if not return_grid else GridOutputHandler(dyadic_len_1, dyadic_len_2, data)
+    if not return_grid:
+        result = ScalarOutputHandler(data)
+    else:
+        dyadic_len_1 = ((data.length_1 - 1) << dyadic_order_1) + 1
+        dyadic_len_2 = ((data.length_2 - 1) << dyadic_order_2) + 1
+        result = GridOutputHandler(dyadic_len_1, dyadic_len_2, data)
 
     torch_path1 = torch.as_tensor(data.path1)  # Avoids data copy
     torch_path2 = torch.as_tensor(data.path2)
@@ -174,8 +169,5 @@ def sig_kernel(
         if not BUILT_WITH_CUDA:
             raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
         sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2, return_grid)
-
-    if return_grid and swap:
-        result.transpose()
 
     return result.data
