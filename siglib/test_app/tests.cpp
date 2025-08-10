@@ -146,7 +146,38 @@ void example_batch_signature_kernel_cuda(
     // Copy data from the host to the device (CPU -> GPU)
     cudaMemcpy(d_gram, gram.data(), sizeof(double) * gram_size, cudaMemcpyHostToDevice);
 
-    time_function(num_runs, batch_sig_kernel_cuda, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2);
+    time_function(num_runs, batch_sig_kernel_cuda, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, false);
+
+    cudaFree(d_gram);
+    cudaFree(d_out);
+}
+
+void example_batch_signature_kernel_cuda_full_grid(
+    uint64_t batch_size,
+    uint64_t dimension,
+    uint64_t length1,
+    uint64_t length2,
+    uint64_t dyadic_order_1,
+    uint64_t dyadic_order_2,
+    int num_runs
+) {
+    print_header("Batch Signature Kernel CUDA (Full Grid)");
+
+    uint64_t gram_size = length1 * length2 * batch_size;
+    uint64_t dyadic_length_1 = ((length1 - 1) << dyadic_order_1) + 1;
+    uint64_t dyadic_length_2 = ((length2 - 1) << dyadic_order_2) + 1;
+    uint64_t grid_size = dyadic_length_1 * dyadic_length_2 * batch_size;
+    std::vector<double> gram = test_data<double>(gram_size);
+    
+    double* d_gram;
+    double* d_out;
+    cudaMalloc(&d_gram, sizeof(double) * gram_size);
+    cudaMalloc(&d_out, sizeof(double) * grid_size);
+
+    // Copy data from the host to the device (CPU -> GPU)
+    cudaMemcpy(d_gram, gram.data(), sizeof(double) * gram_size, cudaMemcpyHostToDevice);
+
+    time_function(num_runs, batch_sig_kernel_cuda, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, true);
 
     cudaFree(d_gram);
     cudaFree(d_out);

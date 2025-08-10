@@ -51,8 +51,8 @@ using batch_signature_int32_fn = void(CDECL_*)(int*, double*, uint64_t, uint64_t
 
 using sig_kernel_fn = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
 using batch_sig_kernel_fn = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, int, bool);
-using sig_kernel_cuda_fn = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
-using batch_sig_kernel_cuda_fn = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+using sig_kernel_cuda_fn = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
+using batch_sig_kernel_cuda_fn = void(CDECL_*)(double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
 using batch_sig_combine_fn = void(CDECL_*)(double*, double*, double*, uint64_t, uint64_t, uint64_t, int);
 using sig_backprop_double_fn = void(CDECL_*)(double*, double*, double*, double*, uint64_t, uint64_t, uint64_t, bool, bool, double);
 

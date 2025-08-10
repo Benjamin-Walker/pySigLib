@@ -44,7 +44,7 @@ def sig_kernel_(data, result, gram, dyadic_order_1, dyadic_order_2, n_jobs, retu
     if err_code:
         raise Exception("Error in pysiglib.sig_kernel: " + err_msg(err_code))
 
-def sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2,):
+def sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2, return_grid):
     err_code = CUSIG.batch_sig_kernel_cuda(
         cast(gram.data_ptr(), POINTER(c_double)),
         result.data_ptr, data.batch_size,
@@ -52,7 +52,8 @@ def sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2,):
         data.length_1,
         data.length_2,
         dyadic_order_1,
-        dyadic_order_2
+        dyadic_order_2,
+        return_grid
     )
 
     if err_code:
@@ -172,7 +173,7 @@ def sig_kernel(
     else:
         if not BUILT_WITH_CUDA:
             raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
-        sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2)
+        sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2, return_grid)
 
     if return_grid and swap:
         result.transpose()

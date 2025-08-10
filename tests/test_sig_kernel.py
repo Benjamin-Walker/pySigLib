@@ -237,3 +237,52 @@ def test_sig_kernel_full_grid_time_aug_lead_lag():
     kernel2 = pysiglib.sig_kernel(X, Y, 0, lead_lag = True, time_aug = True, return_grid=True)
 
     check_close(kernel1, kernel2)
+
+@pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
+def test_sig_kernel_full_grid():
+    X = torch.rand(size=(10, 5, 5), device = "cuda", dtype = torch.double)
+    Y = torch.rand(size=(10, 10, 5), device = "cuda", dtype = torch.double)
+
+    kernel1 = sig_kernel_full_grid(X, Y, 5, 10, 10)
+    kernel2 = pysiglib.sig_kernel(X, Y, 0, return_grid=True)
+
+    check_close(kernel1, kernel2.cpu())
+
+@pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
+def test_sig_kernel_full_grid_time_aug():
+    X = torch.rand(size=(10, 5, 5), device="cpu", dtype = torch.double)
+    Y = torch.rand(size=(10, 10, 5), device="cpu", dtype = torch.double)
+
+    X_t = pysiglib.transform_path(X, time_aug = True).to(device = "cuda")
+    Y_t = pysiglib.transform_path(Y, time_aug = True).to(device = "cuda")
+
+    kernel1 = sig_kernel_full_grid(X_t, Y_t, 5, 10, 10)
+    kernel2 = pysiglib.sig_kernel(X, Y, 0, time_aug = True, return_grid=True)
+
+    check_close(kernel1, kernel2.cpu())
+
+@pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
+def test_sig_kernel_full_grid_lead_lag():
+    X = torch.rand(size=(10, 5, 5), device="cpu", dtype = torch.double)
+    Y = torch.rand(size=(10, 10, 5), device="cpu", dtype = torch.double)
+
+    X_ll = pysiglib.transform_path(X, lead_lag = True).to(device = "cuda")
+    Y_ll = pysiglib.transform_path(Y, lead_lag = True).to(device = "cuda")
+
+    kernel1 = sig_kernel_full_grid(X_ll, Y_ll, X_ll.shape[1], Y_ll.shape[1], 10)
+    kernel2 = pysiglib.sig_kernel(X, Y, 0, lead_lag = True, return_grid=True)
+
+    check_close(kernel1, kernel2.cpu())
+
+@pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
+def test_sig_kernel_full_grid_time_aug_lead_lag():
+    X = torch.rand(size=(10, 5, 5), device="cpu", dtype = torch.double)
+    Y = torch.rand(size=(10, 10, 5), device="cpu", dtype = torch.double)
+
+    X_ll = pysiglib.transform_path(X, time_aug = True, lead_lag=True).to(device = "cuda")
+    Y_ll = pysiglib.transform_path(Y, time_aug = True, lead_lag=True).to(device = "cuda")
+
+    kernel1 = sig_kernel_full_grid(X_ll, Y_ll, X_ll.shape[1], Y_ll.shape[1], 10)
+    kernel2 = pysiglib.sig_kernel(X, Y, 0, lead_lag = True, time_aug = True, return_grid=True)
+
+    check_close(kernel1, kernel2.cpu())
