@@ -18,6 +18,7 @@ from .sig_length import sig_length
 from .sig import sig_combine, signature
 from .sig_backprop import sig_backprop, sig_combine_backprop
 from .sig_kernel import sig_kernel
+from .sig_kernel_backprop import sig_kernel_backprop
 from .transform_path import transform_path
 
 import pysiglib.torch_api

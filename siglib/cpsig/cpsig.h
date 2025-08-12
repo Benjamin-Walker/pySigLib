@@ -79,6 +79,9 @@ extern "C" {
 	CPSIG_API int sig_kernel(double* gram, double* out, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, bool return_grid = false) noexcept;
 	CPSIG_API int batch_sig_kernel(double* gram, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, int n_jobs = 1, bool return_grid = false) noexcept;
 
+	CPSIG_API int sig_kernel_backprop(double* gram, double* out, double deriv, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2) noexcept;
+	CPSIG_API int batch_sig_kernel_backprop(double* gram, double* out, double* derivs, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, int n_jobs = 1) noexcept;
+
 }
 
 

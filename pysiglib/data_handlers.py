@@ -267,6 +267,97 @@ class DoublePathInputHandler:
         self.path1, self.path2 = self.path2, self.path1
         self.length_1, self.length_2 = self.length_2, self.length_1
 
+class TriplePathInputHandler:
+    """
+    Handle a triple of inputs which are (shaped like) paths or a batch of paths
+    """
+    def __init__(self, path1_, path2_, path3_, time_aug, lead_lag, end_time, path1_name = "path1", path2_name = "path2", path3_name = "path3"):
+
+        self.data1 = PathInputHandler(path1_, time_aug, lead_lag, end_time, path1_name)
+        self.data2 = PathInputHandler(path2_, time_aug, lead_lag, end_time, path2_name)
+        self.data3 = PathInputHandler(path3_, time_aug, lead_lag, end_time, path3_name)
+        self.path1 = self.data1.path
+        self.path2 = self.data2.path
+        self.path3 = self.data3.path
+
+        if len(self.path1.shape) == 2:
+            self.is_batch = False
+            self.batch_size = 1
+            self.length_1 = self.path1.shape[0]
+            self.dimension = self.path1.shape[1]
+        elif len(self.path1.shape) == 3:
+            self.is_batch = True
+            self.batch_size = self.path1.shape[0]
+            self.length_1 = self.path1.shape[1]
+            self.dimension = self.path1.shape[2]
+        else:
+            raise ValueError(path1_name + ".shape must have length 2 or 3, got length " + str(len(self.path1.shape)) + " instead.")
+
+        if len(self.path2.shape) == 2:
+            if self.batch_size != 1:
+                raise ValueError(path1_name + ", " + path2_name + " have different batch sizes")
+            self.length_2 = self.path2.shape[0]
+            if self.dimension != self.path2.shape[1]:
+                raise ValueError(path1_name + ", " + path2_name + " have different dimensions")
+        elif len(self.path2.shape) == 3:
+            if self.batch_size != self.path2.shape[0]:
+                raise ValueError(path1_name + ", " + path2_name + " have different batch sizes")
+            self.length_2 = self.path2.shape[1]
+            if self.dimension != self.path2.shape[2]:
+                raise ValueError(path1_name + ", " + path2_name + " have different dimensions")
+        else:
+            raise ValueError(path2_name + ".shape must have length 2 or 3, got length " + str(len(self.path2.shape)) + " instead.")
+
+        if len(self.path3.shape) == 2:
+            if self.batch_size != 1:
+                raise ValueError(path1_name + ", " + path3_name + " have different batch sizes")
+            self.length_3 = self.path3.shape[0]
+            if self.dimension != self.path3.shape[1]:
+                raise ValueError(path1_name + ", " + path3_name + " have different dimensions")
+        elif len(self.path3.shape) == 3:
+            if self.batch_size != self.path3.shape[0]:
+                raise ValueError(path1_name + ", " + path3_name + " have different batch sizes")
+            self.length_3 = self.path3.shape[1]
+            if self.dimension != self.path3.shape[2]:
+                raise ValueError(path1_name + ", " + path3_name + " have different dimensions")
+        else:
+            raise ValueError(path3_name + ".shape must have length 2 or 3, got length " + str(len(self.path2.shape)) + " instead.")
+
+        if self.data1.type_ != self.data2.type_ or self.data1.type_ != self.data3.type_:
+            raise ValueError(path1_name + ", " + path2_name + " and " + path3_name + " must all be numpy arrays or all torch arrays")
+
+        if self.data1.type_ == "torch" and (self.path1.device != self.path2.device or self.path1.device != self.path3.device):
+            raise ValueError(path1_name + ", " + path2_name + " and " + path3_name + " must all be on the same device")
+
+        self.type_ = self.data1.type_
+        self.device = self.path1.device.type if self.type_ == "torch" else "cpu"
+
+
+class ScalarInputHandler:
+    """
+    Handle output which is (shaped like) a scalar or a batch of scalars
+    """
+    def __init__(self, data_, data_name = "scalars"):
+        self.data_name = data_name
+        check_type_multiple(data_, data_name, (np.ndarray, torch.Tensor))
+        self.data = ensure_own_contiguous_storage(data_, 4)
+        check_dtype(self.data, data_name)
+
+        if len(self.data.shape) > 1:
+            raise ValueError(data_name + " must be a 1D array")
+        self.batch_size = self.data.shape[0]
+
+        if isinstance(self.data, np.ndarray):
+            self.type_ = "numpy"
+            self.dtype = str(self.data.dtype)
+            self.data_ptr = self.data.ctypes.data_as(POINTER(DTYPES[self.dtype]))
+        elif isinstance(self.data, torch.Tensor):
+            self.type_ = "torch"
+            self.dtype = str(self.data.dtype)[6:]
+            self.data_ptr = cast(self.data.data_ptr(), POINTER(DTYPES[self.dtype]))
+
+        self.device = self.data.device.type if self.type_ == "torch" else "cpu"
+
 class ScalarOutputHandler:
     """
     Handle output which is (shaped like) a scalar or a batch of scalars

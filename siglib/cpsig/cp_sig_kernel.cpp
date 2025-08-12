@@ -177,6 +177,110 @@ void batch_sig_kernel_(
 	return;
 }
 
+void sig_kernel_backprop_(
+	double* gram,
+	double* out,
+	double deriv,
+	uint64_t dimension,
+	uint64_t length1,
+	uint64_t length2,
+	uint64_t dyadic_order_1,
+	uint64_t dyadic_order_2
+) {
+	if (dimension == 0) { throw std::invalid_argument("signature kernel received path of dimension 0"); }
+
+	const uint64_t dyadic_length_1 = ((length1 - 1) << dyadic_order_1) + 1;
+	const uint64_t dyadic_length_2 = ((length2 - 1) << dyadic_order_2) + 1;
+	double* out_ptr = out;
+
+	if (dyadic_length_2 <= dyadic_length_1) {
+		for (uint64_t i = 0; i < length1 - 1; ++i) {
+			for (uint64_t j = 0; j < length2 - 1; ++j) {
+				get_sig_kernel_deriv_<true>(i, j, gram, out_ptr, deriv, length2, dyadic_order_1, dyadic_order_2, dyadic_length_1, dyadic_length_2);
+				++out_ptr;
+			}
+		}
+	}
+	else {
+		for (uint64_t i = 0; i < length1 - 1; ++i) {
+			for (uint64_t j = 0; j < length2 - 1; ++j) {
+				get_sig_kernel_deriv_<false>(i, j, gram, out_ptr, deriv, length2, dyadic_order_1, dyadic_order_2, dyadic_length_1, dyadic_length_2);
+				++out_ptr;
+			}
+		}
+	}
+
+	return;
+}
+
+void batch_sig_kernel_backprop_(
+	double* gram,
+	double* out,
+	double* derivs,
+	uint64_t batch_size,
+	uint64_t dimension,
+	uint64_t length1,
+	uint64_t length2,
+	uint64_t dyadic_order_1,
+	uint64_t dyadic_order_2,
+	int n_jobs
+) {
+	if (dimension == 0) { throw std::invalid_argument("signature kernel received path of dimension 0"); }
+
+	const uint64_t gram_length = (length1 - 1) * (length2 - 1);
+	
+	if (!gram) {
+		std::fill(out, out + batch_size * gram_length, 0.);
+		return;
+	}
+
+	double* const data_end_1 = gram + gram_length * batch_size;
+
+	const uint64_t dyadic_length_1 = ((length1 - 1) << dyadic_order_1) + 1;
+	const uint64_t dyadic_length_2 = ((length2 - 1) << dyadic_order_2) + 1;
+
+	std::function<void(double*, double*, double*)> sig_kernel_backprop_func;
+
+	if (dyadic_length_2 <= dyadic_length_1) {
+		sig_kernel_backprop_func = [&](double* gram_ptr, double* deriv_ptr, double* out_ptr) {
+			double* out_ptr_ = out_ptr;
+			for (uint64_t i = 0; i < length1 - 1; ++i) {
+				for (uint64_t j = 0; j < length2 - 1; ++j) {
+					get_sig_kernel_deriv_<true>(i, j, gram_ptr, out_ptr_, *deriv_ptr, length2, dyadic_order_1, dyadic_order_2, dyadic_length_1, dyadic_length_2);
+					++out_ptr_;
+				}
+			}
+			};
+	}
+	else {
+		sig_kernel_backprop_func = [&](double* gram_ptr, double* deriv_ptr, double* out_ptr) {
+			double* out_ptr_ = out_ptr;
+			for (uint64_t i = 0; i < length1 - 1; ++i) {
+				for (uint64_t j = 0; j < length2 - 1; ++j) {
+					get_sig_kernel_deriv_<false>(i, j, gram_ptr, out_ptr_, *deriv_ptr, length2, dyadic_order_1, dyadic_order_2, dyadic_length_1, dyadic_length_2);
+					++out_ptr_;
+				}
+			}
+			};
+	}
+
+	if (n_jobs != 1) {
+		multi_threaded_batch_2(sig_kernel_backprop_func, gram, derivs, out, batch_size, gram_length, 1, gram_length, n_jobs);
+	}
+	else {
+		double* gram_ptr = gram;
+		double* out_ptr = out;
+		double* deriv_ptr = derivs;
+		for (;
+			gram_ptr < data_end_1;
+			gram_ptr += gram_length, out_ptr += gram_length, deriv_ptr += 1) {
+
+			sig_kernel_backprop_func(gram_ptr, deriv_ptr, out_ptr);
+		}
+	}
+	return;
+}
+
 extern "C" {
 
 	CPSIG_API int sig_kernel(double* gram, double* out, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, bool return_grid) noexcept {
@@ -185,5 +289,13 @@ extern "C" {
 
 	CPSIG_API int batch_sig_kernel(double* gram, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, int n_jobs, bool return_grid) noexcept {
 		SAFE_CALL(batch_sig_kernel_(gram, out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, n_jobs, return_grid));
+	}
+
+	CPSIG_API int sig_kernel_backprop(double* gram, double* out, double deriv, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2) noexcept {
+		SAFE_CALL(sig_kernel_backprop_(gram, out, deriv, dimension, length1, length2, dyadic_order_1, dyadic_order_2));
+	}
+
+	CPSIG_API int batch_sig_kernel_backprop(double* gram, double* out, double* derivs, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, int n_jobs) noexcept {
+		SAFE_CALL(batch_sig_kernel_backprop_(gram, out, derivs, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, n_jobs));
 	}
 }

@@ -520,3 +520,35 @@ if BUILT_WITH_CUDA:
         c_bool
     )
     CUSIG.batch_sig_kernel_cuda.restype = c_int
+
+######################################################
+# batch_sig_kernel_backprop
+######################################################
+
+CPSIG.batch_sig_kernel_backprop.argtypes = (
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_int
+)
+CPSIG.batch_sig_kernel.restype = c_int
+
+# if BUILT_WITH_CUDA:
+#     CUSIG.batch_sig_kernel_cuda.argtypes = (
+#         POINTER(c_double),
+#         POINTER(c_double),
+#         c_uint64,
+#         c_uint64,
+#         c_uint64,
+#         c_uint64,
+#         c_uint64,
+#         c_uint64,
+#         c_bool
+#     )
+#     CUSIG.batch_sig_kernel_cuda.restype = c_int

@@ -894,5 +894,70 @@ namespace cpSigTests
             check_result(f, gram, true_sig, dimension, length1, length2, 0, 0, true);
         }
     };
+
+    TEST_CLASS(sigKernelBackpropTest) {
+    public:
+        TEST_METHOD(ManualTest1) {
+            auto f = sig_kernel_backprop;
+            uint64_t dimension = 1, length1 = 2, length2 = 3;
+            std::vector<double> path1 = { 0., 2. };
+            std::vector<double> path2 = { 0., 1., 2. };
+            double deriv = 1.;
+            std::vector<double> true_ = { 4.5 + 1./6, 4.5 };
+            std::vector<double> gram((length1 - 1) * (length2 - 1));
+            gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+            check_result(f, gram, true_, deriv, dimension, length1, length2, 0, 0);
+        }
+
+        TEST_METHOD(ManualTest2) {
+            auto f = sig_kernel_backprop;
+            uint64_t dimension = 1, length1 = 3, length2 = 3;
+            std::vector<double> path1 = { 0., 2., 3. };
+            std::vector<double> path2 = { 0., 1., 2. };
+            double deriv = 1.;
+            std::vector<double> true_ = { 761./72, 7.125, 133./24, 12.5 + 1. / 6 };
+            std::vector<double> gram((length1 - 1) * (length2 - 1));
+            gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+            check_result(f, gram, true_, deriv, dimension, length1, length2, 0, 0);
+        }
+
+        TEST_METHOD(ManualTest3) {
+            auto f = sig_kernel_backprop;
+            uint64_t dimension = 1, length1 = 2, length2 = 3;
+            std::vector<double> path1 = { 0., 2. };
+            std::vector<double> path2 = { 0., 1., 2. };
+            double deriv = 1.;
+            std::vector<double> true_ = { 5.1602194279800226, 5.1185673607720270 };
+            std::vector<double> gram((length1 - 1) * (length2 - 1));
+            gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+            check_result(f, gram, true_, deriv, dimension, length1, length2, 1, 1);
+        }
+
+        TEST_METHOD(BatchManualTest1) {
+            auto f = batch_sig_kernel_backprop;
+            uint64_t batch_size = 2, dimension = 1, length1 = 2, length2 = 3;
+            std::vector<double> path1 = { 0., 2., 0., 2. };
+            std::vector<double> path2 = { 0., 1., 2., 0., 1., 2. };
+            std::vector<double> derivs = { 1., 1. };
+            std::vector<double> true_ = { 4.5 + 1. / 6, 4.5, 4.5 + 1. / 6, 4.5 };
+            std::vector<double> gram((length1 - 1) * (length2 - 1) * batch_size);
+            gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+            gram_(path1.data(), path2.data(), gram.data() + 2, 1, dimension, length1, length2);
+            check_result(f, gram, true_, derivs.data(), batch_size, dimension, length1, length2, 0, 0, 1);
+        }
+
+        TEST_METHOD(BatchManualTest2) {
+            auto f = batch_sig_kernel_backprop;
+            uint64_t batch_size = 2, dimension = 1, length1 = 3, length2 = 3;
+            std::vector<double> path1 = { 0., 2., 3., 0., 2., 3. };
+            std::vector<double> path2 = { 0., 1., 2., 0., 1., 2. };
+            std::vector<double> derivs = { 1., 1. };
+            std::vector<double> true_ = { 761. / 72, 7.125, 133. / 24, 12.5 + 1. / 6, 761. / 72, 7.125, 133. / 24, 12.5 + 1. / 6 };
+            std::vector<double> gram((length1 - 1) * (length2 - 1) * batch_size);
+            gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+            gram_(path1.data(), path2.data(), gram.data() + 4, 1, dimension, length1, length2);
+            check_result(f, gram, true_, derivs.data(), batch_size, dimension, length1, length2, 0, 0, 1);
+        }
+    };
 }
 //TODO: add tests for transform_path
