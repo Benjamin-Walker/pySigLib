@@ -337,8 +337,9 @@ class ScalarInputHandler:
     """
     Handle output which is (shaped like) a scalar or a batch of scalars
     """
-    def __init__(self, data_, data_name = "scalars"):
+    def __init__(self, data_, is_batch = False, data_name = "scalars"):
         self.data_name = data_name
+        self.is_batch = is_batch
         check_type_multiple(data_, data_name, (np.ndarray, torch.Tensor))
         self.data = ensure_own_contiguous_storage(data_, 4)
         check_dtype(self.data, data_name)

@@ -20,6 +20,7 @@ import numpy as np
 import torch
 
 from .transform_path import transform_path
+from .transform_path_backprop import transform_path_backprop
 from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
@@ -140,19 +141,15 @@ def sig_kernel_backprop(
 
     data = DoublePathInputHandler(path1, path2, False, False, end_time, "path1", "path2")
 
-    if isinstance(derivs, torch.Tensor):#TODO
-        derivs = derivs.double()
-    else:
-        derivs = derivs.astype("double")
-
-    derivs_data = ScalarInputHandler(derivs, "derivs")
+    derivs = torch.as_tensor(derivs, dtype = torch.double)
+    derivs_data = ScalarInputHandler(derivs, data.is_batch, "derivs")
 
     if not (derivs_data.type_ == data.type_ and derivs_data.device == data.device):
         raise ValueError("derivs, path1 and path2 must all be numpy arrays or all torch tensors on the same device")
     if data.batch_size != derivs_data.batch_size:
         raise ValueError("batch size for derivs does not match batch size of paths")
 
-    result = GridOutputHandler(data.length_1 - 1, data.length_2 - 1, data) #Derivatives with respect to gram matrix
+    result = GridOutputHandler(data.length_1 - 1, data.length_2 - 1, derivs_data) #Derivatives with respect to gram matrix
 
     torch_path1 = torch.as_tensor(data.path1)  # Avoids data copy
     torch_path2 = torch.as_tensor(data.path2)
@@ -174,14 +171,24 @@ def sig_kernel_backprop(
         raise NotImplementedError()
         #sig_kernel_backprop_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2)
 
+    # Now convert derivs wrt to gram into derivs wrt the path
+    # note result.data is a torch array
     if data.is_batch:
-        #out = torch.einsum('jib,jik->jbk', result.data, y1) - torch.einsum('jai,jik->jak', result.data, y1)
-        out = torch.zeros((data.batch_size, data.length_1, data.length_2 - 1), dtype=torch.double)
+        out = torch.empty((data.batch_size, data.length_1, data.length_2 - 1), dtype=y1.dtype, device = result.device)
+        out[:, 0, :] = 0
         out[:, 1:, :] = result.data
         out[:, :-1, :] -= result.data
-        out = torch.einsum('bik,bkd->bid', out, y1)
     else:
-        out = torch.einsum('ib,ik->bk', result.data, y1) - torch.einsum('ai,ik->ak', result.data, y1)
+        out = torch.empty((data.length_1, data.length_2 - 1), dtype=y1.dtype, device=result.device)
+        out[0, :] = 0
+        out[1:, :] = result.data
+        out[:-1, :] -= result.data
+        out = out[None, :, :]
+
+    out = torch.bmm(out, y1)
+
+    if lead_lag or time_aug:
+        out = transform_path_backprop(out, time_aug, lead_lag, end_time, n_jobs)
 
     if data.type_ == "numpy":
         return out.numpy()
