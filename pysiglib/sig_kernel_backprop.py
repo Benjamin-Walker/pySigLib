@@ -69,26 +69,21 @@ def sig_kernel_backprop(
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
+        left_deriv : bool = True,#TODO
+        right_deriv : bool = False,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     """
-    Computes a single signature kernel or a batch of signature kernels.
-    The signature kernel of two :math:`d`-dimensional paths :math:`x,y`
-    is defined as
+    This function is required to backpropagate through ``pysiglib.sig_kernel``.
+    Given the derivatives of a scalar function :math:`F` with respect to a
+    signature kernel, :math:`\\partial F / \\left< S(x), S(y) \\right>`,
+    returns the derivatives of :math:`F` with respect to one or both of the
+    underlying paths, :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^{L_1}` and
+    :math:`\\{\\partial F / y_{t_i}\\}_{i=0}^{L_2}`.
 
-    .. math::
-
-        k_{x,y}(s,t) := \\left< S(x)_{[0,s]}, S(y)_{[0, t]} \\right>_{T((\\mathbb{R}^d))}
-
-    where the inner product is defined as
-
-    .. math::
-
-        \\left< A, B \\right> := \\sum_{k=0}^{\\infty} \\left< A_k, B_k \\right>_{\\left(\\mathbb{R}^d\\right)^{\\otimes k}}
-    .. math::
-
-        \\left< u, v \\right>_{\\left(\\mathbb{R}^d\\right)^{\\otimes k}} := \\prod_{i=1}^k \\left< u_i, v_i \\right>_{\\mathbb{R}^d}
-
+    :param derivs: Derivatives with respect to a signature kernel or batch
+        of signature kernels, :math:`\\partial F / \\left< S(x), S(y) \\right>`.
+    :type derivs: numpy.ndarray | torch.tensor
     :param path1: The first underlying path or batch of paths, given as a `numpy.ndarray` or
         `torch.tensor`. For a single path, this must be of shape (length, dimension). For a
         batch of paths, this must be of shape (batch size, length, dimension).
@@ -97,26 +92,34 @@ def sig_kernel_backprop(
         or `torch.tensor`. For a single path, this must be of shape (length, dimension).
         For a batch of paths, this must be of shape (batch size, length, dimension).
     :type path2: numpy.ndarray | torch.tensor
-    :param dyadic_order: If set to a positive integer :math:`\\lambda`, will refine the
-        PDE grid by a factor of :math:`2^\\lambda`.
+    :param dyadic_order: The dyadic order(s) used to compute the signature kernels.
     :type dyadic_order: int | tuple
-    :param time_aug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
-        defined as the original path with an extra channel set to time, :math:`t`.
+    :param time_aug: If ``True``, assumes the paths were time augmented.
     :type time_aug: bool
-    :param lead_lag: If set to True, will compute the signature of the path after applying the lead-lag transformation.
+    :param lead_lag: If ``True``, assumes the lead-lag transform was applied.
     :type lead_lag: bool
+    :param left_deriv: If ``True``, returns :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^{L_1}`.
+        At least one of ``left_deriv`` and ``right_deriv`` must be ``True``. If both are
+        ``True``, returns both derivatives as a tuple.
+    :type left_deriv: bool
+    :param right_deriv: If ``True``, returns :math:`\\{\\partial F / y_{t_i}\\}_{i=0}^{L_2}`.
+        At least one of ``left_deriv`` and ``right_deriv`` must be ``True``. If both are
+        ``True``, returns both derivatives as a tuple.
+    :type right_deriv: bool
     :param n_jobs: (Only applicable to CPU computation) Number of threads to run in parallel.
         If n_jobs = 1, the computation is run serially. If set to -1, all available threads
         are used. For n_jobs below -1, (max_threads + 1 + n_jobs) threads are used. For example
         if n_jobs = -2, all threads but one are used.
     :type n_jobs: int
-    :return: Single signature kernel or batch of signature kernels
-    :rtype: numpy.ndarray | torch.tensor
+    :return: Derivatives of :math:`F` with respect to one or both of the
+        underlying paths, :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^{L_1}` and
+        :math:`\\{\\partial F / y_{t_i}\\}_{i=0}^{L_2}`.
+    :rtype: numpy.ndarray | torch.tensor | Tuple[numpy.ndarray | numpy.ndarray] | Tuple[torch.tensor | torch.tensor]
 
     .. note::
 
-        Ideally, any array passed to ``pysiglib.sig_kernel`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig_kernel`` will internally create a contiguous copy, which may be
+        Ideally, any array passed to ``pysiglib.sig_kernel_backprop`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.sig_kernel_backprop`` will internally create a contiguous copy, which may be
         inefficient.
     """
     check_type(n_jobs, "n_jobs", int)

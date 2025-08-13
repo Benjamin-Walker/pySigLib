@@ -30,10 +30,12 @@ pySigLib |release|
 
    /pages/installation
    /pages/transform_path
+   /pages/transform_path_backprop
    /pages/sig_length
    /pages/signature
    /pages/sig_backprop
    /pages/sig_combine
    /pages/sig_combine_backprop
    /pages/sig_kernel
+   /pages/sig_kernel_backprop
    /pages/torch_api

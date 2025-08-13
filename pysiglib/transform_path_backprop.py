@@ -66,58 +66,21 @@ def transform_path_backprop(
     n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     """
-    This function is required to backpropogate through ``pysiglib.transform_path``.
-    This function applies time-augmentation and/or the lead-lag transformation to a path. Given a
-    :math:`d`-dimensional path :math:`(X_{t_i})_{i=1}^L`, the time-augmented path is formed by adding time as the
-    last channel of the path,
+    This function is required to backpropagate through ``pysiglib.transform_path``.
+    Given the derivatives of a scalar function :math:`F` with respect to the
+    result of ``pysiglib.transform_path``,
+    :math:`\\{\\partial F / \\partial \\tilde{x}_{t_i}\\}_{i=0}^\\tilde{L}`,
+    returns the derivatives of :math:`F` with respect to the original path,
+    :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^L`.
 
-    .. math::
-
-        \\widehat{X}_{t_i} := (X_{t_i}, t_i).
-
-    The lead-lag transformation is defined by
-
-    .. math::
-
-        X^{LL}_{t_i} := (X^{\\text{Lead}}_{t_i}, X^{\\text{Lag}}_{t_i})
-
-    .. math::
-
-        X^{\\text{Lead}}_{t_i} :=
-        \\begin{cases}
-            X_{t_k} & \\text{if } i = 2k, \\\\
-            X_{t_k} & \\text{if } i = 2k - 1,
-        \\end{cases}
-
-    .. math::
-
-        X^{\\text{Lag}}_{t_i} :=
-        \\begin{cases}
-            X_{t_k} & \\text{if } i = 2k, \\\\
-            X_{t_k} & \\text{if } i = 2k + 1,
-        \\end{cases}
-
-    so that
-
-    .. math::
-
-        (X^{\\text{Lead}}_{t_i})_{i=0}^L = (X_{t_0}, X_{t_1}, X_{t_1}, X_{t_2}, X_{t_2}, \\ldots),
-
-    .. math::
-
-        (X^{\\text{Lag}}_{t_i})_{i=0}^L = (X_{t_0}, X_{t_0}, X_{t_1}, X_{t_1}, X_{t_2}, \\ldots).
-
-    When both ``time_aug`` and ``lead_lag`` are set to ``True``, time-augmentation is applied
-    after the lead-lag transformation.
-
-    :param path: The underlying path or batch of paths, given as a `numpy.ndarray` or `torch.tensor`.
-        For a single path, this must be of shape (length, dimension). For a batch of paths, this must
-        be of shape (batch size, length, dimension).
-    :type path: numpy.ndarray | torch.tensor
-    :param time_aug: If ``True``, applies time-augmentation by adding a linear channel to the path
-        spanning :math:`[0, t_L]`. :math:`t_L` is given by the parameter ``end_time`` and defaults to 1.
+    :param derivs: The derivatives with respect to the result of ``pysiglib.transform_path``,
+        :math:`\\{\\partial F / \\partial \\tilde{x}_{t_i}\\}_{i=0}^\\tilde{L}`.
+    :type derivs: numpy.ndarray | torch.tensor
+    :param time_aug: If ``True``, assumes the derivatives are with respect to a time
+        augmented path.
     :type time_aug: bool
-    :param lead_lag: If ``True``, applies the lead-lag transform.
+    :param lead_lag: If ``True``, assumes the derivatives are with respect to a lead-lag
+        transformed path.
     :type lead_lag: bool
     :param end_time: End time for time-augmentation, :math:`t_L`.
     :type end_time: float
@@ -125,24 +88,15 @@ def transform_path_backprop(
         If set to -1, all available threads are used. For n_jobs below -1, (max_threads + 1 + n_jobs)
         threads are used. For example if n_jobs = -2, all threads but one are used.
     :type n_jobs: int
-    :return: Transformed paths.
+    :return: Derivatives with respect to the original path,
+        :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^L`.
     :rtype: numpy.ndarray | torch.tensor
-
 
     .. note::
 
-        Ideally, any array passed to ``pysiglib.transform_path`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.transform_path`` will internally create a contiguous copy, which may be
+        Ideally, any array passed to ``pysiglib.transform_path_backprop`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.transform_path_backprop`` will internally create a contiguous copy, which may be
         inefficient.
-
-    .. important::
-
-        This function is provided for convenience only, and one should prefer the in-built flags for
-        these transformations within ``pysiglib`` functions where available. For example, running
-        ``pysiglib.signature`` with ``lead_lag=True`` will be faster and more memory-efficient than
-        pre-computing the lead-lag transform and passing it to ``pysiglib.signature``, as the former
-        method will never explicitly compute or store the lead-lag transform, and will instead
-        modify the signature computation directly.
 
     """
     check_type(time_aug, "time_aug", bool)

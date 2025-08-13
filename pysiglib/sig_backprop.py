@@ -66,7 +66,7 @@ def sig_combine_backprop(
         n_jobs : int = 1
 ):
     """
-    This function is required to backpropogate through ``pysiglib.sig_combine``.
+    This function is required to backpropagate through ``pysiglib.sig_combine``.
     Given the derivatives of a scalar function :math:`F` with respect to the
     result of ``pysiglib.sig_combine``, :math:`\\partial F / \\partial S(x_1 * x_2)`,
     returns the derivatives of :math:`F` with respect to the original two signatures,
@@ -167,7 +167,7 @@ def sig_backprop(
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     """
-    This function is required to backpropogate through the signature computation.
+    This function is required to backpropagate through the signature computation.
     Given the derivatives of a scalar function :math:`F` with respect to the
     signature, :math:`\\partial F / \\partial S(x)`, returns the
     derivatives of :math:`F` with respect to the underlying path,

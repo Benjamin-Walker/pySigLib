@@ -77,7 +77,7 @@ def transform_path(
 
     .. math::
 
-        X^{LL}_{t_i} := (X^{\\text{Lead}}_{t_i}, X^{\\text{Lag}}_{t_i})
+        X^{LL}_{t_i} := (X^{\\text{Lag}}_{t_i}, X^{\\text{Lead}}_{t_i})
 
     .. math::
 
@@ -99,11 +99,11 @@ def transform_path(
 
     .. math::
 
-        (X^{\\text{Lead}}_{t_i})_{i=0}^L = (X_{t_0}, X_{t_1}, X_{t_1}, X_{t_2}, X_{t_2}, \\ldots),
+        (X^{\\text{Lag}}_{t_i})_{i=0}^L = (X_{t_0}, X_{t_0}, X_{t_1}, X_{t_1}, X_{t_2}, \\ldots),
 
     .. math::
 
-        (X^{\\text{Lag}}_{t_i})_{i=0}^L = (X_{t_0}, X_{t_0}, X_{t_1}, X_{t_1}, X_{t_2}, \\ldots).
+        (X^{\\text{Lead}}_{t_i})_{i=0}^L = (X_{t_0}, X_{t_1}, X_{t_1}, X_{t_2}, X_{t_2}, \\ldots).
 
     When both ``time_aug`` and ``lead_lag`` are set to ``True``, time-augmentation is applied
     after the lead-lag transformation.
@@ -126,6 +126,11 @@ def transform_path(
     :return: Transformed paths.
     :rtype: numpy.ndarray | torch.tensor
 
+    .. note::
+
+        Note that in the definition of the lead-lag transformation, we have intentionally chosen
+        :math:`X^{LL} := (X^{\\text{Lag}}, X^{\\text{Lead}})` rather than the more commonly used
+        order of channels :math:`X^{LL} := (X^{\\text{Lead}}, X^{\\text{Lag}})`.
 
     .. note::
 
