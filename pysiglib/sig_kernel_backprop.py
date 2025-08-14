@@ -157,8 +157,10 @@ def sig_kernel_backprop(
         are used. For n_jobs below -1, (max_threads + 1 + n_jobs) threads are used. For example
         if n_jobs = -2, all threads but one are used.
     :type n_jobs: int
-    :return: Derivatives of :math:`F` with respect to one or both of the
-        underlying paths, :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^{L_1}` and
+    :return: Tuple of derivatives of :math:`F` with respect to one or both of the
+        underlying paths. If ``left_deriv`` is ``True``, the first element of
+        this tuple is  :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^{L_1}`, otherwise
+        it is ``None``. Similarly for ``right_deriv`` and
         :math:`\\{\\partial F / y_{t_i}\\}_{i=0}^{L_2}`.
     :rtype: numpy.ndarray | torch.tensor | Tuple[numpy.ndarray | numpy.ndarray] | Tuple[torch.tensor | torch.tensor]
 
@@ -221,10 +223,6 @@ def sig_kernel_backprop(
         rd = sig_kernel_backprop_from_gram(derivs_data, data, torch.transpose(gram, 1, 2).contiguous(), x1, dyadic_order_2, dyadic_order_1, time_aug, lead_lag,
                                       end_time, n_jobs)
 
-    if left_deriv and not right_deriv:
-        return ld
-    if not left_deriv and right_deriv:
-        return rd
     return ld, rd
 
 

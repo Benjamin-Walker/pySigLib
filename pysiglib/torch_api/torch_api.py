@@ -117,7 +117,7 @@ transform_path.__doc__ = transform_path_forward.__doc__
 
 class SigKernel(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, path1, path2, dyadic_order, time_aug, lead_lag, end_time, left_deriv, right_deriv, n_jobs):
+    def forward(ctx, path1, path2, dyadic_order, time_aug, lead_lag, end_time, n_jobs):
         k = sig_kernel_forward(path1, path2, dyadic_order, time_aug, lead_lag, end_time, n_jobs, False)
 
         ctx.save_for_backward(path1, path2)
@@ -125,23 +125,20 @@ class SigKernel(torch.autograd.Function):
         ctx.time_aug = time_aug
         ctx.lead_lag = lead_lag
         ctx.end_time = end_time
-        ctx.left_deriv = left_deriv
-        ctx.right_deriv = right_deriv
         ctx.n_jobs = n_jobs
 
         return k
 
     @staticmethod
     def backward(ctx, grad_output):
+        left_deriv = ctx.needs_input_grad[0]
+        right_deriv = ctx.needs_input_grad[1]
+
         path1, path2 = ctx.saved_tensors
         new_derivs = sig_kernel_backprop(grad_output, path1, path2, ctx.dyadic_order,
                                          ctx.time_aug, ctx.lead_lag, ctx.end_time,
-                                         ctx.left_deriv, ctx.right_deriv, ctx.n_jobs)
+                                         left_deriv, right_deriv, ctx.n_jobs)
 
-        if (ctx.left_deriv and not ctx.right_deriv):
-            return new_derivs, None, None, None, None, None, None, None, None
-        if (not ctx.left_deriv and ctx.right_deriv):
-            return None, new_derivs, None, None, None, None, None, None, None
         return new_derivs[0], new_derivs[1], None, None, None, None, None, None, None
 
 def sig_kernel(
