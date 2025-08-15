@@ -1,0 +1,207 @@
+/* Copyright 2025 Daniil Shmelev
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ========================================================================= */
+
+#include "dll_funcs.h"
+#include "utils.h"
+
+void example_signature_double(
+    uint64_t dimension,
+    uint64_t length,
+    uint64_t degree,
+    bool time_aug,
+    bool lead_lag,
+    bool horner,
+    int num_runs
+) {
+    print_header("Signature Double");
+
+    std::vector<double> path = test_data<double>(dimension * length);
+
+    uint64_t out_size = sig_length(dimension, degree);
+    std::vector<double> out(out_size, 0.);
+
+    time_function(num_runs, signature_double, path.data(), out.data(), dimension, length, degree, time_aug, lead_lag, 1., horner);
+
+    std::cout << "done\n";
+}
+
+void example_signature_int32(
+    uint64_t dimension,
+    uint64_t length,
+    uint64_t degree,
+    bool time_aug,
+    bool lead_lag,
+    bool horner,
+    int num_runs
+) {
+    print_header("Signature Int");
+
+    std::vector<int> path = test_data<int>(dimension * length);
+
+    uint64_t out_size = sig_length(dimension, degree);
+    std::vector<double> out(out_size, 0.);
+
+    time_function(num_runs, signature_int32, path.data(), out.data(), dimension, length, degree, time_aug, lead_lag, 1., horner);
+
+    std::cout << "done\n";
+}
+
+void example_batch_signature_double(
+    uint64_t batch_size,
+    uint64_t dimension,
+    uint64_t length,
+    uint64_t degree,
+    bool time_aug,
+    bool lead_lag,
+    bool horner,
+    int n_jobs,
+    int num_runs
+) {
+    print_header("Batch Signature Double");
+
+    std::vector<double> path = test_data<double>(batch_size * dimension * length);
+
+    uint64_t out_size = sig_length(dimension, degree) * batch_size;
+    std::vector<double> out(out_size, 0.);
+
+    time_function(num_runs, batch_signature_double, path.data(), out.data(), batch_size, dimension, length, degree, time_aug, lead_lag, 1., horner, n_jobs);
+
+    std::cout << "done\n";
+}
+
+void example_batch_signature_int32(
+    uint64_t batch_size,
+    uint64_t dimension,
+    uint64_t length,
+    uint64_t degree,
+    bool time_aug,
+    bool lead_lag,
+    bool horner,
+    int n_jobs,
+    int num_runs
+) {
+    print_header("Batch Signature Int");
+
+    std::vector<int> path = test_data<int>(batch_size * dimension * length);
+
+    uint64_t out_size = sig_length(dimension, degree) * batch_size;
+    std::vector<double> out(out_size, 0.);
+
+    time_function(num_runs, batch_signature_int32, path.data(), out.data(), batch_size, dimension, length, degree, time_aug, lead_lag, 1., horner, n_jobs);
+
+    std::cout << "done\n";
+}
+
+void example_batch_signature_kernel(
+    uint64_t batch_size,
+    uint64_t dimension,
+    uint64_t length1,
+    uint64_t length2,
+    uint64_t dyadic_order_1,
+    uint64_t dyadic_order_2,
+    int n_jobs,
+    int num_runs
+) {
+    print_header("Batch Signature Kernel");
+
+    std::vector<double> out(batch_size, 0.);
+    std::vector<double> gram = test_data<double>(length1 * length2 * batch_size);
+
+    time_function(num_runs, batch_sig_kernel, gram.data(), out.data(), batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, n_jobs, false);
+
+    std::cout << "done\n";
+}
+
+void example_batch_signature_kernel_cuda(
+    uint64_t batch_size,
+    uint64_t dimension,
+    uint64_t length1,
+    uint64_t length2,
+    uint64_t dyadic_order_1,
+    uint64_t dyadic_order_2,
+    int num_runs
+) {
+    print_header("Batch Signature Kernel CUDA");
+
+    uint64_t gram_size = length1 * length2 * batch_size;
+    std::vector<double> gram = test_data<double>(gram_size);
+    
+    double* d_gram;
+    double* d_out;
+    cudaMalloc(&d_gram, sizeof(double) * gram_size);
+    cudaMalloc(&d_out, sizeof(double) * batch_size);
+
+    // Copy data from the host to the device (CPU -> GPU)
+    cudaMemcpy(d_gram, gram.data(), sizeof(double) * gram_size, cudaMemcpyHostToDevice);
+
+    time_function(num_runs, batch_sig_kernel_cuda, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, false);
+
+    cudaFree(d_gram);
+    cudaFree(d_out);
+}
+
+void example_batch_signature_kernel_cuda_full_grid(
+    uint64_t batch_size,
+    uint64_t dimension,
+    uint64_t length1,
+    uint64_t length2,
+    uint64_t dyadic_order_1,
+    uint64_t dyadic_order_2,
+    int num_runs
+) {
+    print_header("Batch Signature Kernel CUDA (Full Grid)");
+
+    uint64_t gram_size = length1 * length2 * batch_size;
+    uint64_t dyadic_length_1 = ((length1 - 1) << dyadic_order_1) + 1;
+    uint64_t dyadic_length_2 = ((length2 - 1) << dyadic_order_2) + 1;
+    uint64_t grid_size = dyadic_length_1 * dyadic_length_2 * batch_size;
+    std::vector<double> gram = test_data<double>(gram_size);
+    
+    double* d_gram;
+    double* d_out;
+    cudaMalloc(&d_gram, sizeof(double) * gram_size);
+    cudaMalloc(&d_out, sizeof(double) * grid_size);
+
+    // Copy data from the host to the device (CPU -> GPU)
+    cudaMemcpy(d_gram, gram.data(), sizeof(double) * gram_size, cudaMemcpyHostToDevice);
+
+    time_function(num_runs, batch_sig_kernel_cuda, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, true);
+
+    cudaFree(d_gram);
+    cudaFree(d_out);
+}
+
+void example_sig_backprop_double(
+    uint64_t dimension,
+    uint64_t length,
+    uint64_t degree,
+    bool time_aug,
+    bool lead_lag,
+    int num_runs
+) {
+    print_header("Signature Double");
+
+    std::vector<double> path = test_data<double>(dimension * length);
+    uint64_t sig_len = sig_length(dimension, degree);
+    std::vector<double> sig_derivs = test_data<double>(sig_len);
+    std::vector<double> sig = test_data<double>(sig_len);
+
+    uint64_t out_size = dimension * length;
+    std::vector<double> out(out_size, 0.);
+
+    time_function(num_runs, sig_backprop_double, path.data(), out.data(), sig_derivs.data(), sig.data(), dimension, length, degree, time_aug, lead_lag, 1.);
+
+    std::cout << "done\n";
+}

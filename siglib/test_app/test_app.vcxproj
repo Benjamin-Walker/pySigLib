@@ -90,6 +90,16 @@
   <ItemGroup>
     <None Include="Jamfile.jam" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dll_funcs.h" />
+    <ClInclude Include="tests.h" />
+    <ClInclude Include="utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dll_funcs.cpp" />
+    <ClCompile Include="tests.cpp" />
+    <ClCompile Include="utils.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.6.targets" />

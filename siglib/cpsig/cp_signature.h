@@ -33,7 +33,7 @@ FORCE_INLINE void linear_signature_(Point<T>& start_pt, Point<T>& end_pt, double
 	out[0] = 1.;
 
 	for (uint64_t i = 0UL; i < dimension; ++i)
-		out[i + 1] = static_cast<double>(end_pt[i] - start_pt[i]);
+		out[i + 1] = end_pt[i] - start_pt[i];
 	
 	double one_over_level;
 	double left_over_level;
@@ -121,7 +121,7 @@ void signature_horner_(Path<T>& path, double* out, uint64_t degree)
 
 	for (; next_pt != last_pt; ++prev_pt, ++next_pt) {
 		for (uint64_t i = 0UL; i < dimension; ++i)
-			increments[i] = static_cast<double>(next_pt[i] - prev_pt[i]);
+			increments[i] = next_pt[i] - prev_pt[i];
 
 		for (int64_t target_level = static_cast<int64_t>(degree); target_level > 1L; --target_level) {
 
@@ -198,12 +198,14 @@ void signature_horner_(Path<T>& path, double* out, uint64_t degree)
 	}
 }
 
+void signature_horner_step_(double* sig, double* increments, uint64_t dimension, uint64_t degree, uint64_t* level_index, double* horner_step);
+
 template<typename T>
-void signature_(T* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, bool horner = true)
+void signature_(T* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., bool horner = true)
 {
 	if (dimension == 0) { throw std::invalid_argument("signature received path of dimension 0"); }
 
-	Path<T> path_obj(path, dimension, length, time_aug, lead_lag); //Work with path_obj to capture time_aug, lead_lag transformations
+	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time); //Work with path_obj to capture time_aug, lead_lag transformations
 
 	if (path_obj.length() <= 1) {
 		out[0] = 1.;
@@ -218,7 +220,7 @@ void signature_(T* path, double* out, uint64_t dimension, uint64_t length, uint6
 		out[0] = 1.;
 		uint64_t dimension_ = path_obj.dimension();
 		for (uint64_t i = 0; i < dimension_; ++i)
-			out[i + 1] = static_cast<double>(last_pt[i] - first_pt[i]);
+			out[i + 1] = last_pt[i] - first_pt[i];
 		return; 
 	}
 
@@ -229,12 +231,12 @@ void signature_(T* path, double* out, uint64_t dimension, uint64_t length, uint6
 }
 
 template<typename T>
-void batch_signature_(T* path, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, bool horner = true, int n_jobs = 1)
+void batch_signature_(T* path, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., bool horner = true, int n_jobs = 1)
 {
 	//Deal with trivial cases
 	if (dimension == 0) { throw std::invalid_argument("signature received path of dimension 0"); }
 
-	Path<T> dummy_path_obj(nullptr, dimension, length, time_aug, lead_lag); //Work with path_obj to capture time_aug, lead_lag transformations
+	Path<T> dummy_path_obj(nullptr, dimension, length, time_aug, lead_lag, end_time); //Work with path_obj to capture time_aug, lead_lag transformations
 
 	const uint64_t result_length = ::sig_length(dummy_path_obj.dimension(), degree);
 
@@ -260,24 +262,24 @@ void batch_signature_(T* path, double* out, uint64_t batch_size, uint64_t dimens
 
 	if (degree == 1) {
 		sig_func = [&](T* path_ptr, double* out_ptr) {
-			Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag);
+			Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag, end_time);
 			Point<T> first_pt = path_obj.begin();
 			Point<T> last_pt = --path_obj.end();
 			out_ptr[0] = 1.;
 			for (uint64_t i = 0; i < path_obj.dimension(); ++i)
-				out_ptr[i + 1] = static_cast<double>(last_pt[i] - first_pt[i]);
+				out_ptr[i + 1] = last_pt[i] - first_pt[i];
 			};
 	}
 	else {
 		if (horner) {
 			sig_func = [&](T* path_ptr, double* out_ptr) {
-				Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag);
+				Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag, end_time);
 				signature_horner_<T>(path_obj, out_ptr, degree);
 				};
 		}
 		else {
 			sig_func = [&](T* path_ptr, double* out_ptr) {
-				Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag);
+				Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag, end_time);
 				signature_naive_<T>(path_obj, out_ptr, degree);
 				};
 		}
@@ -298,4 +300,189 @@ void batch_signature_(T* path, double* out, uint64_t batch_size, uint64_t dimens
 		}
 	}
 	return;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// backpropagation
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename T>
+void sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1.) {
+	
+	if (dimension == 0) { throw std::invalid_argument("sig_backprop received path of dimension 0"); }
+
+	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
+
+	if (path_obj.length() <= 1 || degree == 0) {
+		uint64_t result_length = dimension * length;
+		std::fill(out, out + result_length, 0.);
+		return;
+	}
+
+	std::fill(out, out + length * dimension, 0.);
+	const uint64_t sig_len_ = ::sig_length(path_obj.dimension(), degree);
+
+	auto sig_derivs_copy_uptr = std::make_unique<double[]>(sig_len_);
+	double* sig_derivs_copy = sig_derivs_copy_uptr.get();
+	std::memcpy(sig_derivs_copy, sig_derivs, sig_len_ * sizeof(double));
+	
+	auto sig_copy_uptr = std::make_unique<double[]>(sig_len_);
+	double* sig_copy = sig_copy_uptr.get();
+	std::memcpy(sig_copy, sig, sig_len_ * sizeof(double));
+	sig_backprop_inplace_(path_obj, out, sig_derivs_copy, sig_copy, degree, sig_len_);
+}
+
+template<typename T>
+void batch_sig_backprop_(T* path, double* out, double* sig_derivs, double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int n_jobs = 1)
+{
+	std::fill(out, out + length * dimension * batch_size, 0.);
+	//Deal with trivial cases
+	if (dimension == 0) { throw std::invalid_argument("sig_backprop received path of dimension 0"); }
+
+	Path<T> dummy_path_obj(nullptr, dimension, length, time_aug, lead_lag, end_time); //Work with path_obj to capture time_aug, lead_lag transformations
+
+	const uint64_t flat_path_length = dimension * length;
+	const uint64_t sig_len_ = ::sig_length(dummy_path_obj.dimension(), degree);
+
+	if (dummy_path_obj.length() <= 1 || degree == 0) {
+		double* const out_end = out + flat_path_length * batch_size;
+		std::fill(out, out_end, 0.);
+		return;
+	}
+
+	//General case
+	T* const data_end = path + flat_path_length * batch_size;
+
+	auto sig_derivs_copy_uptr = std::make_unique<double[]>(sig_len_ * batch_size);
+	double* sig_derivs_copy = sig_derivs_copy_uptr.get();
+	std::memcpy(sig_derivs_copy, sig_derivs, sig_len_ * batch_size * sizeof(double));
+
+	auto sig_copy_uptr = std::make_unique<double[]>(sig_len_ * batch_size);
+	double* sig_copy = sig_copy_uptr.get();
+	std::memcpy(sig_copy, sig, sig_len_ * batch_size * sizeof(double));
+
+	std::function<void(T*, double*, double*, double*)> sig_backprop_func;
+
+	sig_backprop_func = [&](T* path_ptr, double* sig_derivs_ptr, double* sig_ptr, double* out_ptr) {
+		Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag, end_time);
+		sig_backprop_inplace_<T>(path_obj, out_ptr, sig_derivs_ptr, sig_ptr, degree, sig_len_);
+	};
+
+	T* path_ptr;
+	double* sig_derivs_ptr, * sig_ptr;
+	double* out_ptr;
+
+	if (n_jobs != 1) {
+		multi_threaded_batch_3(
+			sig_backprop_func,
+			path,
+			sig_derivs_copy,
+			sig_copy,
+			out, 
+			batch_size,
+			flat_path_length,
+			sig_len_,
+			sig_len_,
+			flat_path_length,
+			n_jobs
+		);
+	}
+	else {
+		for (path_ptr = path, sig_derivs_ptr = sig_derivs_copy, sig_ptr = sig_copy, out_ptr = out;
+			path_ptr < data_end;
+			path_ptr += flat_path_length, sig_derivs_ptr += sig_len_, sig_ptr += sig_len_, out_ptr += flat_path_length) {
+
+			sig_backprop_func(path_ptr, sig_derivs_ptr, sig_ptr, out_ptr);
+		}
+	}
+	return;
+}
+
+template<typename T>
+void sig_backprop_inplace_(Path<T>& path, double* out, double* sig_derivs, double* sig, uint64_t degree, uint64_t sig_len) {
+
+	const uint64_t data_dimension = path.data_dimension();
+	const uint64_t dimension = path.dimension();
+
+	const uint64_t data_length = path.data_length();
+
+	auto local_derivs_uptr = std::make_unique<double[]>(sig_len);
+	double* local_derivs = local_derivs_uptr.get();
+
+	auto linear_signature_uptr = std::make_unique<double[]>(sig_len);
+	double* linear_signature = linear_signature_uptr.get();
+
+	auto increments_uptr = std::make_unique<double[]>(dimension);
+	double* increments = increments_uptr.get();
+
+	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
+	uint64_t* level_index = level_index_uptr.get();
+
+	level_index[0] = 0UL;
+	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
+		level_index[i] = level_index[i - 1UL] * dimension + 1UL;
+
+	auto horner_step_uptr = std::make_unique<double[]>(level_index[degree + 1UL] - level_index[degree]);
+	double* horner_step = horner_step_uptr.get();
+
+	Point<T> prev_pt(path.end());
+	Point<T> next_pt(path.end());
+	--prev_pt;
+	--prev_pt;
+	--next_pt;
+
+	Point<T> first_pt(path.begin());
+
+	if (path.lead_lag()) {
+		double* pos = out + (data_length - 1) * data_dimension;
+		double* neg = pos - data_dimension;
+		bool parity = false;
+
+		for (; next_pt != first_pt; --prev_pt, --next_pt, parity = !parity) {
+
+			for (uint64_t i = 0UL; i < dimension; ++i)
+				increments[i] = prev_pt[i] - next_pt[i];
+
+			linear_signature_(prev_pt, next_pt, linear_signature, dimension, degree, level_index);
+			//sig_uncombine_linear_inplace_(sig, linear_signature, degree, level_index);
+			signature_horner_step_(sig, increments, dimension, degree, level_index, horner_step); //Uncombine linear sig using horner
+			uncombine_sig_deriv(sig, linear_signature, sig_derivs, local_derivs, dimension, degree, level_index);
+			linear_sig_deriv_to_increment_deriv(linear_signature, local_derivs, dimension, degree, level_index);
+
+
+			//TODO: can we exploit the structure and avoid computing derivatives which are a priori zero?
+
+			double* s = parity ? local_derivs + 1 + data_dimension : local_derivs + 1;
+			for (uint64_t d = 0; d < data_dimension; ++d) {
+				pos[d] += s[d];
+				neg[d] -= s[d];
+			}
+			if (parity) {
+				pos -= data_dimension;
+				neg -= data_dimension;
+			}
+		}
+	}
+	else {
+		for (double* pos = out + (path.length() - 1) * data_dimension; next_pt != first_pt; --prev_pt, --next_pt, pos -= data_dimension) {
+
+			for (uint64_t i = 0UL; i < dimension; ++i)
+				increments[i] = prev_pt[i] - next_pt[i];
+
+			linear_signature_(prev_pt, next_pt, linear_signature, dimension, degree, level_index);
+			//sig_uncombine_linear_inplace_(sig, linear_signature, degree, level_index);
+			signature_horner_step_(sig, increments, dimension, degree, level_index, horner_step); //Uncombine linear sig using horner
+			uncombine_sig_deriv(sig, linear_signature, sig_derivs, local_derivs, dimension, degree, level_index);
+			linear_sig_deriv_to_increment_deriv(linear_signature, local_derivs, dimension, degree, level_index);
+
+			//double* pos = out + i * dimension;
+			double* neg = pos - data_dimension;
+			double* s = local_derivs + 1;
+			for (uint64_t d = 0; d < data_dimension; ++d) {
+				pos[d] += s[d];
+				neg[d] -= s[d];
+			}
+
+		}
+	}
 }

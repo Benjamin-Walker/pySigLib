@@ -39,26 +39,28 @@ class Path {
 public:
 	static_assert(std::is_arithmetic<T>::value);
 
-	Path(T* data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false) :
+	Path(T* data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false, double end_time_ = 1.) :
 		_dimension{ (lead_lag_ ? 2 * dimension_ : dimension_) + (time_aug_ ? 1 : 0) },
-		_length{ lead_lag_ ? length_ * 2 - 3 : length_ },
+		_length{ lead_lag_ ? length_ * 2 - 1 : length_ },
 		_data{ std::span<T>(data_, dimension_ * length_) },
 		_data_dimension{ dimension_ },
 		_data_length{ length_ },
 		_data_size{ dimension_ * length_ },
 		_time_aug{ time_aug_ },
-		_lead_lag{ lead_lag_ } {
+		_lead_lag{ lead_lag_ },
+		_time_step{ end_time_ / (_length - 1) } {
 	}
 
-	Path(const std::span<T> data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false) :
+	Path(const std::span<T> data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false, double end_time_ = 1.) :
 		_dimension{ (lead_lag_ ? 2 * dimension_ : dimension_) + (time_aug_ ? 1 : 0) },
-		_length{ lead_lag_ ? length_ * 2 - 3 : length_ },
+		_length{ lead_lag_ ? length_ * 2 - 1 : length_ },
 		_data{ data_ },
 		_data_dimension{ dimension_ },
 		_data_length{ length_ },
 		_data_size{ dimension_ * length_ },
 		_time_aug{ time_aug_ },
-		_lead_lag{ lead_lag_ } {
+		_lead_lag{ lead_lag_ },
+		_time_step{ end_time_ / (_length - 1) } {
 		if (data_.size() != dimension_ * length_)
 			throw std::invalid_argument("1D vector is not the correct shape for a path of dimension " + std::to_string(dimension_) + " and length " + std::to_string(length_));
 	}
@@ -71,18 +73,20 @@ public:
 		_data_length{ other._data_length },
 		_data_size{ other._data_size },
 		_time_aug{ other._time_aug },
-		_lead_lag{ other._lead_lag } {
+		_lead_lag{ other._lead_lag },
+		_time_step{ other._time_step } {
 	}
 
-	Path(const Path& other, bool time_aug_, bool lead_lag_) :
+	Path(const Path& other, bool time_aug_, bool lead_lag_, double end_time_ = 1.) :
 		_dimension{ (lead_lag_ ? 2 * other._data_dimension : other._data_dimension) + (time_aug_ ? 1 : 0) },
-		_length{ lead_lag_ ? other._data_length * 2 - 3 : other._data_length },
+		_length{ lead_lag_ ? other._data_length * 2 - 1 : other._data_length },
 		_data{ other._data },
 		_data_dimension{ other._data_dimension },
 		_data_length{ other._data_length },
 		_data_size{ other._data_size },
 		_time_aug{ time_aug_ },
-		_lead_lag{ lead_lag_ } {
+		_lead_lag{ lead_lag_ },
+		_time_step{ end_time_ / (_length - 1) } {
 	}
 
 	virtual ~Path() {}
@@ -90,11 +94,15 @@ public:
 	Path<T>& operator=(const Path&) = delete;
 
 	inline uint64_t dimension() const { return _dimension; }
+	inline uint64_t data_dimension() const { return _data_dimension; }
 	inline uint64_t length() const { return _length; }
+	inline uint64_t data_length() const { return _data_length; }
 	inline T* data() const { return _data.data(); }
 
 	inline bool time_aug() const { return _time_aug; }
 	inline bool lead_lag() const { return _lead_lag; }
+	inline double time_step() const { return _time_step; }
+	inline double end_time() const { return _time_step * (_length - 1); }
 
 	friend class Point<T>;
 	friend class PointImpl<T>;
@@ -141,6 +149,7 @@ private:
 
 	const bool _time_aug;
 	const bool _lead_lag;
+	const double _time_step;
 };
 
 template<typename T>
@@ -164,7 +173,7 @@ public:
 		return p;
 	}
 
-	virtual inline T operator[](uint64_t i) const { return ptr[i]; } //Change to double
+	virtual inline double operator[](uint64_t i) const { return static_cast<double>(ptr[i]); }
 	virtual inline void operator++() { ptr += path->_data_dimension; }
 	virtual inline void operator--() { ptr -= path->_data_dimension; }
 
@@ -175,14 +184,23 @@ public:
 	virtual inline void set_to_index(int64_t n) { ptr = path->_data.data() + n * path->_data_dimension; }
 
 	inline T* data() const { return ptr; }
-	virtual inline uint64_t index() const { return static_cast<uint64_t>((ptr - path->_data.data()) / path->_data_dimension); } //TODO: this can be heavy in "!=" operators
+	virtual inline uint64_t index() const { return static_cast<uint64_t>((ptr - path->_data.data()) / path->_data_dimension); }
 
-	bool operator==(const PointImpl& other) const { return path == other.path && index() == other.index(); }
-	bool operator!=(const PointImpl& other) const { return path != other.path || index() != other.index(); }
-	bool operator<(const PointImpl& other) const { return path == other.path && index() < other.index(); }
-	bool operator<=(const PointImpl& other) const { return path == other.path && index() <= other.index(); }
-	bool operator>(const PointImpl& other) const { return path == other.path && index() > other.index(); }
-	bool operator>=(const PointImpl& other) const { return path == other.path && index() >= other.index(); }
+	// We assume here that the two points being compared belong to the same path,
+	// which saves us checking this each time. We keep this check in debug.
+
+#ifndef _DEBUG
+	virtual bool operator==(const PointImpl& other) const { return ptr == other.ptr; }
+	virtual bool operator<(const PointImpl& other) const { return ptr < other.ptr; }
+	virtual bool operator>(const PointImpl& other) const { return ptr > other.ptr; }
+#else
+	virtual bool operator==(const PointImpl& other) const { return path == other.path && ptr == other.ptr; }
+	virtual bool operator<(const PointImpl& other) const { return path == other.path && ptr < other.ptr; }
+	virtual bool operator>(const PointImpl& other) const { return path == other.path && ptr > other.ptr; }
+#endif
+	bool operator!=(const PointImpl& other) const { return !(*this == other); }
+	bool operator<=(const PointImpl& other) const { return !(*this > other); }
+	bool operator>=(const PointImpl& other) const { return !(*this < other); }
 
 	T* ptr;
 	const Path<T>* path;
@@ -191,8 +209,8 @@ public:
 template<typename T>
 class PointImplTimeAug : public PointImpl<T> {
 public:
-	PointImplTimeAug() : PointImpl<T>(), time{ 0 } {}
-	PointImplTimeAug(const Path<T>* path_, uint64_t index) : PointImpl<T>(path_, index), time{ static_cast<T>(index) } {}
+	PointImplTimeAug() : PointImpl<T>(), time{ 0. } {}
+	PointImplTimeAug(const Path<T>* path_, uint64_t index) : PointImpl<T>(path_, index), time{ index * this->path->_time_step } {}
 	PointImplTimeAug(const PointImplTimeAug& other) : PointImpl<T>(other), time{ other.time } {}
 	virtual ~PointImplTimeAug() {}
 
@@ -204,16 +222,16 @@ public:
 		return p;
 	}
 
-	inline T operator[](uint64_t i) const override { return (i < this->path->_data_dimension) ? this->ptr[i] : time;	}
-	inline void operator++() override { this->ptr += this->path->_data_dimension; time += 1;	}
-	inline void operator--() override { this->ptr -= this->path->_data_dimension; time -= 1; }
-	inline void advance(int64_t n) override { this->ptr += n * this->path->_data_dimension; time += static_cast<T>(n); }
-	inline void set_to_start() override { this->ptr = this->path->_data.data(); time = 0; }
-	inline void set_to_end() override { this->ptr = this->path->_data.data() + this->path->_data_size; time = static_cast<T>(this->path->_length); }
-	inline void set_to_index(int64_t n) override { this->ptr = this->path->_data.data() + n * this->path->_data_dimension; time = static_cast<T>(n); }
+	inline double operator[](uint64_t i) const override { return static_cast<double>((i < this->path->_data_dimension) ? this->ptr[i] : time);	}
+	inline void operator++() override { this->ptr += this->path->_data_dimension; time += this->path->_time_step;	}
+	inline void operator--() override { this->ptr -= this->path->_data_dimension; time -= this->path->_time_step; }
+	inline void advance(int64_t n) override { this->ptr += n * this->path->_data_dimension; time += n * this->path->_time_step; }
+	inline void set_to_start() override { this->ptr = this->path->_data.data(); time = 0.; }
+	inline void set_to_end() override { this->ptr = this->path->_data.data() + this->path->_data_size; time = this->path->_length * this->path->_time_step; }
+	inline void set_to_index(int64_t n) override { this->ptr = this->path->_data.data() + n * this->path->_data_dimension; time = n * this->path->_time_step; }
 
 private:
-	T time; //Change time to [0,1]
+	double time;
 };
 
 template<typename T>
@@ -232,12 +250,12 @@ public:
 		return p;
 	}
 
-	inline T operator[](uint64_t i) const override { 
+	inline double operator[](uint64_t i) const override { 
 		if (i < this->path->_data_dimension)
-			return this->ptr[i];
+			return static_cast<double>(this->ptr[i]);
 		else {
-			uint64_t leadIdx = parity ? this->path->_data_dimension + i : i;
-			return this->ptr[leadIdx];
+			uint64_t leadIdx = parity ? i : i - this->path->_data_dimension;
+			return static_cast<double>(this->ptr[leadIdx]);
 		}
 	}
 	inline void operator++() override { if (parity) this->ptr += this->path->_data_dimension; parity = !parity; }
@@ -249,6 +267,22 @@ public:
 
 	inline uint64_t index() const override { return 2 * static_cast<uint64_t>(this->ptr - this->path->_data.data()) + static_cast<uint64_t>(parity); }
 
+	bool operator==(const PointImpl<T>& other) const override {
+		if (!PointImpl<T>::operator==(other))
+			return false;
+		return parity == static_cast<const PointImplLeadLag<T>*>(&other)->parity;
+	}
+	bool operator<(const PointImpl<T>& other) const override {
+		if (PointImpl<T>::operator<(other))
+			return true;
+		return PointImpl<T>::operator==(other) && parity < static_cast<const PointImplLeadLag<T>*>(&other)->parity;
+	}
+	bool operator>(const PointImpl<T>& other) const override {
+		if (PointImpl<T>::operator>(other))
+			return true;
+		return PointImpl<T>::operator==(other) && parity > static_cast<const PointImplLeadLag<T>*>(&other)->parity;
+	}
+
 private:
 	bool parity;
 };
@@ -256,11 +290,11 @@ private:
 template<typename T>
 class PointImplTimeAugLeadLag : public PointImpl<T> {
 public:
-	PointImplTimeAugLeadLag() : PointImpl<T>(), parity{ false }, time{ 0 }, _data_dimension_times_2{ 0 } {}
+	PointImplTimeAugLeadLag() : PointImpl<T>(), parity{ false }, time{ 0. }, _data_dimension_times_2{ 0 } {}
 	PointImplTimeAugLeadLag(const Path<T>* path_, uint64_t index) : 
 		PointImpl<T>(path_, index / 2), 
 		parity{ static_cast<bool>(index % 2) },
-		time{ static_cast<T>((index / 2) * 3 + (index % 2) * 2)},
+		time{ index * this->path->_time_step },
 		_data_dimension_times_2{ path_->_data_dimension * 2 }
 	{}
 	PointImplTimeAugLeadLag(const PointImplTimeAugLeadLag& other) :
@@ -280,44 +314,60 @@ public:
 		return p;
 	}
 
-	inline T operator[](uint64_t i) const override {
+	inline double operator[](uint64_t i) const override {
 		if (i < this->path->_data_dimension)
-			return this->ptr[i];
+			return static_cast<double>(this->ptr[i]);
 		else if (i < this->_data_dimension_times_2) {
-			uint64_t lead_idx = parity ? this->path->_data_dimension + i : i;
-			return this->ptr[lead_idx];
+			uint64_t lead_idx = parity ? i : i - this->path->_data_dimension;
+			return static_cast<double>(this->ptr[lead_idx]);
 		}
 		else
 			return time;
 	}
 	inline void operator++() override {
-		if (parity) { this->ptr += this->path->_data_dimension; time += 1; }
-		else time += 2;
+		if (parity) { this->ptr += this->path->_data_dimension; }
+		time += this->path->_time_step;
 		parity = !parity;
 	}
 	inline void operator--() override {
-		if (!parity) { this->ptr -= this->path->_data_dimension; time -= 1; }
-		else time -= 2;
+		if (!parity) { this->ptr -= this->path->_data_dimension; }
+		time -= this->path->_time_step;
 		parity = !parity;
 	}
 	inline void advance(int64_t n) override { 
 		this->ptr += (n / 2) * this->path->_data_dimension; 
 		parity = (parity != static_cast<bool>(n % 2)); 
-		time += (parity) ? static_cast<T>((n / 2) * 3 + (n % 2)) : static_cast<T>((n / 2) * 3 + (n % 2) * 2);
+		time += n * this->path->_time_step;
 	}
 	inline void set_to_start() override { this->ptr = this->path->_data.data(); parity = false; time = 0; }
-	inline void set_to_end() override { this->ptr = this->path->_data.data() + this->path->_data_size; parity = true; time = static_cast<T>(this->path->_length); }
+	inline void set_to_end() override { this->ptr = this->path->_data.data() + this->path->_data_size; parity = true; time = this->path->_length * this->path->_time_step; }
 	inline void set_to_index(int64_t n) override { 
 		this->ptr = this->path->_data.data() + (n / 2) * this->path->_data_dimension;
 		parity = static_cast<bool>(n % 2);
-		time = static_cast<T>( (n / 2) * 3 + (n % 2) * 2 );
+		time = n * this->path->_time_step;
 	}
 
 	inline uint64_t index() const override { return 2UL * static_cast<uint64_t>(this->ptr - this->path->_data.data()) + static_cast<uint64_t>(parity); }
 
+	bool operator==(const PointImpl<T>& other) const override {
+		if (!PointImpl<T>::operator==(other))
+			return false;
+		return parity == static_cast<const PointImplTimeAugLeadLag<T>*>(&other)->parity;
+	}
+	bool operator<(const PointImpl<T>& other) const override {
+		if (PointImpl<T>::operator<(other))
+			return true;
+		return PointImpl<T>::operator==(other) && parity < static_cast<const PointImplTimeAugLeadLag<T>*>(&other)->parity;
+	}
+	bool operator>(const PointImpl<T>& other) const override {
+		if (PointImpl<T>::operator>(other))
+			return true;
+		return PointImpl<T>::operator==(other) && parity > static_cast<const PointImplTimeAugLeadLag<T>*>(&other)->parity;
+	}
+
 private:
 	bool parity;
-	T time;
+	double time;
 	uint64_t _data_dimension_times_2;
 };
 
@@ -357,7 +407,7 @@ public:
 	}
 
 
-	inline T operator[](uint64_t i) const { 
+	inline double operator[](uint64_t i) const { 
 #ifdef _DEBUG
 		sq_bracket_bounds_check(i);
 #endif

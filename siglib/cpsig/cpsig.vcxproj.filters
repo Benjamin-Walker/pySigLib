@@ -42,6 +42,9 @@
     <ClInclude Include="cp_sig_kernel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cp_path_transforms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cppch.cpp">

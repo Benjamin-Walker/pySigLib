@@ -102,6 +102,7 @@
     <ClInclude Include="cpsig.h" />
     <ClInclude Include="cp_path.h" />
     <ClInclude Include="cppch.h" />
+    <ClInclude Include="cp_path_transforms.h" />
     <ClInclude Include="cp_sig_kernel.h" />
     <ClInclude Include="cp_signature.h" />
     <ClInclude Include="cp_tensor_poly.h" />

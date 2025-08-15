@@ -1,0 +1,100 @@
+/* Copyright 2025 Daniil Shmelev
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ========================================================================= */
+
+#pragma once
+
+void example_signature_double(
+	uint64_t dimension = 5,
+	uint64_t length = 10000,
+	uint64_t degree = 6,
+	bool time_aug = false,
+	bool lead_lag = false,
+	bool horner = true,
+	int num_runs = 50
+);
+
+void example_signature_int32(
+	uint64_t dimension = 5,
+	uint64_t length = 10000,
+	uint64_t degree = 6,
+	bool time_aug = false,
+	bool lead_lag = false,
+	bool horner = true,
+	int num_runs = 50
+);
+
+void example_batch_signature_double(
+	uint64_t batch_size = 100,
+	uint64_t dimension = 5,
+	uint64_t length = 1000,
+	uint64_t degree = 5,
+	bool time_aug = false,
+	bool lead_lag = false,
+	bool horner = true,
+	int n_jobs = -1,
+	int num_runs = 50
+);
+
+void example_batch_signature_int32(
+	uint64_t batch_size = 100,
+	uint64_t dimension = 5,
+	uint64_t length = 1000,
+	uint64_t degree = 5,
+	bool time_aug = false,
+	bool lead_lag = false,
+	bool horner = true,
+	int n_jobs = -1,
+	int num_runs = 50
+);
+
+void example_batch_signature_kernel(
+	uint64_t batch_size = 100,
+	uint64_t dimension = 5,
+	uint64_t length1 = 1000,
+	uint64_t length2 = 1000,
+	uint64_t dyadic_order_1 = 0,
+	uint64_t dyadic_order_2 = 0,
+	int n_jobs = -1,
+	int num_runs = 50
+);
+
+void example_batch_signature_kernel_cuda(
+	uint64_t batch_size = 100,
+	uint64_t dimension = 5,
+	uint64_t length1 = 1000,
+	uint64_t length2 = 1000,
+	uint64_t dyadic_order_1 = 0,
+	uint64_t dyadic_order_2 = 0,
+	int num_runs = 50
+);
+
+void example_batch_signature_kernel_cuda_full_grid(
+	uint64_t batch_size = 10,
+	uint64_t dimension = 5,
+	uint64_t length1 = 100,
+	uint64_t length2 = 100,
+	uint64_t dyadic_order_1 = 0,
+	uint64_t dyadic_order_2 = 0,
+	int num_runs = 50
+);
+
+void example_sig_backprop_double(
+	uint64_t dimension = 5,
+	uint64_t length = 1000,
+	uint64_t degree = 5,
+	bool time_aug = false,
+	bool lead_lag = false,
+	int num_runs = 50
+);

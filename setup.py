@@ -23,11 +23,11 @@ from setuptools.command.build_py import build_py as _build_py
 
 REBUILD = True
 USE_CUDA = 'CUDA_PATH' in os.environ
-if 'CUSIG' in os.environ and os.environ['CUSIG'] == 0:
+if 'CUSIG' in os.environ and int(os.environ['CUSIG']) == 0:
     USE_CUDA = False
 
 USE_AVX = True
-if 'SIGLIB_VEC' in os.environ and os.environ['SIGLIB_VEC'] == 0:
+if 'SIGLIB_VEC' in os.environ and int(os.environ['SIGLIB_VEC']) == 0:
     USE_AVX = False
 
 # Only support Windows, Linux and MacOS

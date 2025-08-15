@@ -30,9 +30,6 @@
     <ClInclude Include="..\cpsig\cpsig.h">
       <Filter>Header Files\cpsig</Filter>
     </ClInclude>
-    <ClInclude Include="..\cpsig\cpPath.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\cpsig\cp_tensor_poly.h">
       <Filter>Header Files\cpsig</Filter>
     </ClInclude>
@@ -43,6 +40,9 @@
       <Filter>Header Files\cpsig</Filter>
     </ClInclude>
     <ClInclude Include="..\cpsig\cp_signature.h">
+      <Filter>Header Files\cpsig</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cpsig\cp_path_transforms.h">
       <Filter>Header Files\cpsig</Filter>
     </ClInclude>
   </ItemGroup>
@@ -63,6 +63,9 @@
       <Filter>Source Files\cpsig</Filter>
     </ClCompile>
     <ClCompile Include="..\cpsig\cp_tensor_poly.cpp">
+      <Filter>Source Files\cpsig</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cpsig\cp_path_transforms.cpp">
       <Filter>Source Files\cpsig</Filter>
     </ClCompile>
   </ItemGroup>

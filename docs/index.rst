@@ -24,14 +24,15 @@ pySigLib |release|
    :align: center
    :class: only-dark
 
-.. automodule:: pysiglib.pysiglib
-
 .. toctree::
    :titlesonly:
    :maxdepth: 2
 
    /pages/installation
+   /pages/transform_path
    /pages/sig_length
    /pages/signature
    /pages/sig_combine
    /pages/sig_kernel
+   /pages/backprop
+   /pages/torch_api

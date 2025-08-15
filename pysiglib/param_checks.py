@@ -18,18 +18,7 @@ import warnings
 import numpy as np
 import torch
 
-SUPPORTED_DTYPES = [
-    np.int32,
-    np.int64,
-    np.float32,
-    np.float64,
-    torch.int32,
-    torch.int64,
-    torch.float32,
-    torch.float64
-]
-
-SUPPORTED_DTYPES_STR = "int32, int64, float or double"
+from .dtypes import SUPPORTED_DTYPES, SUPPORTED_DTYPES_STR
 
 def get_type_str(type_):
     try:
@@ -60,6 +49,11 @@ def check_dtype_double(arr, arr_name):
     if arr.dtype not in [np.float64, torch.float64]:
         raise TypeError(arr_name + ".dtype must be float64, got " + str(arr.dtype) + " instead")
 
+def check_cpu(arr, arr_name):
+    if isinstance(arr, torch.Tensor):
+        if not arr.device.type == "cpu":
+            raise ValueError(arr_name + " must be located on the cpu")
+
 WARNED_ONCE_ABOUT_MEMORY = False
 MEMORY_WARNING = "Detected a non-contiguous or view-based array. Such arrays will be cloned to ensure safe access. To avoid this overhead, pass arrays that are both contiguous and own their data. This warning will only appear once per session."
 
@@ -77,7 +71,7 @@ def ensure_own_contiguous_storage(arr, stacklevel):
             return arr.clone().contiguous()
         return arr
 
-    elif isinstance(arr, np.ndarray):
+    if isinstance(arr, np.ndarray):
         owns_data = arr.base is None
         is_contiguous = arr.flags['C_CONTIGUOUS']
         if not owns_data or not is_contiguous:
@@ -86,3 +80,5 @@ def ensure_own_contiguous_storage(arr, stacklevel):
                 WARNED_ONCE_ABOUT_MEMORY = True
             return np.ascontiguousarray(arr.copy())
         return arr
+
+    raise TypeError("Unexpected error in ensure_own_contiguous_storage: arr must be of type torch.Tensor or numpy.ndarray")
