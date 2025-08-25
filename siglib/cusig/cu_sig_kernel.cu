@@ -305,7 +305,7 @@ void sig_kernel_backprop_cuda_(
 	cudaMalloc((void**)&d_b_initial_condition, main_dyadic_length_ * batch_size_ * sizeof(double));
 	cudaMemset(d_b_initial_condition, 0, main_dyadic_length_ * batch_size_ * sizeof(double));
 
-	goursat_pde_deriv << <batch_size_, 32U >> > (d_initial_condition, d_a_initial_condition, d_b_initial_condition, gram, deriv, k_grid, out);
+	goursat_pde_deriv << <static_cast<unsigned int>(batch_size_), 32U >> > (d_initial_condition, d_a_initial_condition, d_b_initial_condition, gram, deriv, k_grid, out);
 
 	cudaFree(d_initial_condition);
 	cudaFree(d_a_initial_condition);

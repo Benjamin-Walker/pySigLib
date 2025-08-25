@@ -15,22 +15,7 @@
 
 #pragma once
 #include "cupch.h"
-
-extern __constant__ uint64_t dimension;
-extern __constant__ uint64_t length1;
-extern __constant__ uint64_t length2;
-extern __constant__ uint64_t dyadic_order_1;
-extern __constant__ uint64_t dyadic_order_2;
-
-extern __constant__ double twelth;
-extern __constant__ double sixth;
-extern __constant__ uint64_t dyadic_length_1;
-extern __constant__ uint64_t dyadic_length_2;
-extern __constant__ uint64_t main_dyadic_length;
-extern __constant__ uint64_t num_anti_diag;
-extern __constant__ double dyadic_frac;
-extern __constant__ uint64_t gram_length;
-extern __constant__ uint64_t grid_length;
+#include "cuda_constants.h"
 
 __device__ double myAtomicAdd(double* address, double val);
 
@@ -79,7 +64,6 @@ __device__ void goursat_pde_32(
 	const uint64_t ord_dyadic_order_1 = order ? dyadic_order_1 : dyadic_order_2;
 	const uint64_t ord_dyadic_order_2 = order ? dyadic_order_2 : dyadic_order_1;
 	const uint64_t ord_dyadic_length_1 = order ? dyadic_length_1 : dyadic_length_2;
-	const uint64_t ord_dyadic_length_2 = order ? dyadic_length_2 : dyadic_length_1;
 
 	// Initialise to 1
 	for (int i = 0; i < 3; ++i)
@@ -159,7 +143,6 @@ __device__ void goursat_pde_32_full(
 	const uint64_t ord_dyadic_order_1 = order ? dyadic_order_1 : dyadic_order_2;
 	const uint64_t ord_dyadic_order_2 = order ? dyadic_order_2 : dyadic_order_1;
 	const uint64_t ord_dyadic_length_1 = order ? dyadic_length_1 : dyadic_length_2;
-	const uint64_t ord_dyadic_length_2 = order ? dyadic_length_2 : dyadic_length_1;
 
 	__syncthreads();
 

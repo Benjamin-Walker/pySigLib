@@ -31,5 +31,6 @@ extern __constant__ uint64_t dyadic_length_2;
 extern __constant__ uint64_t num_anti_diag;
 extern __constant__ double dyadic_frac;
 extern __constant__ uint64_t gram_length;
+extern __constant__ uint64_t grid_length;
 
 #endif
