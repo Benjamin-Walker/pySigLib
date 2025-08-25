@@ -577,6 +577,7 @@ if BUILT_WITH_CUDA:
         POINTER(c_double),
         POINTER(c_double),
         POINTER(c_double),
+        POINTER(c_double),
         c_uint64,
         c_uint64,
         c_uint64,

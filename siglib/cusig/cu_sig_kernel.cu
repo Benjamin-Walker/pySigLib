@@ -35,6 +35,26 @@ __constant__ uint64_t gram_length;
 __constant__ uint64_t grid_length;
 
 
+// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
+__device__ double myAtomicAdd(double* address, double val)
+{
+	unsigned long long int* address_as_ull =
+		(unsigned long long int*)address;
+	unsigned long long int old = *address_as_ull, assumed;
+
+	do {
+		assumed = old;
+		old = atomicCAS(address_as_ull, assumed,
+			__double_as_longlong(val +
+				__longlong_as_double(assumed)));
+
+		// Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
+	} while (assumed != old);
+
+	return __longlong_as_double(old);
+}
+
+
 __global__ void goursat_pde(
 	double* const initial_condition, //This is the top row of the grid, which will be overwritten to become the bottom row of this grid.
 	const double* const gram
@@ -180,102 +200,123 @@ void sig_kernel_cuda_(
 	}
 }
 
-//__global__ void goursat_pde_deriv(
-//	double* k_initial_condition, //This is the top row of the grid, which will be overwritten to become the bottom row of this grid.
-//	double* d_initial_condition,
-//	double* gram,
-//	double* deriv
-//) {
-//	int blockId = blockIdx.x;
-//
-//	//Figure out what we're doing from block id
-//	const uint64_t batch_id = blockId / gram_length;
-//	const uint64_t deriv_point_id = blockId % gram_length;
-//	const uint64_t p0 = deriv_point_id / (length2 - 1);
-//	const uint64_t p1 = deriv_point_id % (length2 - 1);
-//	const double deriv_val = deriv[batch_id];
-//
-//	double* gram_ = gram + batch_id * gram_length;
-//
-//	__shared__ double diagonals[198]; // Six diagonals of length 33 (32 + initial condition) are rotated and reused
-//	double* k_diagonals = diagonals;
-//	double* d_diagonals = diagonals + 99;
-//
-//
-//
-//}
+__global__ void goursat_pde_deriv(
+	double* const initial_condition, //This is the top row of the grid, which will be overwritten
+	double* const a_initial_condition,
+	double* const b_initial_condition,
+	const double* const gram,
+	const double* const deriv,
+	const double* const k_grid,
+	double* const out
+) {
+	const int blockId = blockIdx.x;
+	const double* const gram_ = gram + blockId * gram_length;
+	const double deriv_ = *(deriv + blockId);
+	const double* const k_grid_ = k_grid + blockId * grid_length;
+	double* const out_ = out + blockId * gram_length;
 
-//void sig_kernel_backprop_cuda_(
-//	double* gram,
-//	double* out,
-//	double* deriv,
-//	uint64_t batch_size_,
-//	uint64_t dimension_,
-//	uint64_t length1_,
-//	uint64_t length2_,
-//	uint64_t dyadic_order_1_,
-//	uint64_t dyadic_order_2_
-//) {
-//	if (dimension_ == 0) { throw std::invalid_argument("signature kernel received path of dimension 0"); }
-//
-//	static const double twelth_ = 1. / 12;
-//	static const double sixth_ = 1. / 6;
-//	const uint64_t dyadic_length_1_ = ((length1_ - 1) << dyadic_order_1_) + 1;
-//	const uint64_t dyadic_length_2_ = ((length2_ - 1) << dyadic_order_2_) + 1;
-//	const uint64_t main_dyadic_length_ = dyadic_length_2_ <= dyadic_length_1_ ? dyadic_length_1_ : dyadic_length_2_;
-//	const uint64_t num_anti_diag_ = 33 + main_dyadic_length_ - 1;
-//	const double dyadic_frac_ = 1. / (1ULL << (dyadic_order_1_ + dyadic_order_2_));
-//	const uint64_t gram_length_ = (length1_ - 1) * (length2_ - 1);
-//	const uint64_t grid_length_ = dyadic_length_1_ * dyadic_length_2_;
-//
-//	// Allocate constant memory
-//	cudaMemcpyToSymbol(dimension, &dimension_, sizeof(uint64_t));
-//	cudaMemcpyToSymbol(length1, &length1_, sizeof(uint64_t));
-//	cudaMemcpyToSymbol(length2, &length2_, sizeof(uint64_t));
-//	cudaMemcpyToSymbol(dyadic_order_1, &dyadic_order_1_, sizeof(uint64_t));
-//	cudaMemcpyToSymbol(dyadic_order_2, &dyadic_order_2_, sizeof(uint64_t));
-//
-//	cudaMemcpyToSymbol(twelth, &twelth_, sizeof(double));
-//	cudaMemcpyToSymbol(sixth, &sixth_, sizeof(double));
-//	cudaMemcpyToSymbol(dyadic_length_1, &dyadic_length_1_, sizeof(uint64_t));
-//	cudaMemcpyToSymbol(dyadic_length_2, &dyadic_length_2_, sizeof(uint64_t));
-//	cudaMemcpyToSymbol(main_dyadic_length, &main_dyadic_length_, sizeof(uint64_t));
-//	cudaMemcpyToSymbol(num_anti_diag, &num_anti_diag_, sizeof(uint64_t));
-//	cudaMemcpyToSymbol(dyadic_frac, &dyadic_frac_, sizeof(double));
-//	cudaMemcpyToSymbol(gram_length, &gram_length_, sizeof(uint64_t));
-//	cudaMemcpyToSymbol(grid_length, &grid_length_, sizeof(uint64_t));
-//
-//	//unsigned int num_blocks = batch_size_ * gram_length_; //TODO: this is likely too big to allocate all memory at once...
-//
-//	cudaMemset(out, 0, batch_size_ * gram_length_ * sizeof(double));
-//	
-//	// Allocate grid for dF / dk
-//	double* d_grid;
-//	cudaMalloc((void**)&d_grid, grid_length_ * sizeof(double));
-//
-//	auto zeros_uptr = std::make_unique<double[]>(main_dyadic_length_ * num_blocks);
-//	double* zeros = zeros_uptr.get();
-//	std::fill(zeros, zeros + main_dyadic_length_ * num_blocks, 0.);
-//
-//	double* d_initial_condition;
-//	cudaMalloc((void**)&d_initial_condition, main_dyadic_length_ * num_blocks * sizeof(double));
-//	cudaMemcpy(d_initial_condition, zeros, main_dyadic_length_ * num_blocks * sizeof(double), cudaMemcpyHostToDevice);
-//	zeros_uptr.reset();
-//
-//	goursat_pde_deriv << <num_blocks, 32U >> > (k_initial_condition, d_initial_condition, gram, deriv);
-//
-//	cudaFree(k_initial_condition);
-//	for (uint64_t i = 0; i < num_blocks; ++i)
-//		cudaMemcpy(out + i, d_initial_condition + (i + 1) * main_dyadic_length_ - 1, sizeof(double), cudaMemcpyDeviceToDevice);
-//	cudaFree(d_initial_condition);
-//	
-//
-//	cudaError_t err = cudaGetLastError();
-//	if (err != cudaSuccess) {
-//		int error_code = static_cast<int>(err);
-//		throw std::runtime_error("CUDA Error (" + std::to_string(error_code) + "): " + cudaGetErrorString(err));
-//	}
-//}
+	__shared__ double diagonals[99]; // Three diagonals of length 33 (32 + initial condition) are rotated and reused
+	__shared__ double a[33];
+	__shared__ double b[33];
+
+	if (dyadic_length_2 <= dyadic_length_1) {
+		double* const initial_condition_ = initial_condition + blockId * dyadic_length_1;
+		double* const a_initial_condition_ = a_initial_condition + blockId * dyadic_length_1;
+		double* const b_initial_condition_ = b_initial_condition + blockId * dyadic_length_1;
+
+		const uint64_t num_full_runs = (dyadic_length_2 - 1) / 32;
+		const uint64_t remainder = (dyadic_length_2 - 1) % 32;
+
+		for (int i = 0; i < num_full_runs; ++i)
+			goursat_pde_32_deriv<true>(deriv_, k_grid_, out_, initial_condition_, a_initial_condition_, b_initial_condition_, diagonals, a, b, gram_, i, 32);
+
+		if (remainder)
+			goursat_pde_32_deriv<true>(deriv_, k_grid_, out_, initial_condition_, a_initial_condition_, b_initial_condition_, diagonals, a, b, gram_, num_full_runs, remainder);
+	}
+	else {
+		double* const initial_condition_ = initial_condition + blockId * dyadic_length_2;
+		double* const a_initial_condition_ = a_initial_condition + blockId * dyadic_length_2;
+		double* const b_initial_condition_ = b_initial_condition + blockId * dyadic_length_2;
+
+		const uint64_t num_full_runs = (dyadic_length_1 - 1) / 32;
+		const uint64_t remainder = (dyadic_length_1 - 1) % 32;
+
+		for (int i = 0; i < num_full_runs; ++i) 
+			goursat_pde_32_deriv<false>(deriv_, k_grid_, out_, initial_condition_, a_initial_condition_, b_initial_condition_, diagonals, a, b, gram_, i, 32);
+
+		if (remainder)
+			goursat_pde_32_deriv<false>(deriv_, k_grid_, out_, initial_condition_, a_initial_condition_, b_initial_condition_, diagonals, a, b, gram_, num_full_runs, remainder);
+	}
+}
+
+void sig_kernel_backprop_cuda_(
+	const double* const gram,
+	double* const out,
+	const double* const deriv,
+	const double* const k_grid,
+	const uint64_t batch_size_,
+	const uint64_t dimension_,
+	const uint64_t length1_,
+	const uint64_t length2_,
+	const uint64_t dyadic_order_1_,
+	const uint64_t dyadic_order_2_
+) {
+	if (dimension_ == 0) { throw std::invalid_argument("signature kernel received path of dimension 0"); }
+
+	static const double twelth_ = 1. / 12;
+	static const double sixth_ = 1. / 6;
+	const uint64_t dyadic_length_1_ = ((length1_ - 1) << dyadic_order_1_) + 1;
+	const uint64_t dyadic_length_2_ = ((length2_ - 1) << dyadic_order_2_) + 1;
+	const uint64_t main_dyadic_length_ = dyadic_length_2_ <= dyadic_length_1_ ? dyadic_length_1_ : dyadic_length_2_;
+	const uint64_t num_anti_diag_ = 33 + main_dyadic_length_ - 1;
+	const double dyadic_frac_ = 1. / (1ULL << (dyadic_order_1_ + dyadic_order_2_));
+	const uint64_t gram_length_ = (length1_ - 1) * (length2_ - 1);
+	const uint64_t grid_length_ = dyadic_length_1_ * dyadic_length_2_;
+
+	// Allocate constant memory
+	cudaMemcpyToSymbol(dimension, &dimension_, sizeof(uint64_t));
+	cudaMemcpyToSymbol(length1, &length1_, sizeof(uint64_t));
+	cudaMemcpyToSymbol(length2, &length2_, sizeof(uint64_t));
+	cudaMemcpyToSymbol(dyadic_order_1, &dyadic_order_1_, sizeof(uint64_t));
+	cudaMemcpyToSymbol(dyadic_order_2, &dyadic_order_2_, sizeof(uint64_t));
+
+	cudaMemcpyToSymbol(twelth, &twelth_, sizeof(double));
+	cudaMemcpyToSymbol(sixth, &sixth_, sizeof(double));
+	cudaMemcpyToSymbol(dyadic_length_1, &dyadic_length_1_, sizeof(uint64_t));
+	cudaMemcpyToSymbol(dyadic_length_2, &dyadic_length_2_, sizeof(uint64_t));
+	cudaMemcpyToSymbol(main_dyadic_length, &main_dyadic_length_, sizeof(uint64_t));
+	cudaMemcpyToSymbol(num_anti_diag, &num_anti_diag_, sizeof(uint64_t));
+	cudaMemcpyToSymbol(dyadic_frac, &dyadic_frac_, sizeof(double));
+	cudaMemcpyToSymbol(gram_length, &gram_length_, sizeof(uint64_t));
+	cudaMemcpyToSymbol(grid_length, &grid_length_, sizeof(uint64_t));
+
+	//Initialise out to 0
+	cudaMemset(out, 0, batch_size_ * gram_length_ * sizeof(double));
+
+	double* d_initial_condition;
+	cudaMalloc((void**)&d_initial_condition, main_dyadic_length_ * batch_size_ * sizeof(double));
+	cudaMemset(d_initial_condition, 0, main_dyadic_length_ * batch_size_ * sizeof(double));
+
+	double* d_a_initial_condition;
+	cudaMalloc((void**)&d_a_initial_condition, main_dyadic_length_ * batch_size_ * sizeof(double));
+	cudaMemset(d_a_initial_condition, 0, main_dyadic_length_ * batch_size_ * sizeof(double));
+
+	double* d_b_initial_condition;
+	cudaMalloc((void**)&d_b_initial_condition, main_dyadic_length_ * batch_size_ * sizeof(double));
+	cudaMemset(d_b_initial_condition, 0, main_dyadic_length_ * batch_size_ * sizeof(double));
+
+	goursat_pde_deriv << <batch_size_, 32U >> > (d_initial_condition, d_a_initial_condition, d_b_initial_condition, gram, deriv, k_grid, out);
+
+	cudaFree(d_initial_condition);
+	cudaFree(d_a_initial_condition);
+	cudaFree(d_b_initial_condition);	
+
+	cudaError_t err = cudaGetLastError();
+	if (err != cudaSuccess) {
+		int error_code = static_cast<int>(err);
+		throw std::runtime_error("CUDA Error (" + std::to_string(error_code) + "): " + cudaGetErrorString(err));
+	}
+}
 
 #define SAFE_CALL(function_call)                            \
     try {                                                   \
@@ -321,11 +362,11 @@ extern "C" {
 		SAFE_CALL(sig_kernel_cuda_(gram, out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, return_grid));
 	}
 
-	/*CUSIG_API int sig_kernel_backprop_cuda(double* gram, double* out, double* deriv, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2) noexcept {
-		SAFE_CALL(sig_kernel_backprop_cuda_(gram, out, deriv, 1ULL, dimension, length1, length2, dyadic_order_1, dyadic_order_2));
+	CUSIG_API int sig_kernel_backprop_cuda(const double* const gram, double* const out, const double deriv, const double* const k_grid, const uint64_t dimension, const uint64_t length1, const uint64_t length2, const uint64_t dyadic_order_1, const uint64_t dyadic_order_2) noexcept {
+		SAFE_CALL(sig_kernel_backprop_cuda_(gram, out, &deriv, k_grid, 1ULL, dimension, length1, length2, dyadic_order_1, dyadic_order_2));
 	}
 
-	CUSIG_API int batch_sig_kernel_backprop_cuda(double* gram, double* out, double* deriv, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2) noexcept {
-		SAFE_CALL(sig_kernel_backprop_cuda_(gram, out, deriv, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2));
-	}*/
+	CUSIG_API int batch_sig_kernel_backprop_cuda(const double* const gram, double* const out, const double* const deriv, const double* const k_grid, const uint64_t batch_size, const uint64_t dimension, const uint64_t length1, const uint64_t length2, const uint64_t dyadic_order_1, const uint64_t dyadic_order_2) noexcept {
+		SAFE_CALL(sig_kernel_backprop_cuda_(gram, out, deriv, k_grid, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2));
+	}
 }

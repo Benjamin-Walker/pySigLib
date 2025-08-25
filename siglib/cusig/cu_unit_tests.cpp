@@ -138,7 +138,7 @@ void check_result_2(FN f, std::vector<T>& path1, std::vector<T>& path2, std::vec
 }
 
 template<typename FN, typename T, typename... Args>
-void check_result_3(FN f, std::vector<T>& path, std::vector<double>& true_, std::vector<double>& deriv, Args... args) {
+void check_result_4(FN f, std::vector<T>& path, std::vector<double>& true_, std::vector<double>& deriv, std::vector<double>& k_grid, Args... args) {
     std::vector<double> out;
     out.resize(true_.size() + 1); //+1 at the end just to check we don't write more than expected
     out[true_.size()] = -1.;
@@ -146,21 +146,25 @@ void check_result_3(FN f, std::vector<T>& path, std::vector<double>& true_, std:
     T* d_a;
     double* d_out;
     double* d_deriv;
+    double* d_k_grid;
     cudaMalloc(&d_a, sizeof(T) * path.size());
     cudaMalloc(&d_out, sizeof(double) * out.size());
     cudaMalloc(&d_deriv, sizeof(double) * deriv.size());
+    cudaMalloc(&d_k_grid, sizeof(double) * k_grid.size());
 
     // Copy data from the host to the device (CPU -> GPU)
     cudaMemcpy(d_a, path.data(), sizeof(T) * path.size(), cudaMemcpyHostToDevice);
     cudaMemcpy(d_deriv, deriv.data(), sizeof(double) * deriv.size(), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_k_grid, k_grid.data(), sizeof(double) * k_grid.size(), cudaMemcpyHostToDevice);
 
-    f(d_a, d_out, d_deriv, args...);
+    f(d_a, d_out, d_deriv, d_k_grid, args...);
 
     cudaMemcpy(out.data(), d_out, sizeof(double) * true_.size(), cudaMemcpyDeviceToHost);
 
     cudaFree(d_a);
     cudaFree(d_out);
     cudaFree(d_deriv);
+    cudaFree(d_k_grid);
 
     for (uint64_t i = 0; i < true_.size(); ++i)
         Assert::IsTrue(abs(true_[i] - out[i]) < EPSILON);
@@ -279,55 +283,223 @@ public:
     }
     };
 
-    /*TEST_CLASS(sigKernelBackpropTest) {
+    TEST_CLASS(sigKernelBackpropTest) {
 public:
     TEST_METHOD(ManualTest1) {
-        auto f = sig_kernel_backprop_cuda;
-        uint64_t dimension = 1, length1 = 2, length2 = 3;
+        auto f = batch_sig_kernel_backprop_cuda;
+        uint64_t batch_size = 1, dimension = 1, length1 = 2, length2 = 3;
         std::vector<double> path1 = { 0., 2. };
         std::vector<double> path2 = { 0., 1., 2. };
         std::vector<double> deriv = { 1. };
         std::vector<double> true_ = { 4.5 + 1. / 6, 4.5 };
         std::vector<double> gram((length1 - 1) * (length2 - 1));
+        std::vector<double> k_grid = { 1., 1., 1., 1., 4., 11. };
         gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
-        check_result_3(f, gram, true_, deriv, dimension, length1, length2, 0, 0);
+        check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 0, 0);
+    }
+
+    TEST_METHOD(ManualTest1Extended) {
+        auto f = batch_sig_kernel_backprop_cuda;
+        uint64_t batch_size = 1, dimension = 1, length1 = 34, length2 = 35;
+        std::vector<double> path1(length1, 0.);
+        path1[length1 - 1] = 2.;
+        std::vector<double> path2(length2, 0.);
+        path2[length2 - 2] = 1.;
+        path2[length2 - 1] = 2.;
+        std::vector<double> deriv = { 1. };
+        std::vector<double> true_((length1 - 1) * (length2 - 1), 11.); //{ 4.5 + 1. / 6, 4.5 };
+
+        for (int i = 1; i < length1 - 1; ++i) {
+            true_[(length2 - 1) * i - 2] = 7. + 1. / 9;
+            true_[(length2 - 1) * i - 1] = 2. + 1. / 3;
+        }
+        for (int i = (length1 - 2) * (length2 - 1); i < (length1 - 1) * (length2 - 1) - 2; ++i) {
+            true_[i] = 5. + 4. / 9;
+        }
+
+        true_[(length1 - 1) * (length2 - 1) - 2] = 4.5 + 1. / 6;
+        true_[(length1 - 1) * (length2 - 1) - 1] = 4.5;
+        std::vector<double> gram((length1 - 1) * (length2 - 1));
+        std::vector<double> k_grid(length1 * length2, 1.);// = { 1., 1., 1., 1., 4., 11. };
+        k_grid[length1 * length2 - 2] = 4.;
+        k_grid[length1 * length2 - 1] = 11.;
+        gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+        check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 0, 0);
+    }
+
+    TEST_METHOD(ManualTest1Rev) {
+        auto f = batch_sig_kernel_backprop_cuda;
+        uint64_t batch_size = 1, dimension = 1, length2 = 2, length1 = 3;
+        std::vector<double> path2 = { 0., 2. };
+        std::vector<double> path1 = { 0., 1., 2. };
+        std::vector<double> deriv = { 1. };
+        std::vector<double> true_ = { 4.5 + 1. / 6, 4.5 };
+        std::vector<double> gram((length1 - 1) * (length2 - 1));
+        std::vector<double> k_grid = { 1., 1., 1., 4., 1., 11. };
+        gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+        check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 0, 0);
     }
 
     TEST_METHOD(ManualTest2) {
-        auto f = sig_kernel_backprop_cuda;
-        uint64_t dimension = 1, length1 = 3, length2 = 3;
+        auto f = batch_sig_kernel_backprop_cuda;
+        uint64_t batch_size = 1, dimension = 1, length1 = 3, length2 = 3;
         std::vector<double> path1 = { 0., 2., 3. };
         std::vector<double> path2 = { 0., 1., 2. };
         std::vector<double> deriv = { 1. };
         std::vector<double> true_ = { 761. / 72, 7.125, 133. / 24, 12.5 + 1. / 6 };
         std::vector<double> gram((length1 - 1) * (length2 - 1));
+        std::vector<double> k_grid = { 1., 1., 1., 1., 4., 11., 1., 7., 25. - 1. / 6 };
         gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
-        check_result_3(f, gram, true_, deriv, dimension, length1, length2, 0, 0);
+        check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 0, 0);
+    }
+
+    TEST_METHOD(ManualTest2Rev) {
+        auto f = batch_sig_kernel_backprop_cuda;
+        uint64_t batch_size = 1, dimension = 1, length2 = 3, length1 = 3;
+        std::vector<double> path2 = { 0., 2., 3. };
+        std::vector<double> path1 = { 0., 1., 2. };
+        std::vector<double> deriv = { 1. };
+        std::vector<double> true_ = { 761. / 72, 133. / 24, 7.125, 12.5 + 1. / 6 };
+        std::vector<double> gram((length1 - 1) * (length2 - 1));
+        std::vector<double> k_grid = { 1., 1., 1., 1., 4., 7., 1., 11., 25. - 1. / 6 };
+        gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+        check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 0, 0);
     }
 
     TEST_METHOD(ManualTest3) {
-        auto f = sig_kernel_backprop_cuda;
-        uint64_t dimension = 1, length1 = 2, length2 = 3;
+        auto f = batch_sig_kernel_backprop_cuda;
+        uint64_t batch_size = 1, dimension = 1, length1 = 2, length2 = 3;
         std::vector<double> path1 = { 0., 2. };
         std::vector<double> path2 = { 0., 1., 2. };
         std::vector<double> deriv = { 1. };
         std::vector<double> true_ = { 5.1602194279800226, 5.1185673607720270 };
         std::vector<double> gram((length1 - 1) * (length2 - 1));
+        std::vector<double> k_grid = {
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.5625,
+            2.27734375,
+            3.1857910156249996,
+            4.3402760823567705,
+            1.0,
+            2.27734375,
+            4.25830078125,
+            7.2303009033203125,
+            11.584854549831814
+        };
         gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
-        check_result_3(f, gram, true_, deriv, dimension, length1, length2, 1, 1);
+        check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 1, 1);
     }
+
+    TEST_METHOD(ManualTest3Rev) {
+        auto f = batch_sig_kernel_backprop_cuda;
+        uint64_t batch_size = 1, dimension = 1, length2 = 2, length1 = 3;
+        std::vector<double> path2 = { 0., 2. };
+        std::vector<double> path1 = { 0., 1., 2. };
+        std::vector<double> deriv = { 1. };
+        std::vector<double> true_ = { 5.1602194279800226, 5.1185673607720270 };
+        std::vector<double> gram((length1 - 1) * (length2 - 1));
+        std::vector<double> k_grid = {
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.5625,
+            2.27734375,
+            1.0,
+            2.27734375,
+            4.25830078125,
+            1.0,
+            3.1857910156249996,
+            7.2303009033203125,
+            1.0,
+            4.3402760823567705,
+            11.584854549831814
+        };
+        gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+        check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 1, 1);
+    }
+
+    TEST_METHOD(ManualTest4) {
+        auto f = batch_sig_kernel_backprop_cuda;
+        uint64_t batch_size = 1, dimension = 2, length1 = 3, length2 = 3;
+        std::vector<double> path1 = { 0., 1., 2., 4., 5., 5. };
+        std::vector<double> path2 = { 0., 2., 1., 3., 2., 1. };
+        std::vector<double> deriv = { 1. };
+        std::vector<double> true_ = { 1631. / 72, -437. / 96, 817. / 32, 1049. / 24 };
+        std::vector<double> gram((length1 - 1) * (length2 - 1));
+        std::vector<double> k_grid = {
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            12.25,
+            4.75,
+            1.0,
+            57.75,
+            87.729 + 1. / 6000
+        };
+        gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+        check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 0, 0);
+    }
+
+    TEST_METHOD(ManualTest4Rev) {
+        auto f = batch_sig_kernel_backprop_cuda;
+        uint64_t batch_size = 1, dimension = 2, length2 = 3, length1 = 3;
+        std::vector<double> path2 = { 0., 1., 2., 4., 5., 5. };
+        std::vector<double> path1 = { 0., 2., 1., 3., 2., 1. };
+        std::vector<double> deriv = { 1. };
+        std::vector<double> true_ = { 1631. / 72, 817. / 32 , -437. / 96, 1049. / 24 };
+        std::vector<double> gram((length1 - 1) * (length2 - 1));
+        std::vector<double> k_grid = {
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            12.25,
+            57.75,
+            1.0,
+            4.75,
+            87.729 + 1. / 6000
+        };
+        gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+        check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 0, 0);
+    }
+
+    /*TEST_METHOD(ManualTest5) {
+        auto f = batch_sig_kernel_backprop_cuda;
+        uint64_t batch_size = 1, dimension = 1, length1 = 10, length2 = 40;
+        std::vector<double> path1(length1);
+        for (int i = 0; i < length1; ++i)
+            path1[i] = i / 10.;
+        std::vector<double> path2(40);
+        for (int i = 0; i < length2; ++i)
+            path2[i] = i / 10.;
+        std::vector<double> deriv = { 1. };
+        std::vector<double> true_((length1 - 1) * (length2 - 1));
+        std::vector<double> gram((length1 - 1) * (length2 - 1));
+        std::vector<double> k_grid(length1 * length2);
+        gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
+        sig_kernel_cuda(gram.data(), k_grid.data(), dimension, length1, length2, 0, 0, true);
+        check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 0, 0);
+    }*/
 
     TEST_METHOD(BatchManualTest1) {
         auto f = batch_sig_kernel_backprop_cuda;
         uint64_t batch_size = 2, dimension = 1, length1 = 2, length2 = 3;
         std::vector<double> path1 = { 0., 2., 0., 2. };
         std::vector<double> path2 = { 0., 1., 2., 0., 1., 2. };
-        std::vector<double> deriv = { 1., 1. };
+        std::vector<double> derivs = { 1., 1. };
         std::vector<double> true_ = { 4.5 + 1. / 6, 4.5, 4.5 + 1. / 6, 4.5 };
         std::vector<double> gram((length1 - 1) * (length2 - 1) * batch_size);
+        std::vector<double> k_grid = { 1., 1., 1., 1., 4., 11., 1., 1., 1., 1., 4., 11. };
         gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
         gram_(path1.data(), path2.data(), gram.data() + 2, 1, dimension, length1, length2);
-        check_result_3(f, gram, true_, deriv, batch_size, dimension, length1, length2, 0, 0);
+        check_result_4(f, gram, true_, derivs, k_grid, batch_size, dimension, length1, length2, 0, 0);
     }
 
     TEST_METHOD(BatchManualTest2) {
@@ -335,12 +507,13 @@ public:
         uint64_t batch_size = 2, dimension = 1, length1 = 3, length2 = 3;
         std::vector<double> path1 = { 0., 2., 3., 0., 2., 3. };
         std::vector<double> path2 = { 0., 1., 2., 0., 1., 2. };
-        std::vector<double> deriv = { 1., 1. };
+        std::vector<double> derivs = { 1., 1. };
         std::vector<double> true_ = { 761. / 72, 7.125, 133. / 24, 12.5 + 1. / 6, 761. / 72, 7.125, 133. / 24, 12.5 + 1. / 6 };
         std::vector<double> gram((length1 - 1) * (length2 - 1) * batch_size);
+        std::vector<double> k_grid = { 1., 1., 1., 1., 4., 11., 1., 7., 25. - 1. / 6, 1., 1., 1., 1., 4., 11., 1., 7., 25. - 1. / 6 };
         gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
         gram_(path1.data(), path2.data(), gram.data() + 4, 1, dimension, length1, length2);
-        check_result_3(f, gram, true_, deriv, batch_size, dimension, length1, length2, 0, 0);
+        check_result_4(f, gram, true_, derivs, k_grid, batch_size, dimension, length1, length2, 0, 0);
     }
-    };*/
+    };
 }

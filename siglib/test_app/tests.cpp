@@ -206,6 +206,29 @@ void example_sig_backprop_double(
     std::cout << "done\n";
 }
 
+void example_batch_sig_kernel_backprop(
+    uint64_t batch_size,
+    uint64_t dimension,
+    uint64_t length1,
+    uint64_t length2,
+    uint64_t dyadic_order_1,
+    uint64_t dyadic_order_2,
+    int n_jobs,
+    int num_runs
+) {
+    print_header("Batch Sig Kernel Backprop");
+
+    uint64_t gram_size = (length1 - 1) * (length2 - 1) * batch_size;
+    std::vector<double> gram = test_data<double>(gram_size);
+    std::vector<double> deriv = test_data<double>(batch_size);
+    std::vector<double> out(batch_size * (length1 - 1) * (length2 - 1));
+    std::vector<double> k_grid = test_data<double>(batch_size * length1 * length2);
+
+    time_function(num_runs, batch_sig_kernel_backprop, gram.data(), out.data(), deriv.data(), k_grid.data(), batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, n_jobs);
+
+    std::cout << "done\n";
+}
+
 void example_batch_sig_kernel_backprop_cuda(
     uint64_t batch_size,
     uint64_t dimension,
@@ -217,24 +240,34 @@ void example_batch_sig_kernel_backprop_cuda(
 ) {
     print_header("Batch Sig Kernel Backprop CUDA");
 
-    uint64_t gram_size = length1 * length2 * batch_size;
+    uint64_t dyadic_length_1 = ((length1 - 1) << dyadic_order_1) + 1;
+    uint64_t dyadic_length_2 = ((length2 - 1) << dyadic_order_2) + 1;
+    uint64_t grid_size = dyadic_length_1 * dyadic_length_2;
+    uint64_t gram_size = (length1 - 1) * (length2 - 1) * batch_size;
     std::vector<double> gram = test_data<double>(gram_size);
     std::vector<double> deriv = test_data<double>(batch_size);
+    std::vector<double> k_grid = test_data<double>(batch_size * length1 * length2);
 
     double* d_gram;
     double* d_out;
     double* d_deriv;
-    cudaMalloc(&d_gram, sizeof(double) * gram_size);
+    double* d_k_grid;
+    cudaMalloc(&d_gram, sizeof(double) * batch_size * gram_size);
     cudaMalloc(&d_out, sizeof(double) * batch_size * gram_size);
     cudaMalloc(&d_deriv, sizeof(double) * batch_size);
+    cudaMalloc(&d_k_grid, sizeof(double) * batch_size * grid_size);
 
     // Copy data from the host to the device (CPU -> GPU)
     cudaMemcpy(d_gram, gram.data(), sizeof(double) * gram_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_deriv, deriv.data(), sizeof(double) * batch_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_k_grid, k_grid.data(), sizeof(double) * batch_size * grid_size, cudaMemcpyHostToDevice);
 
-    time_function(num_runs, batch_sig_kernel_backprop_cuda, d_gram, d_out, d_deriv, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2);
+    time_function(num_runs, batch_sig_kernel_backprop_cuda, d_gram, d_out, d_deriv, d_k_grid, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2);
 
     cudaFree(d_gram);
     cudaFree(d_deriv);
+    cudaFree(d_k_grid);
     cudaFree(d_out);
+ 
+    std::cout << "done\n";
 }

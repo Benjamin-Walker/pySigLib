@@ -99,6 +99,17 @@ void example_sig_backprop_double(
 	int num_runs = 50
 );
 
+void example_batch_sig_kernel_backprop(
+	uint64_t batch_size = 32,
+	uint64_t dimension = 5,
+	uint64_t length1 = 1000,
+	uint64_t length2 = 1000,
+	uint64_t dyadic_order_1 = 0,
+	uint64_t dyadic_order_2 = 0,
+	int n_jobs = -1,
+	int num_runs = 50
+);
+
 void example_batch_sig_kernel_backprop_cuda(
 	uint64_t batch_size = 1,
 	uint64_t dimension = 1,
