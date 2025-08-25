@@ -76,6 +76,11 @@ __device__ void goursat_pde_32(
 ) {
 	const int thread_id = threadIdx.x;
 
+	const uint64_t ord_dyadic_order_1 = order ? dyadic_order_1 : dyadic_order_2;
+	const uint64_t ord_dyadic_order_2 = order ? dyadic_order_2 : dyadic_order_1;
+	const uint64_t ord_dyadic_length_1 = order ? dyadic_length_1 : dyadic_length_2;
+	const uint64_t ord_dyadic_length_2 = order ? dyadic_length_2 : dyadic_length_1;
+
 	// Initialise to 1
 	for (int i = 0; i < 3; ++i)
 		diagonals[i * 33 + thread_id + 1] = 1.;
@@ -95,78 +100,40 @@ __device__ void goursat_pde_32(
 
 	for (uint64_t p = 2; p < num_anti_diag; ++p) { // First two antidiagonals are initialised to 1
 
-		if (order) {
-			uint64_t startj, endj;
-			if (dyadic_length_1 > p) startj = 1ULL;
-			else startj = p - dyadic_length_1 + 1;
-			if (num_threads + 1 > p) endj = p;
-			else endj = num_threads + 1;
+		uint64_t startj, endj;
+		if (ord_dyadic_length_1 > p) startj = 1ULL;
+		else startj = p - ord_dyadic_length_1 + 1;
+		if (num_threads + 1 > p) endj = p;
+		else endj = num_threads + 1;
 
-			const uint64_t j = startj + thread_id;
+		const uint64_t j = startj + thread_id;
 
-			if (j < endj) {
+		if (j < endj) {
 
-				// Make sure correct initial condition is filled in for first thread
-				if (thread_id == 0 && p < dyadic_length_1) {
-					diagonals[next_diag_idx] = initial_condition[p];
-				}
-
-				const uint64_t i = p - j;  // Calculate corresponding i (since i + j = p)
-				const uint64_t ii = ((i - 1) >> dyadic_order_1);
-				const uint64_t jj = ((j + iteration * 32 - 1) >> dyadic_order_2);
-
-				const double deriv = gram[ii * (length2 - 1) + jj] * dyadic_frac;
-				const double deriv2 = deriv * deriv * twelth;
-
-				diagonals[next_diag_idx + j] = (diagonals[prev_diag_idx + j] + diagonals[prev_diag_idx + j - 1]) * (
-					1. + 0.5 * deriv + deriv2) - diagonals[prev_prev_diag_idx + j - 1] * (1. - deriv2);
-
+			// Make sure correct initial condition is filled in for first thread
+			if (thread_id == 0 && p < ord_dyadic_length_1) {
+				diagonals[next_diag_idx] = initial_condition[p];
 			}
 
-			// Wait for all threads to finish
-			__syncthreads();
+			const uint64_t i = p - j;  // Calculate corresponding i (since i + j = p)
+			const uint64_t ii = ((i - 1) >> ord_dyadic_order_1);
+			const uint64_t jj = ((j + iteration * 32 - 1) >> ord_dyadic_order_2);
 
-			// Overwrite initial condition with result
-			// Safe to do since we won't be using initial_condition[p-num_threads] any more
-			if (thread_id == 0 && p >= num_threads && p - num_threads < dyadic_length_1)
-				initial_condition[p - num_threads] = diagonals[next_diag_idx + num_threads];
+			const double deriv = order ? gram[ii * (length2 - 1) + jj] * dyadic_frac : gram[jj * (length2 - 1) + ii] * dyadic_frac;
+			const double deriv2 = deriv * deriv * twelth;
+
+			diagonals[next_diag_idx + j] = (diagonals[prev_diag_idx + j] + diagonals[prev_diag_idx + j - 1]) * (
+				1. + 0.5 * deriv + deriv2) - diagonals[prev_prev_diag_idx + j - 1] * (1. - deriv2);
+
 		}
-		else {
-			uint64_t startj, endj;
-			if (dyadic_length_2 > p) startj = 1ULL;
-			else startj = p - dyadic_length_2 + 1;
-			if (num_threads + 1 > p) endj = p;
-			else endj = num_threads + 1;
 
-			const uint64_t j = startj + thread_id;
+		// Wait for all threads to finish
+		__syncthreads();
 
-			if (j < endj) {
-
-				// Make sure correct initial condition is filled in for first thread
-				if (thread_id == 0 && p < dyadic_length_2) {
-					diagonals[next_diag_idx] = initial_condition[p];
-				}
-
-				const uint64_t i = p - j;  // Calculate corresponding i (since i + j = p)
-				const uint64_t ii = ((i - 1) >> dyadic_order_2);
-				const uint64_t jj = ((j + iteration * 32 - 1) >> dyadic_order_1);
-
-				const double deriv = gram[jj * (length2 - 1) + ii] * dyadic_frac;
-				const double deriv2 = deriv * deriv * twelth;
-
-				diagonals[next_diag_idx + j] = (diagonals[prev_diag_idx + j] + diagonals[prev_diag_idx + j - 1]) * (
-					1. + 0.5 * deriv + deriv2) - diagonals[prev_prev_diag_idx + j - 1] * (1. - deriv2);
-
-			}
-
-			// Wait for all threads to finish
-			__syncthreads();
-
-			// Overwrite initial condition with result
-			// Safe to do since we won't be using initial_condition[p-num_threads] any more
-			if (thread_id == 0 && p >= num_threads && p - num_threads < dyadic_length_2)
-				initial_condition[p - num_threads] = diagonals[next_diag_idx + num_threads];
-		}
+		// Overwrite initial condition with result
+		// Safe to do since we won't be using initial_condition[p-num_threads] any more
+		if (thread_id == 0 && p >= num_threads && p - num_threads < ord_dyadic_length_1)
+			initial_condition[p - num_threads] = diagonals[next_diag_idx + num_threads];
 
 		// Rotate the diagonals (swap indices, no data copying)
 		int temp = prev_prev_diag_idx;
@@ -189,57 +156,43 @@ __device__ void goursat_pde_32_full(
 	const int thread_id = threadIdx.x;
 	double* const pde_grid_ = order ? pde_grid + iteration * 32 : pde_grid + iteration * 32 * dyadic_length_2;
 
+	const uint64_t ord_dyadic_order_1 = order ? dyadic_order_1 : dyadic_order_2;
+	const uint64_t ord_dyadic_order_2 = order ? dyadic_order_2 : dyadic_order_1;
+	const uint64_t ord_dyadic_length_1 = order ? dyadic_length_1 : dyadic_length_2;
+	const uint64_t ord_dyadic_length_2 = order ? dyadic_length_2 : dyadic_length_1;
+
 	__syncthreads();
 
 	for (uint64_t p = 2; p < num_anti_diag; ++p) { // First two antidiagonals are initialised to 1
 
-		if (order) {
+		uint64_t startj, endj;
+		if (ord_dyadic_length_1 > p) startj = 1ULL;
+		else startj = p - ord_dyadic_length_1 + 1;
+		if (num_threads + 1 > p) endj = p;
+		else endj = num_threads + 1;
 
-			uint64_t startj, endj;
-			if (dyadic_length_1 > p) startj = 1ULL;
-			else startj = p - dyadic_length_1 + 1;
-			if (num_threads + 1 > p) endj = p;
-			else endj = num_threads + 1;
+		const uint64_t j = startj + thread_id;
 
-			const uint64_t j = startj + thread_id;
+		if (j < endj) {
 
-			if (j < endj) {
+			const uint64_t i = p - j;  // Calculate corresponding i (since i + j = p)
+			const uint64_t ii = ((i - 1) >> ord_dyadic_order_1);
+			const uint64_t jj = ((j + iteration * 32 - 1) >> ord_dyadic_order_2);
 
-				const uint64_t i = p - j;  // Calculate corresponding i (since i + j = p)
-				const uint64_t ii = ((i - 1) >> dyadic_order_1);
-				const uint64_t jj = ((j + iteration * 32 - 1) >> dyadic_order_2);
+			const double deriv = order ? gram[ii * (length2 - 1) + jj] * dyadic_frac : gram[jj * (length2 - 1) + ii] * dyadic_frac;
+			const double deriv2 = deriv * deriv * twelth;
 
-				const double deriv = gram[ii * (length2 - 1) + jj] * dyadic_frac;
-				const double deriv2 = deriv * deriv * twelth;
-
+			if (order) {
 				pde_grid_[i * dyadic_length_2 + j] = (pde_grid_[(i - 1) * dyadic_length_2 + j] + pde_grid_[i * dyadic_length_2 + (j - 1)]) * (
 					1. + 0.5 * deriv + deriv2) - pde_grid_[(i - 1) * dyadic_length_2 + j - 1] * (1. - deriv2);
-
 			}
-		}
-		else {
-			uint64_t startj, endj;
-			if (dyadic_length_2 > p) startj = 1ULL;
-			else startj = p - dyadic_length_2 + 1;
-			if (num_threads + 1 > p) endj = p;
-			else endj = num_threads + 1;
-
-			const uint64_t j = startj + thread_id;
-
-			if (j < endj) {
-
-				const uint64_t i = p - j;  // Calculate corresponding i (since i + j = p)
-				const uint64_t ii = ((i - 1) >> dyadic_order_2);
-				const uint64_t jj = ((j + iteration * 32 - 1) >> dyadic_order_1);
-
-				const double deriv = gram[jj * (length2 - 1) + ii] * dyadic_frac;
-				const double deriv2 = deriv * deriv * twelth;
-
-				pde_grid_[j * dyadic_length_2 + i] = (pde_grid_[j * dyadic_length_2 + i - 1] + pde_grid_[(j - 1) * dyadic_length_2 + i]) * (
+			else {
+				pde_grid_[j * dyadic_length_2 + i] = (pde_grid_[(j - 1) * dyadic_length_2 + i] + pde_grid_[j * dyadic_length_2 + (i - 1)]) * (
 					1. + 0.5 * deriv + deriv2) - pde_grid_[(j - 1) * dyadic_length_2 + i - 1] * (1. - deriv2);
-
 			}
+
 		}
+
 		// Wait for all threads to finish
 		__syncthreads();
 	}
