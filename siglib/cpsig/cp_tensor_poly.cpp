@@ -21,35 +21,35 @@
 
 uint64_t power(uint64_t base, uint64_t exp) noexcept {
     uint64_t result = 1;
-    while (exp > 0UL) {
-        if (exp % 2UL == 1UL) {
+    while (exp > 0) {
+        if (exp % 2 == 1) {
             const auto _res = result * base;
             if (_res < result)
-                return 0UL; // overflow
+                return 0; // overflow
             result = _res;
         }
         const auto _base = base * base;
         if (_base < base)
-            return 0UL; // overflow
+            return 0; // overflow
         base = _base;
-        exp /= 2UL;
+        exp /= 2;
     }
     return result;
 }
 
 extern "C" CPSIG_API uint64_t sig_length(uint64_t dimension, uint64_t degree) noexcept {
-    if (dimension == 0UL) {
-        return 1UL;
+    if (dimension == 0) {
+        return 1;
     }
-    else if (dimension == 1UL) {
-        return degree + 1UL;
+    else if (dimension == 1) {
+        return degree + 1;
     }
     else {
-        const auto pwr = power(dimension, degree + 1UL);
+        const auto pwr = power(dimension, degree + 1);
         if (pwr)
-            return (pwr - 1UL) / (dimension - 1UL);
+            return (pwr - 1) / (dimension - 1);
         else
-            return 0UL; // overflow
+            return 0; // overflow
     }
 }
 
@@ -67,9 +67,9 @@ void sig_combine_(
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
 
-	level_index[0] = 0UL;
-	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
-		level_index[i] = level_index[i - 1UL] * dimension + 1;
+	level_index[0] = 0;
+	for (uint64_t i = 1; i <= degree + 1; i++)
+		level_index[i] = level_index[i - 1] * dimension + 1;
 
     std::memcpy(out, sig1, sizeof(double) * level_index[degree + 1]);
 
@@ -131,9 +131,9 @@ void sig_combine_backprop_(
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
 
-	level_index[0] = 0UL;
-	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
-		level_index[i] = level_index[i - 1UL] * dimension + 1;
+	level_index[0] = 0;
+	for (uint64_t i = 1; i <= degree + 1; i++)
+		level_index[i] = level_index[i - 1] * dimension + 1;
 
 	std::memcpy(sig1_deriv, sig_combined_deriv, sizeof(double) * level_index[degree + 1]);
 
@@ -158,9 +158,9 @@ void batch_sig_combine_backprop_(
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
 
-	level_index[0] = 0UL;
-	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
-		level_index[i] = level_index[i - 1UL] * dimension + 1;
+	level_index[0] = 0;
+	for (uint64_t i = 1; i <= degree + 1; i++)
+		level_index[i] = level_index[i - 1] * dimension + 1;
 
 	const uint64_t siglength = level_index[degree + 1];
 

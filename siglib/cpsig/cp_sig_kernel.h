@@ -92,7 +92,7 @@ void get_sig_kernel_diag_internal_(
 
 		if (order) {
 			uint64_t startj, endj;
-			if (dyadic_length_1 > p) startj = 1ULL;
+			if (dyadic_length_1 > p) startj = 1;
 			else startj = p - dyadic_length_1 + 1;
 			if (dyadic_length_2 > p) endj = p;
 			else endj = dyadic_length_2;
@@ -112,7 +112,7 @@ void get_sig_kernel_diag_internal_(
 		}
 		else {
 			uint64_t startj, endj;
-			if (dyadic_length_2 > p) startj = 1ULL;
+			if (dyadic_length_2 > p) startj = 1;
 			else startj = p - dyadic_length_2 + 1;
 			if (dyadic_length_1 > p) endj = p;
 			else endj = dyadic_length_1;
@@ -223,48 +223,44 @@ void get_sig_kernel_backprop_diag_internal_(
 		//Update b
 		uint64_t startj, endj;
 		uint64_t p_ = p - 2;
-		startj = ord_dyadic_length_1 > p_ ? 1ULL : p_ - ord_dyadic_length_1 + 1;
+		startj = ord_dyadic_length_1 > p_ ? 1 : p_ - ord_dyadic_length_1 + 1;
 		endj = ord_dyadic_length_2 > p_ ? p_ : ord_dyadic_length_2;
 
 		uint64_t i = p_ - startj; // Calculate corresponding i (since i + j = p)
 		uint64_t i_rev = ord_dyadic_length_1 - i - 1;
 		uint64_t j_rev = ord_dyadic_length_2 - startj - 1;
 
-		for (uint64_t j = startj; j < endj; ++j) {
+		for (uint64_t j = startj;
+			j < endj;
+			++j, --i, ++i_rev, --j_rev) {
 			const uint64_t ii = (i_rev >> ord_dyadic_order_1);
 			const uint64_t jj = (j_rev >> ord_dyadic_order_2);
 			const uint64_t gram_idx = order ? ii * (length2 - 1) + jj : jj * (length2 - 1) + ii;
 
 			get_b(b[j], gram, gram_idx, dyadic_frac);
-
-			--i;
-			++i_rev;
-			--j_rev;
 		}
 
 		//Update a
 		p_ = p - 1;
-		startj = ord_dyadic_length_1 > p_ ? 1ULL : p_ - ord_dyadic_length_1 + 1;
+		startj = ord_dyadic_length_1 > p_ ? 1 : p_ - ord_dyadic_length_1 + 1;
 		endj = ord_dyadic_length_2 > p_ ? p_ : ord_dyadic_length_2;
 
 		i = p_ - startj; // Calculate corresponding i (since i + j = p)
 		i_rev = ord_dyadic_length_1 - i - 1;
 		j_rev = ord_dyadic_length_2 - startj - 1;
 
-		for (uint64_t j = startj; j < endj; ++j) {
+		for (uint64_t j = startj;
+			j < endj;
+			++j, --i, ++i_rev, --j_rev) {
 			const uint64_t ii = (i_rev >> ord_dyadic_order_1);
 			const uint64_t jj = (j_rev >> ord_dyadic_order_2);
 			const uint64_t gram_idx = order ? ii * (length2 - 1) + jj : jj * (length2 - 1) + ii;
 
 			get_a(a[j], gram, gram_idx, dyadic_frac);
-
-			--i;
-			++i_rev;
-			--j_rev;
 		}
 
 		//Update diagonals
-		startj = ord_dyadic_length_1 > p ? 1ULL : p - ord_dyadic_length_1 + 1;
+		startj = ord_dyadic_length_1 > p ? 1 : p - ord_dyadic_length_1 + 1;
 		endj = ord_dyadic_length_2 > p ? p : ord_dyadic_length_2;
 
 		i = p - startj; // Calculate corresponding i (since i + j = p)
@@ -275,7 +271,9 @@ void get_sig_kernel_backprop_diag_internal_(
 		k21 = k_grid + idx - dyadic_length_2; //NOT ord_dyadic_length_2 here, as we are indexing k_grid
 		k11 = k21 - 1;
 
-		for (uint64_t j = startj; j < endj; ++j) {
+		for (uint64_t j = startj;
+			j < endj;
+			++j, --i, ++i_rev, --j_rev) {
 			const uint64_t ii = (i_rev >> ord_dyadic_order_1);
 			const uint64_t jj = (j_rev >> ord_dyadic_order_2);
 
@@ -289,9 +287,6 @@ void get_sig_kernel_backprop_diag_internal_(
 			// Update dF / dx
 			out[gram_idx] += *(next_diag + j) * ( (*(k12) + *(k21)) * da - *(k11) * db );
 
-			--i;
-			++i_rev;
-			--j_rev;
 			if (order) {
 				k12 += dyadic_length_2 - 1; //NOT ord_dyadic_length_2 here, as we are indexing k_grid
 				k21 += dyadic_length_2 - 1;

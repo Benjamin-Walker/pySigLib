@@ -63,15 +63,20 @@ void get_sig_kernel_(
 	double* k21 = k11 + dyadic_length_2;
 	double* k22 = k21 + 1;
 
-	for (uint64_t ii = 0; ii < length1 - 1; ++ii) {
+	const double* gram_ptr = gram;
+
+	for (uint64_t ii = 0; ii < length1 - 1; ++ii, gram_ptr += length2 - 1) {
 		for (uint64_t m = 0; m < length2 - 1; ++m) {
-			const double deriv = gram[ii * (length2 - 1) + m] * dyadic_frac;//dot_product(diff1Ptr, diff2Ptr, dimension);
+			const double deriv = gram_ptr[m] * dyadic_frac;//dot_product(diff1Ptr, diff2Ptr, dimension);
 			const double deriv2 = deriv * deriv * twelth;
 			deriv_term_1[m] = 1.0 + 0.5 * deriv + deriv2;
 			deriv_term_2[m] = 1.0 - deriv2;
 		}
 
-		for (uint64_t i = 0; i < grid_size_1; ++i) {
+		for (uint64_t i = 0;
+			i < grid_size_1;
+			++i, ++k11, ++k12, ++k21, ++k22) {
+
 			for (uint64_t jj = 0; jj < length2 - 1; ++jj) {
 				const double t1 = deriv_term_1[jj];
 				const double t2 = deriv_term_2[jj];
@@ -79,10 +84,6 @@ void get_sig_kernel_(
 					*(k22++) = (*(k21++) + *(k12++)) * t1 - *(k11++) * t2;
 				}
 			}
-			++k11;
-			++k12;
-			++k21;
-			++k22;
 		}
 	}
 
@@ -266,7 +267,11 @@ void get_sig_kernel_backprop_(
 	k21 = k_grid + grid_idx - 1;
 	k12 = k_grid + grid_idx - dyadic_length_2;
 	k11 = k12 - 1;
-	for (int64_t i = dyadic_length_2 - 2; i >= 1; --i) {
+
+	for (int64_t i = dyadic_length_2 - 2;
+		i >= 1;
+		--i, --grid_idx, --k12, --k21, --k11) {
+
 		const int64_t j = dyadic_length_1 - 1;
 
 		//Precompute indices
@@ -286,11 +291,6 @@ void get_sig_kernel_backprop_(
 
 		//Update dF / dx
 		out[gram_idx] += d_grid[grid_idx] * ( (*k12 + *k21) * a_deriv - *k11 * b_deriv );
-
-		--grid_idx;
-		--k12;
-		--k21;
-		--k11;
 	}
 
 	grid_idx = grid_length - 1 - dyadic_length_2;
@@ -298,7 +298,14 @@ void get_sig_kernel_backprop_(
 	k12 = k_grid + grid_idx - dyadic_length_2;
 	k11 = k12 - 1;
 	//Loop over last column ============================================
-	for (int64_t j = dyadic_length_1 - 2; j >= 1; --j) {
+	for (int64_t j = dyadic_length_1 - 2;
+		j >= 1;
+		--j,
+		grid_idx -= dyadic_length_2,
+		k21 -= dyadic_length_2,
+		k12 -= dyadic_length_2,
+		k11 -= dyadic_length_2) {
+
 		const int64_t i = dyadic_length_2 - 1;
 
 		//Precompute indices
@@ -318,11 +325,6 @@ void get_sig_kernel_backprop_(
 
 		//Update dF / dx
 		out[gram_idx] += d_grid[grid_idx] * ((*k12 + *k21) * a_deriv - *k11 * b_deriv);
-
-		grid_idx -= dyadic_length_2;
-		k21 -= dyadic_length_2;
-		k12 -= dyadic_length_2;
-		k11 -= dyadic_length_2;
 	}
 
 	// Loop over remaining grid ============================================
@@ -333,8 +335,27 @@ void get_sig_kernel_backprop_(
 	d21 = d_grid + grid_idx + 1;
 	d12 = d_grid + grid_idx + dyadic_length_2;
 	d11 = d12 + 1;
-	for (int64_t j = dyadic_length_1 - 2; j >= 1; --j) {
-		for (int64_t i = dyadic_length_2 - 2; i >= 1; --i) {
+	for (int64_t j = dyadic_length_1 - 2;
+		j >= 1;
+		--j,
+		grid_idx -= 2,
+		k12 -= 2,
+		k21 -= 2,
+		k11 -= 2,
+		d12 -= 2,
+		d21 -= 2,
+		d11 -= 2) {
+
+		for (int64_t i = dyadic_length_2 - 2;
+			i >= 1;
+			--i,
+			--grid_idx,
+			--k12,
+			--k21,
+			--k11,
+			--d12,
+			--d21,
+			--d11) {
 
 			//Precompute indices
 			const uint64_t cur_ii = (i >> dyadic_order_2);
@@ -360,22 +381,7 @@ void get_sig_kernel_backprop_(
 
 			//Update dF / dx
 			out[gram_idx] += d_grid[grid_idx] * ((*k12 + *k21) * a_deriv - *k11 * b_deriv);
-
-			--grid_idx;
-			--k12;
-			--k21;
-			--k11;
-			--d12;
-			--d21;
-			--d11;
 		}
-		grid_idx -= 2;
-		k12 -= 2;
-		k21 -= 2;
-		k11 -= 2;
-		d12 -= 2;
-		d21 -= 2;
-		d11 -= 2;
 	}
 
 	return;

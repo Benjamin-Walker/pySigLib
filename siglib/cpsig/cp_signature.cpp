@@ -46,43 +46,43 @@ void signature_horner_step_(
 {
 	//Combines sig with the signature of a linear path given by increments using horner's algorithm
 
-	for (int64_t target_level = static_cast<int64_t>(degree); target_level > 1L; --target_level) {
+	for (int64_t target_level = static_cast<int64_t>(degree); target_level > 1; --target_level) {
 
 		double one_over_level = 1. / static_cast<double>(target_level);
 
 		//left_level = 0
 		//assign z / target_level to horner_step
-		for (uint64_t i = 0UL; i < dimension; ++i)
+		for (uint64_t i = 0; i < dimension; ++i)
 			horner_step[i] = increments[i] * one_over_level;
 
-		for (int64_t left_level = 1L, right_level = target_level - 1L;
-			left_level < target_level - 1L;
+		for (int64_t left_level = 1, right_level = target_level - 1;
+			left_level < target_level - 1;
 			++left_level, --right_level) { //for each, add current left_level and times by z / right_level
 
-			const uint64_t left_level_size = level_index[left_level + 1UL] - level_index[left_level];
+			const uint64_t left_level_size = level_index[left_level + 1] - level_index[left_level];
 			one_over_level = 1. / static_cast<double>(right_level);
 
 			//Horner stuff
 			//Add
 			double* left_ptr_1 = sig + level_index[left_level];
-			for (uint64_t i = 0UL; i < left_level_size; ++i) {
+			for (uint64_t i = 0; i < left_level_size; ++i) {
 				horner_step[i] += *(left_ptr_1++);
 			}
 
 			//Multiply
 #ifdef VEC
 			double left_over_level;
-			double* result_ptr = horner_step + level_index[left_level + 2UL] - level_index[left_level + 1UL] - dimension;
-			for (double* left_ptr = horner_step + left_level_size - 1UL; left_ptr != horner_step - 1UL; --left_ptr, result_ptr -= dimension) {
+			double* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1] - dimension;
+			for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
 				left_over_level = (*left_ptr) * one_over_level;
 				vec_mult_assign(result_ptr, increments, left_over_level, dimension);
 			}
 #else
 			double left_over_level;
-			double* result_ptr = horner_step + level_index[left_level + 2UL] - level_index[left_level + 1UL];
-			for (double* left_ptr = horner_step + left_level_size - 1UL; left_ptr != horner_step - 1UL; --left_ptr) {
+			double* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1];
+			for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr) {
 				left_over_level = (*left_ptr) * one_over_level;
-				for (const double* right_ptr = increments + dimension - 1UL; right_ptr != increments - 1UL; --right_ptr) {
+				for (const double* right_ptr = increments + dimension - 1; right_ptr != increments - 1; --right_ptr) {
 					*(--result_ptr) = left_over_level * (*right_ptr);
 				}
 			}
@@ -91,25 +91,25 @@ void signature_horner_step_(
 
 		//======================= Do last iteration (left_level = target_level - 1) separately for speed, and add result straight into out
 
-		const uint64_t left_level_size = level_index[target_level] - level_index[target_level - 1UL];
+		const uint64_t left_level_size = level_index[target_level] - level_index[target_level - 1];
 
 		//Horner stuff
 		//Add
-		double* left_ptr_1 = sig + level_index[target_level - 1UL];
-		for (uint64_t i = 0UL; i < left_level_size; ++i) {
+		double* left_ptr_1 = sig + level_index[target_level - 1];
+		for (uint64_t i = 0; i < left_level_size; ++i) {
 			horner_step[i] += *(left_ptr_1++);
 		}
 
 		//Multiply and add, writing straight into out
 #ifdef VEC
 		double* result_ptr = sig + level_index[target_level + 1] - dimension;
-		for (double* left_ptr = horner_step + left_level_size - 1UL; left_ptr != horner_step - 1UL; --left_ptr, result_ptr -= dimension) {
+		for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
 			vec_mult_add(result_ptr, increments, *left_ptr, dimension);
 		}
 #else
 		double* result_ptr = sig + level_index[target_level + 1];
-		for (double* left_ptr = horner_step + left_level_size - 1UL; left_ptr != horner_step - 1UL; --left_ptr) {
-			for (const double* right_ptr = increments + dimension - 1UL; right_ptr != increments - 1UL; --right_ptr) {
+		for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr) {
+			for (const double* right_ptr = increments + dimension - 1; right_ptr != increments - 1; --right_ptr) {
 				*(--result_ptr) += (*left_ptr) * (*right_ptr); //no one_over_level here, as right_level = 1
 			}
 		}

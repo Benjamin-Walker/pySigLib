@@ -88,7 +88,7 @@ __device__ void goursat_pde_32(
 	for (uint64_t p = 2; p < num_anti_diag; ++p) { // First two antidiagonals are initialised to 1
 
 		uint64_t startj, endj;
-		if (ord_dyadic_length_1 > p) startj = 1ULL;
+		if (ord_dyadic_length_1 > p) startj = 1;
 		else startj = p - ord_dyadic_length_1 + 1;
 		if (num_threads + 1 > p) endj = p;
 		else endj = num_threads + 1;
@@ -187,7 +187,7 @@ __device__ void goursat_pde_32_full(
 	for (uint64_t p = 2; p < num_anti_diag; ++p) { // First two antidiagonals are initialised to 1
 
 		uint64_t startj, endj;
-		if (ord_dyadic_length_1 > p) startj = 1ULL;
+		if (ord_dyadic_length_1 > p) startj = 1;
 		else startj = p - ord_dyadic_length_1 + 1;
 		if (num_threads + 1 > p) endj = p;
 		else endj = num_threads + 1;
@@ -413,7 +413,7 @@ __device__ void goursat_pde_32_deriv(
 		//Update b
 		uint64_t startj, endj;
 		int64_t p_ = p - 2;
-		startj = ord_dyadic_length_1 > p_ ? 1ULL : p_ - ord_dyadic_length_1 + 1;
+		startj = ord_dyadic_length_1 > p_ ? 1 : p_ - ord_dyadic_length_1 + 1;
 		endj = num_threads + 1 > p_ ? p_ : num_threads + 1;
 
 		uint64_t j = startj + thread_id;
@@ -443,7 +443,7 @@ __device__ void goursat_pde_32_deriv(
 
 		//Update a
 		p_ = p - 1;
-		startj = ord_dyadic_length_1 > p_ ? 1ULL : p_ - ord_dyadic_length_1 + 1;
+		startj = ord_dyadic_length_1 > p_ ? 1 : p_ - ord_dyadic_length_1 + 1;
 		endj = num_threads + 1 > p_ ? p_ : num_threads + 1;
 
 		j = startj + thread_id;
@@ -472,7 +472,7 @@ __device__ void goursat_pde_32_deriv(
 		}
 
 		//Update diagonals
-		startj = ord_dyadic_length_1 > p ? 1ULL : p - ord_dyadic_length_1 + 1;
+		startj = ord_dyadic_length_1 > p ? 1 : p - ord_dyadic_length_1 + 1;
 		endj = num_threads + 1 > p ? p : num_threads + 1;
 
 		j = startj + thread_id;
@@ -680,7 +680,7 @@ void sig_kernel_backprop_cuda_(
 extern "C" {
 
 	CUSIG_API int sig_kernel_cuda(const double* const gram, double* const out, const uint64_t dimension, const uint64_t length1, const uint64_t length2, const uint64_t dyadic_order_1, const uint64_t dyadic_order_2, const bool return_grid) noexcept {
-		SAFE_CALL(sig_kernel_cuda_(gram, out, 1ULL, dimension, length1, length2, dyadic_order_1, dyadic_order_2, return_grid));
+		SAFE_CALL(sig_kernel_cuda_(gram, out, 1, dimension, length1, length2, dyadic_order_1, dyadic_order_2, return_grid));
 	}
 
 	CUSIG_API int batch_sig_kernel_cuda(const double* const gram, double* const out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length1, const uint64_t length2, const uint64_t dyadic_order_1, const uint64_t dyadic_order_2, const bool return_grid) noexcept {
@@ -688,7 +688,7 @@ extern "C" {
 	}
 
 	CUSIG_API int sig_kernel_backprop_cuda(const double* const gram, double* const out, const double deriv, const double* const k_grid, const uint64_t dimension, const uint64_t length1, const uint64_t length2, const uint64_t dyadic_order_1, const uint64_t dyadic_order_2) noexcept {
-		SAFE_CALL(sig_kernel_backprop_cuda_(gram, out, &deriv, k_grid, 1ULL, dimension, length1, length2, dyadic_order_1, dyadic_order_2));
+		SAFE_CALL(sig_kernel_backprop_cuda_(gram, out, &deriv, k_grid, 1, dimension, length1, length2, dyadic_order_1, dyadic_order_2));
 	}
 
 	CUSIG_API int batch_sig_kernel_backprop_cuda(const double* const gram, double* const out, const double* const deriv, const double* const k_grid, const uint64_t batch_size, const uint64_t dimension, const uint64_t length1, const uint64_t length2, const uint64_t dyadic_order_1, const uint64_t dyadic_order_2) noexcept {

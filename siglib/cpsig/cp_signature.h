@@ -39,13 +39,13 @@ FORCE_INLINE void linear_signature_(
 	//Computes the signature of a linear segment joining start_pt and end_pt
 	out[0] = 1.;
 
-	for (uint64_t i = 0UL; i < dimension; ++i)
+	for (uint64_t i = 0; i < dimension; ++i)
 		out[i + 1] = end_pt[i] - start_pt[i];
 	
 	double one_over_level;
 	double left_over_level;
 
-	for (uint64_t level = 2UL; level <= degree; ++level) {
+	for (uint64_t level = 2; level <= degree; ++level) {
 		one_over_level = 1. / static_cast<double>(level);
 		double* result_ptr = out + level_index[level];
 		const double* left_ptr_upper_bound = out + level_index[level];
@@ -75,13 +75,13 @@ void signature_naive_(
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
 
-	level_index[0] = 0UL;
-	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
-		level_index[i] = level_index[i - 1UL] * dimension + 1;
+	level_index[0] = 0;
+	for (uint64_t i = 1; i <= degree + 1; i++)
+		level_index[i] = level_index[i - 1] * dimension + 1;
 
 	linear_signature_(prev_pt, next_pt, out, dimension, degree, level_index); //Zeroth step
 
-	if (path.length() == 2UL) { return; }
+	if (path.length() == 2) { return; }
 
 	++prev_pt;
 	++next_pt;
@@ -115,18 +115,18 @@ void signature_horner_(
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
 
-	level_index[0] = 0UL;
-	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
-		level_index[i] = level_index[i - 1UL] * dimension + 1UL;
+	level_index[0] = 0;
+	for (uint64_t i = 1; i <= degree + 1; i++)
+		level_index[i] = level_index[i - 1] * dimension + 1;
 
 	linear_signature_(prev_pt, next_pt, out, dimension, degree, level_index); //Zeroth step
 
-	if (path.length() == 2UL) { return; }
+	if (path.length() == 2) { return; }
 
 	++prev_pt;
 	++next_pt;
 	
-	auto horner_step_uptr = std::make_unique<double[]>(level_index[degree + 1UL] - level_index[degree]);
+	auto horner_step_uptr = std::make_unique<double[]>(level_index[degree + 1] - level_index[degree]);
 	double* horner_step = horner_step_uptr.get();
 
 	auto increments_uptr = std::make_unique<double[]>(dimension);
@@ -135,7 +135,7 @@ void signature_horner_(
 	Point<T> last_pt(path.end());
 
 	for (; next_pt != last_pt; ++prev_pt, ++next_pt) {
-		for (uint64_t i = 0UL; i < dimension; ++i)
+		for (uint64_t i = 0; i < dimension; ++i)
 			increments[i] = next_pt[i] - prev_pt[i];
 
 		for (int64_t target_level = static_cast<int64_t>(degree); target_level > 1L; --target_level) {
@@ -144,37 +144,37 @@ void signature_horner_(
 
 			//left_level = 0
 			//assign z / target_level to horner_step
-			for (uint64_t i = 0UL; i < dimension; ++i)
+			for (uint64_t i = 0; i < dimension; ++i)
 				horner_step[i] = increments[i] * one_over_level;
 
 			for (int64_t left_level = 1L, right_level = target_level - 1L;
 				left_level < target_level - 1L; 
 				++left_level, --right_level) { //for each, add current left_level and times by z / right_level
 
-				const uint64_t left_level_size = level_index[left_level + 1UL] - level_index[left_level];
+				const uint64_t left_level_size = level_index[left_level + 1] - level_index[left_level];
 				one_over_level = 1. / static_cast<double>(right_level);
 
 				//Horner stuff
 				//Add
 				double* left_ptr_1 = out + level_index[left_level];
-				for (uint64_t i = 0UL; i < left_level_size; ++i) {
+				for (uint64_t i = 0; i < left_level_size; ++i) {
 					horner_step[i] += *(left_ptr_1++);
 				}
 
 				//Multiply
 #ifdef VEC
 				double left_over_level;
-				double* result_ptr = horner_step + level_index[left_level + 2UL] - level_index[left_level + 1UL] - dimension;
-				for (double* left_ptr = horner_step + left_level_size - 1UL; left_ptr != horner_step - 1UL; --left_ptr, result_ptr -= dimension) {
+				double* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1] - dimension;
+				for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
 					left_over_level = (*left_ptr) * one_over_level;
 					vec_mult_assign(result_ptr, increments, left_over_level, dimension);
 				}
 #else
 				double left_over_level;
-				double* result_ptr = horner_step + level_index[left_level + 2UL] - level_index[left_level + 1UL];
-				for (double* left_ptr = horner_step + left_level_size - 1UL; left_ptr != horner_step - 1UL; --left_ptr) {
+				double* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1];
+				for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr) {
 					left_over_level = (*left_ptr) * one_over_level;
-					for (double* right_ptr = increments + dimension - 1UL; right_ptr != increments - 1UL; --right_ptr) {
+					for (double* right_ptr = increments + dimension - 1; right_ptr != increments - 1; --right_ptr) {
 						*(--result_ptr) = left_over_level * (*right_ptr);
 					}
 				}
@@ -183,25 +183,25 @@ void signature_horner_(
 
 			//======================= Do last iteration (left_level = target_level - 1) separately for speed, and add result straight into out
 
-			const uint64_t left_level_size = level_index[target_level] - level_index[target_level - 1UL];
+			const uint64_t left_level_size = level_index[target_level] - level_index[target_level - 1];
 
 			//Horner stuff
 			//Add
-			double* left_ptr_1 = out + level_index[target_level - 1UL];
-			for (uint64_t i = 0UL; i < left_level_size; ++i) {
+			double* left_ptr_1 = out + level_index[target_level - 1];
+			for (uint64_t i = 0; i < left_level_size; ++i) {
 				horner_step[i] += *(left_ptr_1++);
 			}
 
 			//Multiply and add, writing straight into out
 #ifdef VEC
 			double* result_ptr = out + level_index[target_level + 1] - dimension;
-			for (double* left_ptr = horner_step + left_level_size - 1UL; left_ptr != horner_step - 1UL; --left_ptr, result_ptr -= dimension) {
+			for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
 				vec_mult_add(result_ptr, increments, *left_ptr, dimension);
 			}
 #else
 			double* result_ptr = out + level_index[target_level + 1];
-			for (double* left_ptr = horner_step + left_level_size - 1UL; left_ptr != horner_step - 1UL; --left_ptr) {
-				for (double* right_ptr = increments + dimension - 1UL; right_ptr != increments - 1UL; --right_ptr) {
+			for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr) {
+				for (double* right_ptr = increments + dimension - 1; right_ptr != increments - 1; --right_ptr) {
 					*(--result_ptr) += (*left_ptr) * (*right_ptr); //no one_over_level here, as right_level = 1
 				}
 			}
@@ -494,11 +494,11 @@ void sig_backprop_inplace_(
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
 
-	level_index[0] = 0UL;
-	for (uint64_t i = 1UL; i <= degree + 1UL; i++)
-		level_index[i] = level_index[i - 1UL] * dimension + 1UL;
+	level_index[0] = 0;
+	for (uint64_t i = 1; i <= degree + 1; i++)
+		level_index[i] = level_index[i - 1] * dimension + 1;
 
-	auto horner_step_uptr = std::make_unique<double[]>(level_index[degree + 1UL] - level_index[degree]);
+	auto horner_step_uptr = std::make_unique<double[]>(level_index[degree + 1] - level_index[degree]);
 	double* horner_step = horner_step_uptr.get();
 
 	Point<T> prev_pt(path.end());
@@ -516,7 +516,7 @@ void sig_backprop_inplace_(
 
 		for (; next_pt != first_pt; --prev_pt, --next_pt, parity = !parity) {
 
-			for (uint64_t i = 0UL; i < dimension; ++i)
+			for (uint64_t i = 0; i < dimension; ++i)
 				increments[i] = prev_pt[i] - next_pt[i];
 
 			linear_signature_(prev_pt, next_pt, linear_signature, dimension, degree, level_index);
@@ -542,7 +542,7 @@ void sig_backprop_inplace_(
 	else {
 		for (double* pos = out + (path.length() - 1) * data_dimension; next_pt != first_pt; --prev_pt, --next_pt, pos -= data_dimension) {
 
-			for (uint64_t i = 0UL; i < dimension; ++i)
+			for (uint64_t i = 0; i < dimension; ++i)
 				increments[i] = prev_pt[i] - next_pt[i];
 
 			linear_signature_(prev_pt, next_pt, linear_signature, dimension, degree, level_index);

@@ -120,11 +120,11 @@ public:
 
 	inline Point<T> begin() const
 	{
-		return Point<T>(this, 0);
+		return std::move(Point<T>(this, 0));
 	}
 	inline Point<T> end() const
 	{
-		return Point<T>(this, _length); 
+		return std::move(Point<T>(this, _length)); 
 	}
 
 	bool operator==(const Path& other) const {
@@ -154,7 +154,10 @@ private:
 
 template<typename T>
 class PointImpl {
-public:
+	friend class Path<T>;
+	friend class Point<T>;
+
+protected:
 	PointImpl() : ptr{ nullptr }, path{ nullptr } {}
 	PointImpl(const Path<T>* path_, uint64_t index) :
 		ptr{ path_->_data.data() + index * path_->_data_dimension },
@@ -164,7 +167,6 @@ public:
 		ptr{ other.ptr },
 		path{ other.path }
 	{}
-	virtual ~PointImpl() {}
 
 	virtual PointImpl<T>* duplicate() const {
 		auto p = new PointImpl();
@@ -172,6 +174,9 @@ public:
 		p->path = path;
 		return p;
 	}
+
+public:
+	virtual ~PointImpl() {}
 
 	virtual inline double operator[](uint64_t i) const { return static_cast<double>(ptr[i]); }
 	virtual inline void operator++() { ptr += path->_data_dimension; }
@@ -420,7 +425,7 @@ public:
 	inline Point operator++(int) {
 		Point tmp{ *this };
 		++(*this);
-		return tmp;
+		return std::move(tmp);
 	}
 	inline Point& operator--() {
 		_impl->operator--();
@@ -429,7 +434,7 @@ public:
 	inline Point operator--(int) {
 		Point tmp{ *this };
 		--(*this);
-		return tmp;
+		return std::move(tmp);
 	}
 
 	inline uint64_t dimension() { return _impl->dimension(); }

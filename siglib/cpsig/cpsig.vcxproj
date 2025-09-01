@@ -89,6 +89,7 @@
       <FloatingPointModel>Precise</FloatingPointModel>
       <SDLCheck>true</SDLCheck>
       <AdditionalOptions>/Qvec-report:2 %(AdditionalOptions)</AdditionalOptions>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
