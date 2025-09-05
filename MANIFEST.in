@@ -29,6 +29,7 @@ recursive-exclude siglib *.jam
 recursive-exclude docs *.psd
 
 prune */__pycache__
+prune pysiglib/torch_api/__pycache__
 
 prune pysiglib/.idea
 exclude pysiglib/_build_log.txt
