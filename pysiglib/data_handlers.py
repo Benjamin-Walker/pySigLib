@@ -348,7 +348,7 @@ class ScalarInputHandler:
 
         if len(self.data.shape) > 1:
             raise ValueError(data_name + " must be a 1D array")
-        self.batch_size = self.data.shape[0]
+        self.batch_size = self.data.shape[0] if is_batch else 1
 
         if isinstance(self.data, np.ndarray):
             self.type_ = "numpy"
