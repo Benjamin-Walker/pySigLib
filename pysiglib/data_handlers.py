@@ -220,7 +220,7 @@ class DoublePathInputHandler:
     """
     Handle a pair of inputs which are (shaped like) paths or a batch of paths
     """
-    def __init__(self, path1_, path2_, time_aug, lead_lag, end_time, path1_name = "path1", path2_name = "path2", as_double = False):
+    def __init__(self, path1_, path2_, time_aug, lead_lag, end_time, path1_name = "path1", path2_name = "path2", as_double = False, check_batch = True):
 
         self.data1 = PathInputHandler(path1_, time_aug, lead_lag, end_time, path1_name, as_double = as_double)
         self.data2 = PathInputHandler(path2_, time_aug, lead_lag, end_time, path2_name, as_double = as_double)
@@ -241,13 +241,13 @@ class DoublePathInputHandler:
             raise ValueError(path1_name + ".shape must have length 2 or 3, got length " + str(len(self.path1.shape)) + " instead.")
 
         if len(self.path2.shape) == 2:
-            if self.batch_size != 1:
+            if self.batch_size != 1 and check_batch:
                 raise ValueError(path1_name + ", " + path2_name + " have different batch sizes")
             self.length_2 = self.path2.shape[0]
             if self.dimension != self.path2.shape[1]:
                 raise ValueError(path1_name + ", " + path2_name + " have different dimensions")
         elif len(self.path2.shape) == 3:
-            if self.batch_size != self.path2.shape[0]:
+            if self.batch_size != self.path2.shape[0] and check_batch:
                 raise ValueError(path1_name + ", " + path2_name + " have different batch sizes")
             self.length_2 = self.path2.shape[1]
             if self.dimension != self.path2.shape[2]:

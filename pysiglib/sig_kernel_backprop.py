@@ -25,7 +25,7 @@ from .sig_kernel import sig_kernel
 from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
-from .data_handlers import DoublePathInputHandler, ScalarInputHandler, ScalarOutputHandler, GridOutputHandler, PathOutputHandler, PathInputHandler
+from .data_handlers import DoublePathInputHandler, ScalarInputHandler, GridOutputHandler, PathInputHandler
 
 def sig_kernel_backprop_(data, derivs_data, result, gram, k_grid_data, dyadic_order_1, dyadic_order_2, n_jobs):
 
@@ -79,7 +79,7 @@ def gram_deriv(
         sig_kernel_backprop_(data, derivs_data, result, gram, k_grid_data, dyadic_order_1, dyadic_order_2, n_jobs)
     else:
         if not BUILT_WITH_CUDA:
-            raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
+            raise RuntimeError("pySigLib was built without CUDA - data must be moved to CPU.")
         sig_kernel_backprop_cuda_(data, derivs_data, result, gram, k_grid_data, dyadic_order_1, dyadic_order_2)
 
     return result.data
@@ -186,6 +186,8 @@ def sig_kernel_backprop(
     :type time_aug: bool
     :param lead_lag: If ``True``, assumes the lead-lag transform was applied.
     :type lead_lag: bool
+    :param end_time: End time for time-augmentation, :math:`t_L`.
+    :type end_time: float
     :param left_deriv: If ``True``, returns :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^{L_1}`.
         At least one of ``left_deriv`` and ``right_deriv`` must be ``True``. If both are
         ``True``, returns both derivatives as a tuple.
@@ -194,6 +196,8 @@ def sig_kernel_backprop(
         At least one of ``left_deriv`` and ``right_deriv`` must be ``True``. If both are
         ``True``, returns both derivatives as a tuple.
     :type right_deriv: bool
+    :param k_grid: Signature kernel PDE grid. If ``None``, the grid will be recomputed.
+    :type k_grid: numpy.ndarray | torch.tensor
     :param n_jobs: (Only applicable to CPU computation) Number of threads to run in parallel.
         If n_jobs = 1, the computation is run serially. If set to -1, all available threads
         are used. For n_jobs below -1, (max_threads + 1 + n_jobs) threads are used. For example
@@ -275,4 +279,154 @@ def sig_kernel_backprop(
 
     return ld, rd
 
+
+def sig_kernel_gram_backprop(
+        derivs : Union[np.ndarray, torch.tensor],
+        path1 : Union[np.ndarray, torch.tensor],
+        path2 : Union[np.ndarray, torch.tensor],
+        dyadic_order : Union[int, tuple],
+        time_aug : bool = False,
+        lead_lag : bool = False,
+        end_time : float = 1.,
+        left_deriv : bool = True,
+        right_deriv : bool = False,
+        k_grid : Union[np.ndarray, torch.tensor] = None,
+        n_jobs : int = 1,
+        max_batch : int = -1
+) -> Union[np.ndarray, torch.tensor, Tuple[np.ndarray, np.ndarray], Tuple[torch.tensor, torch.tensor]]:
+    """
+    This function is required to backpropagate through ``pysiglib.sig_kernel_gram``.
+    Given the derivatives of a scalar function :math:`F` with respect to a
+    gram matrix of signature kernels, :math:`\\partial F / G`,
+    returns the derivatives of :math:`F` with respect to one or both of the
+    underlying paths, :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^{L_1}` and
+    :math:`\\{\\partial F / y_{t_i}\\}_{i=0}^{L_2}`.
+
+    :param derivs: Derivatives with respect to a gram matrix of signature kernels,
+        :math:`\\partial F / G`.
+    :type derivs: numpy.ndarray | torch.tensor
+    :param path1: The first underlying path or batch of paths, given as a `numpy.ndarray` or
+        `torch.tensor`. For a single path, this must be of shape (length, dimension). For a
+        batch of paths, this must be of shape (batch size, length, dimension).
+    :type path1: numpy.ndarray | torch.tensor
+    :param path2: The second underlying path or batch of paths, given as a `numpy.ndarray`
+        or `torch.tensor`. For a single path, this must be of shape (length, dimension).
+        For a batch of paths, this must be of shape (batch size, length, dimension).
+    :type path2: numpy.ndarray | torch.tensor
+    :param dyadic_order: The dyadic order(s) used to compute the signature kernels.
+    :type dyadic_order: int | tuple
+    :param time_aug: If ``True``, assumes the paths were time augmented.
+    :type time_aug: bool
+    :param lead_lag: If ``True``, assumes the lead-lag transform was applied.
+    :type lead_lag: bool
+    :param end_time: End time for time-augmentation, :math:`t_L`.
+    :type end_time: float
+    :param left_deriv: If ``True``, returns :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^{L_1}`.
+        At least one of ``left_deriv`` and ``right_deriv`` must be ``True``. If both are
+        ``True``, returns both derivatives as a tuple.
+    :type left_deriv: bool
+    :param right_deriv: If ``True``, returns :math:`\\{\\partial F / y_{t_i}\\}_{i=0}^{L_2}`.
+        At least one of ``left_deriv`` and ``right_deriv`` must be ``True``. If both are
+        ``True``, returns both derivatives as a tuple.
+    :type right_deriv: bool
+    :param k_grid: Signature kernel PDE grid. If ``None``, the grid will be recomputed.
+    :type k_grid: numpy.ndarray | torch.tensor
+    :param n_jobs: (Only applicable to CPU computation) Number of threads to run in parallel.
+        If n_jobs = 1, the computation is run serially. If set to -1, all available threads
+        are used. For n_jobs below -1, (max_threads + 1 + n_jobs) threads are used. For example
+        if n_jobs = -2, all threads but one are used.
+    :type n_jobs: int
+    :param max_batch: Maximum batch size to run in parallel. If the computation is failing
+        due to insufficient memory, this parameter should be decreased.
+        If set to -1, the entire batch is computed in parallel.
+    :type max_batch: int
+    :return: Tuple of derivatives of :math:`F` with respect to one or both of the
+        underlying paths. If ``left_deriv`` is ``True``, the first element of
+        this tuple is  :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^{L_1}`, otherwise
+        it is ``None``. Similarly for ``right_deriv`` and
+        :math:`\\{\\partial F / y_{t_i}\\}_{i=0}^{L_2}`.
+    :rtype: numpy.ndarray | torch.tensor | Tuple[numpy.ndarray | numpy.ndarray] | Tuple[torch.tensor | torch.tensor]
+
+    .. note::
+
+        Ideally, any array passed to ``pysiglib.sig_kernel_backprop`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.sig_kernel_backprop`` will internally create a contiguous copy, which may be
+        inefficient.
+
+    .. note::
+
+        When called via ``pysiglib.torch_api``, the default behaviour is to pass ``k_grid = None`` and reconstruct the
+        PDE grids. This is done to avoid memory allocation issues for large batch sizes.
+
+    """
+    # We use sig_kernel_backprop for simplicity, rather than directly calling
+    # the cpp function.
+    # There is clearly more overhead here than is necessary, but it
+    # shouldn't be significant for large computations.
+
+    check_type(left_deriv, "left_deriv", bool)
+    check_type(right_deriv, "right_deriv", bool)
+    if not (left_deriv or right_deriv):
+        return None, None
+
+    check_type(max_batch, "max_batch", int)
+    if max_batch == 0 or max_batch < -1:
+        raise ValueError("max_batch must be a positive integer or -1")
+
+    data = DoublePathInputHandler(path1, path2, time_aug, lead_lag, end_time, "path1", "path2", True, False)
+
+    derivs = torch.as_tensor(derivs, dtype=torch.double)
+    # derivs_data = ScalarInputHandler(derivs, data.is_batch, "derivs")
+    #
+    # if not (derivs_data.type_ == data.type_ and derivs_data.device == data.device):
+    #     raise ValueError("derivs, path1 and path2 must all be numpy arrays or all torch tensors on the same device")
+
+    # Use torch for simplicity
+    path1 = torch.as_tensor(data.path1)
+    path2 = torch.as_tensor(data.path2)
+    if k_grid is not None:
+        k_grid = torch.as_tensor(k_grid)
+
+    batch1 = path1.shape[0]
+    batch2 = path2.shape[0]
+
+    if max_batch == -1:
+        max_batch = max(batch1, batch2)
+
+    ld = torch.zeros(path1.shape, dtype = torch.float64, device = path1.device) if left_deriv else None
+    rd = torch.zeros(path2.shape, dtype = torch.float64, device = path1.device) if right_deriv else None
+
+    ####################################
+    # Now run computation in batches
+    ####################################
+
+    for i in range(0, batch1, max_batch):
+        batch1_ = min(max_batch, batch1 - i)
+        for j in range(0, batch2, max_batch):
+            batch2_ = min(max_batch, batch2 - j)
+
+            path1_ = path1[i:i + batch1_, :, :].repeat_interleave(batch2_, 0).contiguous()
+            path2_ = path2[j:j + batch2_, :, :].repeat(batch1_, 1, 1).contiguous()
+
+            if k_grid is None:
+                k = sig_kernel(path1_, path2_, dyadic_order, time_aug, lead_lag, end_time, n_jobs, True)
+            else:
+                k = k_grid[i:i + batch1_, j:j + batch2_, :, :].contiguous()
+
+            derivs_ = derivs[i:i + batch1_, j:j + batch2_].flatten().contiguous()
+
+            ld_, rd_ = sig_kernel_backprop(derivs_, path1_, path2_, dyadic_order, time_aug, lead_lag, end_time, left_deriv, right_deriv, k, n_jobs)
+
+            if left_deriv:
+                ld_ = ld_.reshape((batch1_, batch2_) + ld_.shape[1:])
+                ld_ = ld_.sum(1)
+                ld[i:i + batch1_, :, :] += ld_
+            if right_deriv:
+                rd_ = rd_.reshape((batch1_, batch2_) + rd_.shape[1:])
+                rd_ = rd_.permute(1, 0, 2, 3).sum(1)
+                rd[j:j + batch2_, :, :] += rd_
+
+    if data.type_ == "numpy":
+        return ld.numpy(), rd.numpy()
+    return ld, rd
 

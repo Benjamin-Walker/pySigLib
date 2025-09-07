@@ -151,12 +151,12 @@ def transform_path_backprop(
             return batch_transform_path_backprop_(data, result, length, dimension, time_aug, lead_lag, end_time, n_jobs)
         else:
             if not BUILT_WITH_CUDA:
-                raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
+                raise RuntimeError("pySigLib was built without CUDA - data must be moved to CPU.")
             return batch_transform_path_backprop_cuda_(data, result, length, dimension, time_aug, lead_lag, end_time)
 
     if data.device == "cpu":
         return transform_path_backprop_(data, result, length, dimension, time_aug, lead_lag, end_time)
     else:
         if not BUILT_WITH_CUDA:
-            raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
+            raise RuntimeError("pySigLib was built without CUDA - data must be moved to CPU.")
         return transform_path_backprop_cuda_(data, result, length, dimension, time_aug, lead_lag, end_time)

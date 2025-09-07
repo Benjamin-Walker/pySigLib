@@ -41,6 +41,7 @@ Fast Signature Computations on CPU and GPU.
    /pages/signature
    /pages/sig_combine
    /pages/sig_kernel
+   /pages/sig_kernel_gram
 
 .. toctree::
    :titlesonly:

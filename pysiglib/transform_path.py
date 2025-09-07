@@ -197,12 +197,12 @@ def transform_path(
             return batch_transform_path_(data, result, n_jobs)
         else:
             if not BUILT_WITH_CUDA:
-                raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
+                raise RuntimeError("pySigLib was built without CUDA - data must be moved to CPU.")
             return batch_transform_path_cuda_(data, result, n_jobs)
 
     if data.device == "cpu":
         return transform_path_(data, result)
     else:
         if not BUILT_WITH_CUDA:
-            raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
+            raise RuntimeError("pySigLib was built without CUDA - data must be moved to CPU.")
         return transform_path_cuda_(data, result)

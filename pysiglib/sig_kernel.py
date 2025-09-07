@@ -25,7 +25,6 @@ from .param_checks import check_type
 from .error_codes import err_msg
 from .data_handlers import DoublePathInputHandler, ScalarOutputHandler, GridOutputHandler
 
-
 def sig_kernel_(data, result, gram, dyadic_order_1, dyadic_order_2, n_jobs, return_grid):
 
     err_code = CPSIG.batch_sig_kernel(
@@ -96,7 +95,9 @@ def sig_kernel(
         For a batch of paths, this must be of shape (batch size, length, dimension).
     :type path2: numpy.ndarray | torch.tensor
     :param dyadic_order: If set to a positive integer :math:`\\lambda`, will refine the
-        PDE grid by a factor of :math:`2^\\lambda`.
+        paths by a factor of :math:`2^\\lambda`. If set to a tuple of positive integers
+        :math:`(\\lambda_1, \\lambda_2)`, will refine the first path by :math:`2^\\lambda_1`
+        and the second path by :math:`2^\\lambda_2`.
     :type dyadic_order: int | tuple
     :param time_aug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
         defined as the original path with an extra channel set to time, :math:`t`. This channel spans :math:`[0, t_L]`,
@@ -168,7 +169,134 @@ def sig_kernel(
         sig_kernel_(data, result, gram, dyadic_order_1, dyadic_order_2, n_jobs, return_grid)
     else:
         if not BUILT_WITH_CUDA:
-            raise RuntimeError("pySigLib was build without CUDA - data must be moved to CPU.")
+            raise RuntimeError("pySigLib was built without CUDA - data must be moved to CPU.")
         sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2, return_grid)
 
     return result.data
+
+
+def sig_kernel_gram(
+        path1 : Union[np.ndarray, torch.tensor],
+        path2 : Union[np.ndarray, torch.tensor],
+        dyadic_order : Union[int, tuple],
+        time_aug : bool = False,
+        lead_lag : bool = False,
+        end_time : float = 1.,
+        n_jobs : int = 1,
+        max_batch : int = -1,
+        return_grid : bool = False
+) -> Union[np.ndarray, torch.tensor]:
+    """
+    Given batches of paths :math:`\{x_i\}_{i=1}^B` and :math:`\{y_i\}_{i=1}^B`, computes the gram matrix of signature kernels
+
+    .. math::
+
+        G = (k_{x_i, y_j})_{i,j = 1}^B.
+
+    The signature kernel of two :math:`d`-dimensional paths :math:`x,y`
+    is defined as
+
+    .. math::
+
+        k_{x,y}(s,t) := \\left< S(x)_{[0,s]}, S(y)_{[0, t]} \\right>_{T((\\mathbb{R}^d))}
+
+    where the inner product is defined as
+
+    .. math::
+
+        \\left< A, B \\right> := \\sum_{k=0}^{\\infty} \\left< A_k, B_k \\right>_{\\left(\\mathbb{R}^d\\right)^{\\otimes k}}
+    .. math::
+
+        \\left< u, v \\right>_{\\left(\\mathbb{R}^d\\right)^{\\otimes k}} := \\prod_{i=1}^k \\left< u_i, v_i \\right>_{\\mathbb{R}^d}
+
+    :param path1: The first underlying path or batch of paths, given as a `numpy.ndarray` or
+        `torch.tensor`. For a single path, this must be of shape (length, dimension). For a
+        batch of paths, this must be of shape (batch size, length, dimension).
+    :type path1: numpy.ndarray | torch.tensor
+    :param path2: The second underlying path or batch of paths, given as a `numpy.ndarray`
+        or `torch.tensor`. For a single path, this must be of shape (length, dimension).
+        For a batch of paths, this must be of shape (batch size, length, dimension).
+    :type path2: numpy.ndarray | torch.tensor
+    :param dyadic_order: If set to a positive integer :math:`\\lambda`, will refine the
+        paths by a factor of :math:`2^\\lambda`. If set to a tuple of positive integers
+        :math:`(\\lambda_1, \\lambda_2)`, will refine the first path by :math:`2^\\lambda_1`
+        and the second path by :math:`2^\\lambda_2`.
+    :type dyadic_order: int | tuple
+    :param time_aug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
+        defined as the original path with an extra channel set to time, :math:`t`. This channel spans :math:`[0, t_L]`,
+        where :math`t_L` is given by the parameter ``end_time``.
+    :type time_aug: bool
+    :param lead_lag: If set to True, will compute the signature of the path after applying the lead-lag transformation.
+    :type lead_lag: bool
+    :param end_time: End time for time-augmentation, :math:`t_L`.
+    :type end_time: float
+    :param n_jobs: (Only applicable to CPU computation) Number of threads to run in parallel.
+        If n_jobs = 1, the computation is run serially. If set to -1, all available threads
+        are used. For n_jobs below -1, (max_threads + 1 + n_jobs) threads are used. For example
+        if n_jobs = -2, all threads but one are used.
+    :type n_jobs: int
+    :param max_batch: Maximum batch size to run in parallel. If the computation is failing
+        due to insufficient memory, this parameter should be decreased.
+        If set to -1, the entire batch is computed in parallel.
+    :type max_batch: int
+    :param return_grid: If ``True``, returns the entire PDE grid.
+    :type return_grid: bool
+    :return: Gram matrix of signature kernels
+    :rtype: numpy.ndarray | torch.tensor
+
+    .. note::
+
+        Ideally, any array passed to ``pysiglib.sig_kernel_gram`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.sig_kernel_gram`` will internally create a contiguous copy, which may be
+        inefficient.
+
+    .. note::
+
+        When called via ``pysiglib.torch_api``, the default behaviour is to reconstruct the
+        PDE grids during backpropagation. This is done to avoid memory allocation issues for large batch sizes.
+
+    """
+    # We use sig_kernel for simplicity, rather than directly calling
+    # the cpp function.
+    # There is clearly more overhead here than is necessary, but it
+    # shouldn't be significant for large computations.
+
+    check_type(max_batch, "max_batch", int)
+    if max_batch == 0 or max_batch < -1:
+        raise ValueError("max_batch must be a positive integer or -1")
+
+    data = DoublePathInputHandler(path1, path2, time_aug, lead_lag, end_time, "path1", "path2", True, False)
+
+    # Use torch for simplicity
+    path1 = torch.as_tensor(data.path1)
+    path2 = torch.as_tensor(data.path2)
+
+    batch1 = path1.shape[0]
+    batch2 = path2.shape[0]
+
+    if max_batch == -1:
+        max_batch = max(batch1, batch2)
+
+    res = []
+
+    ####################################
+    # Now run computation in batches
+    ####################################
+
+    for i in range(0, batch1, max_batch):
+        batch1_ = min(max_batch, batch1 - i)
+        res.append([])
+        for j in range(0, batch2, max_batch):
+            batch2_ = min(max_batch, batch2 - j)
+
+            path1_ = path1[i:i + batch1_, :, :].repeat_interleave(batch2_, 0).contiguous()
+            path2_ = path2[j:j + batch2_, :, :].repeat(batch1_, 1, 1).contiguous()
+
+            k = sig_kernel(path1_, path2_, dyadic_order, time_aug, lead_lag, end_time, n_jobs, return_grid)
+            k = k.reshape((batch1_, batch2_) + k.shape[1:])
+            res[-1].append(k)
+
+    for i in range(len(res)):
+        res[i] = torch.cat(res[i], dim = 1)
+    res = torch.cat(res, dim = 0)
+    return res
