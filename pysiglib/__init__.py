@@ -19,6 +19,7 @@ from .sig import sig_combine, signature
 from .sig_backprop import sig_backprop, sig_combine_backprop
 from .sig_kernel import sig_kernel, sig_kernel_gram
 from .sig_kernel_backprop import sig_kernel_backprop, sig_kernel_gram_backprop
+from .sig_metrics import sig_score, expected_sig_score, sig_mmd
 from .transform_path import transform_path
 from .transform_path_backprop import transform_path_backprop
 

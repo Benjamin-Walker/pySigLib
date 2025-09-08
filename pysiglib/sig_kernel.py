@@ -96,8 +96,8 @@ def sig_kernel(
     :type path2: numpy.ndarray | torch.tensor
     :param dyadic_order: If set to a positive integer :math:`\\lambda`, will refine the
         paths by a factor of :math:`2^\\lambda`. If set to a tuple of positive integers
-        :math:`(\\lambda_1, \\lambda_2)`, will refine the first path by :math:`2^\\lambda_1`
-        and the second path by :math:`2^\\lambda_2`.
+        :math:`(\\lambda_1, \\lambda_2)`, will refine the first path by :math:`2^{\\lambda_1}`
+        and the second path by :math:`2^{\\lambda_2}`.
     :type dyadic_order: int | tuple
     :param time_aug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
         defined as the original path with an extra channel set to time, :math:`t`. This channel spans :math:`[0, t_L]`,
@@ -219,8 +219,8 @@ def sig_kernel_gram(
     :type path2: numpy.ndarray | torch.tensor
     :param dyadic_order: If set to a positive integer :math:`\\lambda`, will refine the
         paths by a factor of :math:`2^\\lambda`. If set to a tuple of positive integers
-        :math:`(\\lambda_1, \\lambda_2)`, will refine the first path by :math:`2^\\lambda_1`
-        and the second path by :math:`2^\\lambda_2`.
+        :math:`(\\lambda_1, \\lambda_2)`, will refine the first path by :math:`2^{\\lambda_1}`
+        and the second path by :math:`2^{\\lambda_2}`.
     :type dyadic_order: int | tuple
     :param time_aug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
         defined as the original path with an extra channel set to time, :math:`t`. This channel spans :math:`[0, t_L]`,
