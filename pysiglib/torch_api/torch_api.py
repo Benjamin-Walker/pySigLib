@@ -23,8 +23,14 @@ from ..sig_kernel import sig_kernel as sig_kernel_forward
 from ..sig_kernel_backprop import sig_kernel_backprop
 from ..sig_kernel import sig_kernel_gram as sig_kernel_gram_forward
 from ..sig_kernel_backprop import sig_kernel_gram_backprop
+from ..sig_metrics import sig_score as sig_score_forward
+from ..sig_metrics import expected_sig_score as expected_sig_score_forward
+from ..sig_metrics import sig_mmd as sig_mmd_forward
 from ..transform_path import transform_path as transform_path_forward
 from ..transform_path_backprop import transform_path_backprop
+
+from ..param_checks import check_type
+from ..data_handlers import DoublePathInputHandler
 
 class Signature(torch.autograd.Function):
     @staticmethod
@@ -213,3 +219,87 @@ def sig_kernel_gram(
     return SigKernelGram.apply(path1, path2, dyadic_order, time_aug, lead_lag, end_time, n_jobs, max_batch, save_kernel)
 
 sig_kernel_gram.__doc__ = sig_kernel_gram_forward.__doc__
+
+def sig_score(
+        sample : Union[np.ndarray, torch.tensor],
+        y : Union[np.ndarray, torch.tensor],
+        dyadic_order : Union[int, tuple],
+        lam : float = 1.,
+        time_aug : bool = False,
+        lead_lag : bool = False,
+        end_time : float = 1.,
+        n_jobs : int = 1,
+        max_batch : int = -1
+) -> Union[np.ndarray, torch.tensor]:
+    check_type(sample, "sample", torch.Tensor)
+    check_type(y, "y", torch.Tensor)
+
+    # Use torch for simplicity
+    sample = torch.as_tensor(sample)
+    y = torch.as_tensor(y)
+    if len(y.shape) == 2:
+        y = y.unsqueeze(0).contiguous().clone()
+
+    data = DoublePathInputHandler(sample, y, time_aug, lead_lag, end_time, "sample_paths", "y", True, False)
+
+    B = sample.shape[0]
+
+    xx = sig_kernel_gram(sample, sample, dyadic_order, time_aug, lead_lag, end_time, n_jobs, max_batch, False)
+    xy = sig_kernel_gram(sample, y, dyadic_order, time_aug, lead_lag, end_time, n_jobs, max_batch, False)
+
+    xx_sum = float((torch.sum(xx) - torch.sum(torch.diag(xx))) / (B * (B - 1)))
+    xy_sum = torch.sum(xy, dim=0) * (2. / B)
+
+    res = lam * torch.full(xy_sum.shape, xx_sum, device=xy_sum.device) - xy_sum
+    return res
+
+sig_score.__doc__ = sig_score_forward.__doc__
+
+def expected_sig_score(
+        sample1 : Union[np.ndarray, torch.tensor],
+        sample2 : Union[np.ndarray, torch.tensor],
+        dyadic_order : Union[int, tuple],
+        lam : float = 1.,
+        time_aug : bool = False,
+        lead_lag : bool = False,
+        end_time : float = 1.,
+        n_jobs : int = 1,
+        max_batch : int = -1
+) -> Union[np.ndarray, torch.tensor]:
+    res = sig_score(sample1, sample2, dyadic_order, lam, time_aug, lead_lag, end_time, n_jobs, max_batch)
+    res = torch.mean(res, 0, True)
+    return res
+
+expected_sig_score.__doc__ = expected_sig_score_forward.__doc__
+
+def sig_mmd(
+        sample1 : Union[np.ndarray, torch.tensor],
+        sample2 : Union[np.ndarray, torch.tensor],
+        dyadic_order : Union[int, tuple],
+        lam : float = 1.,
+        time_aug : bool = False,
+        lead_lag : bool = False,
+        end_time : float = 1.,
+        n_jobs : int = 1,
+        max_batch : int = -1
+) -> Union[np.ndarray, torch.tensor]:
+    data = DoublePathInputHandler(sample1, sample2, time_aug, lead_lag, end_time, "sample1", "sample2", True, False)
+
+    # Use torch for simplicity
+    sample1 = torch.as_tensor(data.path1)
+    sample2 = torch.as_tensor(data.path2)
+
+    m = sample1.shape[0]
+    n = sample2.shape[0]
+
+    xx = sig_kernel_gram(sample1, sample1, dyadic_order, time_aug, lead_lag, end_time, n_jobs, max_batch, False)
+    xy = sig_kernel_gram(sample1, sample2, dyadic_order, time_aug, lead_lag, end_time, n_jobs, max_batch, False)
+    yy = sig_kernel_gram(sample2, sample2, dyadic_order, time_aug, lead_lag, end_time, n_jobs, max_batch, False)
+
+    xx_sum = (torch.sum(xx) - torch.sum(torch.diag(xx))) / (m * (m - 1))
+    xy_sum = 2. * torch.mean(xy)
+    yy_sum = (torch.sum(yy) - torch.sum(torch.diag(yy))) / (n * (n - 1))
+
+    return xx_sum - xy_sum + yy_sum
+
+sig_mmd.__doc__ = sig_mmd_forward.__doc__

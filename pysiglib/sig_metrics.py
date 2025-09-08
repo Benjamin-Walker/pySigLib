@@ -1,14 +1,9 @@
 from typing import Union
-from ctypes import c_double, POINTER, cast
-
 import numpy as np
 import torch
 
-from .transform_path import transform_path
-from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
-from .param_checks import check_type, check_type_multiple
-from .error_codes import err_msg
-from .data_handlers import DoublePathInputHandler, ScalarOutputHandler, GridOutputHandler, PathInputHandler
+from .param_checks import check_type_multiple
+from .data_handlers import DoublePathInputHandler
 
 from .sig_kernel import sig_kernel_gram
 
@@ -79,17 +74,16 @@ def sig_score(
         inefficient.
     """
 
+    check_type_multiple(sample, "sample", (np.ndarray, torch.Tensor))
     check_type_multiple(y, "y", (np.ndarray, torch.Tensor))
-    if len(y.shape) not in (2,3):
-        raise ValueError("Must have len(y.shape) in (2,3)")
-    if len(y.shape) == 2:
-        y = y[None, :, :]
-
-    data = DoublePathInputHandler(sample, y, time_aug, lead_lag, end_time, "sample_paths", "y", True, False)
 
     # Use torch for simplicity
-    sample = torch.as_tensor(data.path1)
-    y = torch.as_tensor(data.path2)
+    sample = torch.as_tensor(sample)
+    y = torch.as_tensor(y)
+    if len(y.shape) == 2:
+        y = y.unsqueeze(0).contiguous().clone()
+
+    data = DoublePathInputHandler(sample, y, time_aug, lead_lag, end_time, "sample_paths", "y", True, False)
 
     B = sample.shape[0]
 
@@ -101,6 +95,8 @@ def sig_score(
 
     res = lam * torch.full(xy_sum.shape, xx_sum, device = xy_sum.device) - xy_sum
 
+    if data.type_ == "numpy":
+        return res.numpy()
     return res
 
 def expected_sig_score(
@@ -169,7 +165,14 @@ def expected_sig_score(
         inefficient.
     """
 
-    return float(sig_score(sample1, sample2, dyadic_order, lam, time_aug, lead_lag, end_time, n_jobs, max_batch).mean())
+    res = sig_score(sample1, sample2, dyadic_order, lam, time_aug, lead_lag, end_time, n_jobs, max_batch)
+
+    if isinstance(res, torch.Tensor):
+        res = torch.mean(res, 0, True)
+    else:
+        res = np.mean(res, keepdims=True)
+
+    return res
 
 def sig_mmd(
         sample1 : Union[np.ndarray, torch.tensor],
@@ -254,4 +257,4 @@ def sig_mmd(
     xy_sum = 2. * torch.mean(xy)
     yy_sum = (torch.sum(yy) - torch.sum(torch.diag(yy))) / (n * (n - 1))
 
-    return float(xx_sum - xy_sum + yy_sum)
+    return xx_sum - xy_sum + yy_sum

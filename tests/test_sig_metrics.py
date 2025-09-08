@@ -87,7 +87,6 @@ def sig_kernel_full_grid(X1, X2, len1, len2, batch):
 ## CPU
 ################################################
 
-
 @pytest.mark.parametrize("dyadic_order", range(3))
 def test_expected_sig_score_random_cpu(dyadic_order):
     batch, len1, len2, dim = 32, 100, 100, 5
@@ -97,7 +96,7 @@ def test_expected_sig_score_random_cpu(dyadic_order):
     static_kernel = sigkernel.LinearKernel()
     signature_kernel = sigkernel.SigKernel(static_kernel, dyadic_order)
     d1 = float(signature_kernel.compute_expected_scoring_rule(X, Y, 100))
-    d2 = pysiglib.expected_sig_score(X, Y, dyadic_order)
+    d2 = pysiglib.expected_sig_score(X, Y, dyadic_order, n_jobs = -1)
 
     assert not abs(d1 - d2) > EPSILON
 
@@ -111,7 +110,7 @@ def test_expected_sig_score_random_cpu_non_square(len1, len2, dyadic_order):
     static_kernel = sigkernel.LinearKernel()
     signature_kernel = sigkernel.SigKernel(static_kernel, dyadic_order)
     d1 = float(signature_kernel.compute_expected_scoring_rule(X, Y, 100))
-    d2 = pysiglib.expected_sig_score(X, Y, dyadic_order)
+    d2 = pysiglib.expected_sig_score(X, Y, dyadic_order, n_jobs = -1)
 
     assert not abs(d1 - d2) > EPSILON
 
@@ -124,7 +123,7 @@ def test_sig_mmd_random_cpu(dyadic_order):
     static_kernel = sigkernel.LinearKernel()
     signature_kernel = sigkernel.SigKernel(static_kernel, dyadic_order)
     mmd1 = float(signature_kernel.compute_mmd(X, Y, 100))
-    mmd2 = pysiglib.sig_mmd(X, Y, dyadic_order)
+    mmd2 = pysiglib.sig_mmd(X, Y, dyadic_order, n_jobs = -1)
 
     assert not abs(mmd1 - mmd2) > EPSILON
 
@@ -138,7 +137,7 @@ def test_sig_mmd_random_cpu_non_square(len1, len2, dyadic_order):
     static_kernel = sigkernel.LinearKernel()
     signature_kernel = sigkernel.SigKernel(static_kernel, dyadic_order)
     mmd1 = float(signature_kernel.compute_mmd(X, Y, 100))
-    mmd2 = pysiglib.sig_mmd(X, Y, dyadic_order)
+    mmd2 = pysiglib.sig_mmd(X, Y, dyadic_order, n_jobs = -1)
 
     assert not abs(mmd1 - mmd2) > EPSILON
 

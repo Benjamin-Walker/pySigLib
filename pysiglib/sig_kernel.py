@@ -267,6 +267,9 @@ def sig_kernel_gram(
 
     data = DoublePathInputHandler(path1, path2, time_aug, lead_lag, end_time, "path1", "path2", True, False)
 
+    if len(path1.shape) != 3 or len(path2.shape) != 3:
+        raise ValueError("path1 and path2 must be 3D arrays.")
+
     # Use torch for simplicity
     path1 = torch.as_tensor(data.path1)
     path2 = torch.as_tensor(data.path2)
@@ -289,8 +292,8 @@ def sig_kernel_gram(
         for j in range(0, batch2, max_batch):
             batch2_ = min(max_batch, batch2 - j)
 
-            path1_ = path1[i:i + batch1_, :, :].repeat_interleave(batch2_, 0).contiguous()
-            path2_ = path2[j:j + batch2_, :, :].repeat(batch1_, 1, 1).contiguous()
+            path1_ = path1[i:i + batch1_, :, :].repeat_interleave(batch2_, 0).contiguous().clone()
+            path2_ = path2[j:j + batch2_, :, :].repeat(batch1_, 1, 1).contiguous().clone()
 
             k = sig_kernel(path1_, path2_, dyadic_order, time_aug, lead_lag, end_time, n_jobs, return_grid)
             k = k.reshape((batch1_, batch2_) + k.shape[1:])

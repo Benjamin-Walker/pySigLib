@@ -405,15 +405,15 @@ def sig_kernel_gram_backprop(
         for j in range(0, batch2, max_batch):
             batch2_ = min(max_batch, batch2 - j)
 
-            path1_ = path1[i:i + batch1_, :, :].repeat_interleave(batch2_, 0).contiguous()
-            path2_ = path2[j:j + batch2_, :, :].repeat(batch1_, 1, 1).contiguous()
+            path1_ = path1[i:i + batch1_, :, :].repeat_interleave(batch2_, 0).contiguous().clone()
+            path2_ = path2[j:j + batch2_, :, :].repeat(batch1_, 1, 1).contiguous().clone()
 
             if k_grid is None:
                 k = sig_kernel(path1_, path2_, dyadic_order, time_aug, lead_lag, end_time, n_jobs, True)
             else:
-                k = k_grid[i:i + batch1_, j:j + batch2_, :, :].contiguous()
+                k = k_grid[i:i + batch1_, j:j + batch2_, :, :].contiguous().clone()
 
-            derivs_ = derivs[i:i + batch1_, j:j + batch2_].flatten().contiguous()
+            derivs_ = derivs[i:i + batch1_, j:j + batch2_].flatten().contiguous().clone()
 
             ld_, rd_ = sig_kernel_backprop(derivs_, path1_, path2_, dyadic_order, time_aug, lead_lag, end_time, left_deriv, right_deriv, k, n_jobs)
 
