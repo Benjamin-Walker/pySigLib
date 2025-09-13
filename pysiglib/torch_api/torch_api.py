@@ -34,13 +34,14 @@ from ..data_handlers import DoublePathInputHandler
 
 class Signature(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, path, degree, time_aug, lead_lag, horner, n_jobs):
-        sig = sig_forward(path, degree, time_aug, lead_lag, horner, n_jobs)
+    def forward(ctx, path, degree, time_aug, lead_lag, end_time, horner, n_jobs):
+        sig = sig_forward(path, degree, time_aug, lead_lag, end_time, horner, n_jobs)
 
         ctx.save_for_backward(path, sig)
         ctx.degree = degree
         ctx.time_aug = time_aug
         ctx.lead_lag = lead_lag
+        ctx.end_time = end_time
         ctx.horner = horner
         ctx.n_jobs = n_jobs
 
@@ -49,7 +50,7 @@ class Signature(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_output):
         path, sig = ctx.saved_tensors
-        grad = sig_backprop(path, sig, grad_output, ctx.degree, ctx.time_aug, ctx.lead_lag, ctx.n_jobs)
+        grad = sig_backprop(path, sig, grad_output, ctx.degree, ctx.time_aug, ctx.lead_lag, ctx.end_time, ctx.n_jobs)
         return grad, None, None, None, None, None
 
 def signature(
@@ -58,9 +59,10 @@ def signature(
         time_aug : bool = False,
         lead_lag : bool = False,
         horner : bool = True,
+        end_time : float = 1.,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
-    return Signature.apply(path, degree, time_aug, lead_lag, horner, n_jobs)
+    return Signature.apply(path, degree, time_aug, lead_lag, end_time, horner, n_jobs)
 
 
 signature.__doc__ = sig_forward.__doc__
