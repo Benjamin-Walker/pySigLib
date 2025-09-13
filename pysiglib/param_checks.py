@@ -13,6 +13,7 @@
 # limitations under the License.
 # =========================================================================
 
+import inspect
 import warnings
 
 import numpy as np
@@ -60,10 +61,18 @@ def check_cpu(arr, arr_name):
         if not arr.device.type == "cpu":
             raise ValueError(arr_name + " must be located on the cpu")
 
+def warn(msg):
+    frame = inspect.currentframe().f_back
+    depth = 2
+    while frame and frame.f_globals.get("__name__", "").startswith("pysiglib"):
+        frame = frame.f_back
+        depth += 1
+    warnings.warn(msg, stacklevel=depth)
+
 WARNED_ONCE_ABOUT_MEMORY = False
 MEMORY_WARNING = "Detected a non-contiguous or view-based array. Such arrays will be cloned to ensure safe access. To avoid this overhead, pass arrays that are both contiguous and own their data. This warning will only appear once per session."
 
-def ensure_own_contiguous_storage(arr, stacklevel):
+def ensure_own_contiguous_storage(arr):
     global WARNED_ONCE_ABOUT_MEMORY
 
     if isinstance(arr, torch.Tensor):
@@ -72,7 +81,7 @@ def ensure_own_contiguous_storage(arr, stacklevel):
         is_contiguous = arr.is_contiguous()
         if is_view or not is_contiguous or has_stride_0:
             if not WARNED_ONCE_ABOUT_MEMORY:
-                warnings.warn(MEMORY_WARNING, stacklevel=stacklevel)
+                warn(MEMORY_WARNING)
                 WARNED_ONCE_ABOUT_MEMORY = True
             return arr.clone().contiguous()
         return arr
@@ -82,7 +91,7 @@ def ensure_own_contiguous_storage(arr, stacklevel):
         is_contiguous = arr.flags['C_CONTIGUOUS']
         if not owns_data or not is_contiguous:
             if not WARNED_ONCE_ABOUT_MEMORY:
-                warnings.warn(MEMORY_WARNING, stacklevel=stacklevel)
+                warn(MEMORY_WARNING)
                 WARNED_ONCE_ABOUT_MEMORY = True
             return np.ascontiguousarray(arr.copy())
         return arr

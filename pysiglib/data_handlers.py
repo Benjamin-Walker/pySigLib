@@ -25,14 +25,14 @@ class SigInputHandler:
     """
     Handle input which is (shaped like) a signature or a batch of signatures
     """
-    def __init__(self, sig_, sig_len, param_name, stacklevel = 4):
+    def __init__(self, sig_, sig_len, param_name):
 
         check_type(sig_len, "sig_len", int)
         self.sig_len = sig_len
         self.param_name = param_name
 
         check_type_multiple(sig_, param_name, (np.ndarray, torch.Tensor))
-        self.sig = ensure_own_contiguous_storage(sig_, stacklevel)
+        self.sig = ensure_own_contiguous_storage(sig_)
         check_dtype_double(self.sig, param_name)
 
         if self.sig.shape[-1] != self.sig_len:
@@ -69,8 +69,8 @@ class DoubleSigInputHandler:
         check_type(sig_len, "sig_len", int)
         self.sig_len = sig_len
 
-        self.data1 = SigInputHandler(sig1, sig_len, sig1_name, 5)
-        self.data2 = SigInputHandler(sig2, sig_len, sig2_name, 5)
+        self.data1 = SigInputHandler(sig1, sig_len, sig1_name)
+        self.data2 = SigInputHandler(sig2, sig_len, sig2_name)
 
         if self.data1.batch_size != self.data2.batch_size:
             raise ValueError(sig1_name + ", " + sig2_name + " have different batch sizes")
@@ -96,9 +96,9 @@ class TripleSigInputHandler:
         check_type(sig_len, "sig_len", int)
         self.sig_len = sig_len
 
-        self.data1 = SigInputHandler(sig1, sig_len, sig1_name, 5)
-        self.data2 = SigInputHandler(sig2, sig_len, sig2_name, 5)
-        self.data3 = SigInputHandler(sig3, sig_len, sig3_name, 5)
+        self.data1 = SigInputHandler(sig1, sig_len, sig1_name)
+        self.data2 = SigInputHandler(sig2, sig_len, sig2_name)
+        self.data3 = SigInputHandler(sig3, sig_len, sig3_name)
 
         if self.data1.batch_size != self.data2.batch_size or self.data2.batch_size != self.data3.batch_size:
             raise ValueError(sig1_name + ", " + sig2_name + ", " + sig3_name + " have different batch sizes")
@@ -162,7 +162,7 @@ class PathInputHandler:
     def __init__(self, path_, time_aug, lead_lag, end_time, param_name, as_double = False):
         self.param_name = param_name
         check_type_multiple(path_, param_name,(np.ndarray, torch.Tensor))
-        self.path = ensure_own_contiguous_storage(path_, 4)
+        self.path = ensure_own_contiguous_storage(path_)
         check_dtype(self.path, param_name)
         if as_double:
             to_double(self.path)
@@ -343,7 +343,7 @@ class ScalarInputHandler:
         self.data_name = data_name
         self.is_batch = is_batch
         check_type_multiple(data_, data_name, (np.ndarray, torch.Tensor))
-        self.data = ensure_own_contiguous_storage(data_, 4)
+        self.data = ensure_own_contiguous_storage(data_)
         check_dtype(self.data, data_name)
 
         if len(self.data.shape) > 1:
