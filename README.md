@@ -96,7 +96,13 @@ Y = np.random.uniform(size=(32, 5000, 10))
 sig = pysiglib.sig_kernel(X, Y, dyadic_order=(3, 0))
 ```
 
-[//]: # (## Citation)
-
-[//]: # ()
-[//]: # (TBC)
+## Citation
+If you found this library useful in your research, please consider citing the paper:
+```bibtex    
+@article{shmelev2025pysiglib,
+  title={pySigLib-Fast Signature-Based Computations on CPU and GPU},
+  author={Shmelev, Daniil and Salvi, Cristopher},
+  journal={arXiv preprint arXiv:2509.10613},
+  year={2025}
+}
+```

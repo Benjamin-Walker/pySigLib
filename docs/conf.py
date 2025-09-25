@@ -63,6 +63,21 @@ add_module_names = False
 html_title = "Documentation"
 
 rst_epilog = """
+|
+
+Citation
+------------
+If you found this library useful in your research, please consider citing the paper:
+
+.. code-block:: text
+
+   @article{shmelev2025pysiglib,
+     title={pySigLib-Fast Signature-Based Computations on CPU and GPU},
+     author={Shmelev, Daniil and Salvi, Cristopher},
+     journal={arXiv preprint arXiv:2509.10613},
+     year={2025}
+   }
+
 .. |release| replace:: %s
 """ % release
 
