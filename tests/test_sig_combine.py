@@ -41,6 +41,24 @@ def test_sig_combine_random(deg):
     sig_mult = pysiglib.sig_combine(sig1, sig2, 5, deg)
     check_close(sig, sig_mult)
 
+@pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
+@pytest.mark.parametrize("deg", range(1, 6))
+def test_sig_combine_random_cuda(deg):
+    X1 = np.random.uniform(size=(100, 5))
+    X2 = np.random.uniform(size=(100, 5))
+    X = np.concatenate((X1, X2), axis=0)
+    X2 = np.concatenate((X1[[-1], :], X2), axis=0)
+
+    X1 = torch.tensor(X1, device = "cuda")
+    X2 = torch.tensor(X2, device="cuda")
+    X = torch.tensor(X, device="cuda")
+
+    sig1 = pysiglib.signature(X1, deg)
+    sig2 = pysiglib.signature(X2, deg)
+    sig = pysiglib.signature(X, deg)
+    sig_mult = pysiglib.sig_combine(sig1, sig2, 5, deg)
+    check_close(sig.cpu(), sig_mult.cpu())
+
 
 @pytest.mark.parametrize("deg", range(1, 6))
 def test_sig_combine_random_batch(deg):
@@ -53,13 +71,6 @@ def test_sig_combine_random_batch(deg):
     sig = pysiglib.signature(X, deg)
     sig_mult = pysiglib.sig_combine(sig1, sig2, 5, deg)
     check_close(sig, sig_mult)
-
-
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
-def test_sig_combine_cuda_err():
-    x = torch.tensor([[0.]], dtype=torch.float64, device="cuda")
-    with pytest.raises(ValueError):
-        pysiglib.sig_combine(x, x, 1, 0)
 
 
 def test_sig_combine_non_contiguous():

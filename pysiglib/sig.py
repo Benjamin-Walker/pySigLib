@@ -23,13 +23,12 @@ from .param_checks import check_type, check_non_neg, check_cpu
 from .error_codes import err_msg
 from .dtypes import CPSIG_SIGNATURE, CPSIG_BATCH_SIGNATURE
 from .sig_length import sig_length
+from .data_handlers import PathInputHandler, DoubleSigInputHandler, SigOutputHandler, DeviceToHost
 
 
 ######################################################
 # Python wrappers
 ######################################################
-
-from .data_handlers import PathInputHandler, DoubleSigInputHandler, SigOutputHandler
 
 
 def sig_combine(
@@ -110,8 +109,9 @@ def sig_combine(
     if n_jobs == 0:
         raise ValueError("n_jobs cannot be 0")
 
-    check_cpu(sig1, "sig1")
-    check_cpu(sig2, "sig2")
+    # If sig1 and sig2 on GPU, move to CPU
+    device_handler = DeviceToHost([sig1, sig2], ["sig1", "sig2"])
+    sig1, sig2 = device_handler.data
 
     sig_len = sig_length(dimension, degree)
     data = DoubleSigInputHandler(sig1, sig2, sig_len, "sig1", "sig2")
@@ -138,7 +138,11 @@ def sig_combine(
 
     if err_code:
         raise Exception("Error in pysiglib.signature: " + err_msg(err_code))
-    return result.data
+
+    res = result.data
+    if device_handler.device is not None:
+        res = res.to(device_handler.device)
+    return res
 
 def signature_(data, result, degree, horner = True):
     err_code = CPSIG_SIGNATURE[data.dtype](
@@ -229,7 +233,9 @@ def signature(
     check_type(degree, "degree", int)
     check_type(horner, "horner", bool)
 
-    check_cpu(path, "path")
+    # If path is on GPU, move to CPU
+    device_handler = DeviceToHost([path], ["path"])
+    path = device_handler.data[0]
 
     data = PathInputHandler(path, time_aug, lead_lag, end_time, "path")
     sig_len = sig_length(data.dimension, degree)
@@ -238,5 +244,11 @@ def signature(
         check_type(n_jobs, "n_jobs", int)
         if n_jobs == 0:
             raise ValueError("n_jobs cannot be 0")
-        return batch_signature_(data, result, degree, horner, n_jobs)
-    return signature_(data, result, degree, horner)
+        res = batch_signature_(data, result, degree, horner, n_jobs)
+    else:
+        res = signature_(data, result, degree, horner)
+
+    if device_handler.device is not None:
+        res = res.to(device_handler.device)
+    return res
+

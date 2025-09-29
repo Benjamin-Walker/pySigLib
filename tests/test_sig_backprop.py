@@ -82,6 +82,18 @@ def test_sig_backprop_random(deg, dtype):
     sig_back2 = iisignature.sigbackprop(sig_derivs[1:].copy(), X.copy(), deg)
     check_close(sig_back1, sig_back2)
 
+@pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
+@pytest.mark.parametrize("deg", range(1, 6))
+def test_sig_backprop_random_cuda(deg):
+    X = torch.rand(size=(100, 5), device = "cuda")
+    sig_derivs = torch.rand(size = (pysiglib.sig_length(5, deg),), device = "cuda", dtype = torch.float64)
+
+    sig = pysiglib.signature(X, deg)
+
+    sig_back1 = pysiglib.sig_backprop(X.clone(), sig.clone(), sig_derivs.clone(), deg)
+    sig_back2 = iisignature.sigbackprop(sig_derivs[1:].clone().cpu(), X.clone().cpu(), deg)
+    check_close(sig_back1.cpu(), sig_back2)
+
 @pytest.mark.parametrize("deg", range(1, 6))
 def test_batch_sig_backprop_random(deg):
     X = np.random.uniform(size=(100, 3, 2)).astype("double")

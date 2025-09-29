@@ -21,7 +21,7 @@ import torch
 from .param_checks import check_cpu, check_type
 from .load_siglib import CPSIG
 from .error_codes import err_msg
-from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, DoubleSigInputHandler, TripleSigInputHandler
+from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, DoubleSigInputHandler, TripleSigInputHandler, DeviceToHost
 from .dtypes import CPSIG_SIG_BACKPROP, CPSIG_BATCH_SIG_BACKPROP
 from .sig_length import sig_length
 
@@ -98,9 +98,8 @@ def sig_combine_backprop(
 
     """
 
-    check_cpu(deriv, "sig_combined_deriv")
-    check_cpu(sig1, "sig1")
-    check_cpu(sig2, "sig2")
+    device_handler = DeviceToHost([deriv, sig1, sig2], ["deriv", "sig1", "sig2"])
+    deriv, sig1, sig2 = device_handler.data
 
     check_type(dimension, "dimension", int)
     check_type(degree, "degree", int)
@@ -115,8 +114,14 @@ def sig_combine_backprop(
         check_type(n_jobs, "n_jobs", int)
         if n_jobs == 0:
             raise ValueError("n_jobs cannot be 0")
-        return batch_sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree, n_jobs)
-    return sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree)
+        res1, res2 = batch_sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree, n_jobs)
+    else:
+        res1, res2 = sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree)
+
+    if device_handler.device is not None:
+        res1 = res1.to(device_handler.device)
+        res2 = res2.to(device_handler.device)
+    return res1, res2
 
 def sig_backprop_(path_data, sig_data, result, degree):
     err_code = CPSIG_SIG_BACKPROP[path_data.dtype](
@@ -206,9 +211,9 @@ def sig_backprop(
 
     """
 
-    check_cpu(path, "path")
-    check_cpu(sig, "sig")
-    check_cpu(sig_derivs, "sig_derivs")
+    device_handler = DeviceToHost([path, sig, sig_derivs], ["path", "sig", "sig_derivs"])
+    path, sig, sig_derivs = device_handler.data
+
     path_data = PathInputHandler(path, time_aug, lead_lag, end_time, "path")
     sig_len = sig_length(path_data.dimension, degree)
     sig_data = DoubleSigInputHandler(sig, sig_derivs, sig_len, "sig", "sig_derivs")
@@ -221,5 +226,10 @@ def sig_backprop(
         check_type(n_jobs, "n_jobs", int)
         if n_jobs == 0:
             raise ValueError("n_jobs cannot be 0")
-        return batch_sig_backprop_(path_data, sig_data, result, degree, n_jobs)
-    return sig_backprop_(path_data, sig_data, result, degree)
+        res = batch_sig_backprop_(path_data, sig_data, result, degree, n_jobs)
+    else:
+        res = sig_backprop_(path_data, sig_data, result, degree)
+
+    if device_handler.device is not None:
+        res = res.to(device_handler.device)
+    return res

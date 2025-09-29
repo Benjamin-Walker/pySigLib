@@ -60,6 +60,15 @@ def test_signature_random(deg, dtype):
     sig = pysiglib.signature(X, deg)
     check_close(iisig, sig[1:])
 
+@pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
+@pytest.mark.parametrize("deg", range(1, 6))
+def test_signature_random_cuda(deg):
+    X = np.random.uniform(size=(100, 5))
+    iisig = iisignature.sig(X, deg)
+    X = torch.tensor(X, device="cuda")
+    sig = pysiglib.signature(X, deg).cpu()
+    check_close(iisig, sig[1:])
+
 
 @pytest.mark.parametrize("deg", range(1, 6))
 def test_signature_random_batch(deg):
@@ -87,13 +96,6 @@ def test_signature_random_int_batch(deg):
     sig_parallel = pysiglib.signature(X, deg, n_jobs=-1)
     check_close(iisig, sig_serial[:, 1:])
     check_close(iisig, sig_parallel[:, 1:])
-
-
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
-def test_signature_cuda_err():
-    x = torch.tensor([[0.], [1.]], device="cuda")
-    with pytest.raises(ValueError):
-        pysiglib.signature(x, 2)
 
 
 def test_signature_non_contiguous():

@@ -440,3 +440,32 @@ class PathOutputHandler(GridOutputHandler):
         super().__init__(length, dimension, data)
         self.length = length
         self.dimension = dimension
+
+class DeviceToHost:
+    """
+    If data is on GPU, move to CPU
+    """
+
+    def __init__(self, data, names):
+
+        self.type = type(data[0])
+        self.device = data[0].device if isinstance(data[0], torch.Tensor) else None
+
+        for i in range(1, len(data)):
+            d_type = type(data[i])
+            d_device = data[i].device if isinstance(data[i], torch.Tensor) else None
+
+            if d_type != self.type:
+                msg = ", ".join(names) + " must all be torch tensors or all be numpy arrays."
+                raise ValueError(msg)
+
+            if d_device != self.device:
+                msg = ", ".join(names) + " must all be on the same device."
+                raise ValueError(msg)
+
+        if self.device is not None:
+            self.data = [d.cpu() for d in data]
+        else:
+            self.data = data
+        self.names = names
+
