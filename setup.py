@@ -148,7 +148,7 @@ with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 setup(
     name='pysiglib',
-    version="0.2.1",
+    version="0.2.2",
     description="Fast Signature Computations on CPU and GPU",
     packages=['pysiglib'],
     long_description=long_description,
