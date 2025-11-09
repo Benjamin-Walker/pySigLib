@@ -18,18 +18,21 @@ import torch
 class Context:
     def __init__(self):
         self.saved_tensors = ()
+        self.saved_for_y = ()
 
     def save_for_backward(self, *args):
         self.saved_tensors = args
 
+    def save_for_grad_y(self, *args):
+        self.saved_for_y = args
+
 class LinearKernel:
 
     def __call__(self, ctx, x, y):
-        dx = x[:, 1:, :] - x[:, :-1, :]
-        dy = y[:, 1:, :] - y[:, :-1, :]
+        dx = torch.diff(x, dim=1)
+        dy = torch.diff(y, dim=1)
         ctx.save_for_backward(dx, dy)
-        gram = torch.bmm(dx, dy.permute(0, 2, 1))
-        return gram
+        return torch.bmm(dx, dy.permute(0, 2, 1))
 
     def grad_x(self, ctx, derivs):
         dx, dy = ctx.saved_tensors
@@ -37,8 +40,7 @@ class LinearKernel:
         out[:, 0, :] = 0
         out[:, 1:, :] = derivs
         out[:, :-1, :] -= derivs
-        out = torch.bmm(out, dy)
-        return out
+        return torch.bmm(out, dy)
 
     def grad_y(self, ctx, derivs):
         dx, dy = ctx.saved_tensors
@@ -46,8 +48,7 @@ class LinearKernel:
         out[:, :, 0] = 0
         out[:, :, 1:] = derivs
         out[:, :, :-1] -= derivs
-        out = torch.bmm(out.permute(0, 2, 1), dx)
-        return out
+        return torch.bmm(out.permute(0, 2, 1), dx)
 
 class ScaledLinearKernel:
     def __init__(self, scale : float = 1.):
@@ -72,12 +73,17 @@ class RBFKernel:
 
     def __call__(self, ctx, x, y):
         dist = torch.bmm(x * self._scale, y.permute(0, 2, 1))
-        torch.pow(x, 2, out=x)
-        torch.pow(y, 2, out=y)
-        x2 = torch.sum(x, dim=2) * self._one_over_sigma
-        y2 = torch.sum(y, dim=2) * self._one_over_sigma
+
+        x2 = torch.pow(x, 2)
+        y2 = torch.pow(y, 2)
+        x2 = torch.sum(x2, dim=2) * self._one_over_sigma
+        y2 = torch.sum(y2, dim=2) * self._one_over_sigma
+
         dist -= torch.reshape(x2, (x.shape[0], x.shape[1], 1)) + torch.reshape(y2, (x.shape[0], 1, y.shape[1]))
         torch.exp(dist, out=dist)
+
+        ctx.save_for_backward(x, y, dist.clone())
+
         buff = torch.empty_like(dist[:, :-1, :])
         torch.diff(dist, dim=1, out=buff)
         dist.resize_((dist.shape[0], dist.shape[1] - 1, dist.shape[2] - 1))
@@ -85,7 +91,34 @@ class RBFKernel:
         return dist
 
     def grad_x(self, ctx, derivs):
-        pass
+        x, y, out = ctx.saved_tensors
+
+        dout = torch.zeros_like(out)
+        dout[:, 1:, 1:] += derivs
+        dout[:, :-1, :-1] += derivs
+        dout[:, 1:, :-1] -= derivs
+        dout[:, :-1, 1:] -= derivs
+
+        dout *= out
+        dout *= 2. * self._one_over_sigma
+
+        ctx.save_for_grad_y(x, y, dout)
+        return torch.bmm(dout, y) - x * torch.sum(dout, dim=2).unsqueeze(-1)
 
     def grad_y(self, ctx, derivs):
-        pass
+
+        if ctx.saved_for_y:
+            x, y, dout = ctx.saved_for_y#
+        else:
+            x, y, out = ctx.saved_tensors
+
+            dout = torch.zeros_like(out)
+            dout[:, 1:, 1:] += derivs
+            dout[:, :-1, :-1] += derivs
+            dout[:, 1:, :-1] -= derivs
+            dout[:, :-1, 1:] -= derivs
+
+            dout *= out
+            dout *= 2. * self._one_over_sigma
+
+        return torch.bmm(dout.permute(0, 2, 1), x) - y * torch.sum(dout, dim=1).unsqueeze(-1)

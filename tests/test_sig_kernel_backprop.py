@@ -29,7 +29,7 @@ def check_close(a, b):
     b_ = np.array(b)
     assert not np.any(np.abs(a_ - b_) > EPSILON)
 
-def finite_difference(x1, x2, dyadic_order, time_aug = False, lead_lag = False):
+def finite_difference(x1, x2, dyadic_order, time_aug = False, lead_lag = False, kernel = None):
     x1 = x1.to(device = "cpu", dtype = torch.double)
     x2 = x2.to(device = "cpu", dtype = torch.double)
     if len(x1.shape) == 2:
@@ -40,14 +40,14 @@ def finite_difference(x1, x2, dyadic_order, time_aug = False, lead_lag = False):
     dim = x1.shape[2]
 
     eps = 1e-10
-    k = pysiglib.sig_kernel(x1, x2, dyadic_order, time_aug = time_aug, lead_lag = lead_lag)
+    k = pysiglib.sig_kernel(x1, x2, dyadic_order, time_aug = time_aug, lead_lag = lead_lag, kernel = kernel)
     out = np.empty(shape = (batch_size, length, dim))
 
     for i in range(length):
         for d in range(dim):
             x1_d = deepcopy(x1)
             x1_d[:,i,d] += eps
-            k_d = pysiglib.sig_kernel(x1_d, x2, dyadic_order, time_aug = time_aug, lead_lag = lead_lag)
+            k_d = pysiglib.sig_kernel(x1_d, x2, dyadic_order, time_aug = time_aug, lead_lag = lead_lag, kernel = kernel)
             out[:,i,d] = (k_d - k) / eps
     return out
 
@@ -81,6 +81,38 @@ def test_sig_kernel_backprop_batch(dyadic_order):
 
     check_close(d1, d3)
     check_close(d2, d4)
+
+@pytest.mark.parametrize("dyadic_order", range(3))
+def test_sig_kernel_scaled_linear_backprop_batch(dyadic_order):
+    X = torch.rand(size=(32, 10, 5))
+    Y = torch.rand(size=(32, 100, 5))
+    derivs = torch.ones(32)
+
+    kernel = pysiglib.ScaledLinearKernel(0.5)
+
+    d1 = finite_difference(X, Y, dyadic_order, kernel = kernel)
+    d2 = finite_difference(Y, X, dyadic_order, kernel = kernel)
+    d3, d4 = pysiglib.sig_kernel_backprop(derivs, X, Y, dyadic_order, left_deriv = True, right_deriv = True, kernel = kernel)
+
+    check_close(d1, d3)
+    check_close(d2, d4)
+
+@pytest.mark.parametrize("dyadic_order", range(3))
+def test_sig_kernel_rbf_backprop_batch(dyadic_order):
+    X = torch.rand(size=(32, 10, 5))
+    Y = torch.rand(size=(32, 100, 5))
+    derivs = torch.ones(32)
+
+    kernel = pysiglib.RBFKernel(0.5)
+
+    d1 = finite_difference(X, Y, dyadic_order, kernel = kernel)
+    d2 = finite_difference(Y, X, dyadic_order, kernel = kernel)
+    d3, d4 = pysiglib.sig_kernel_backprop(derivs, X, Y, dyadic_order, left_deriv = True, right_deriv = True, kernel = kernel)
+    _, d5 = pysiglib.sig_kernel_backprop(derivs, X, Y, dyadic_order, left_deriv = False, right_deriv = True, kernel=kernel)
+
+    check_close(d1, d3)
+    check_close(d2, d4)
+    check_close(d2, d5)
 
 @pytest.mark.parametrize("dyadic_order", range(3))
 def test_sig_kernel_backprop_batch_time_aug(dyadic_order):
