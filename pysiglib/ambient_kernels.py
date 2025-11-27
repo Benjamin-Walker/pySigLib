@@ -13,6 +13,7 @@
 # limitations under the License.
 # =========================================================================
 
+from abc import ABC, abstractmethod
 import torch
 
 class Context:
@@ -26,7 +27,21 @@ class Context:
     def save_for_grad_y(self, *args):
         self.saved_for_y = args
 
-class LinearKernel:
+class AmbientKernel(ABC):
+
+    @abstractmethod
+    def __call__(self, ctx, x, y):
+        pass
+
+    @abstractmethod
+    def grad_x(self, ctx, derivs):
+        pass
+
+    @abstractmethod
+    def grad_y(self, ctx, derivs):
+        pass
+
+class LinearKernel(AmbientKernel):
 
     def __call__(self, ctx, x, y):
         dx = torch.diff(x, dim=1)
@@ -50,7 +65,7 @@ class LinearKernel:
         out[:, :, :-1] -= derivs
         return torch.bmm(out.permute(0, 2, 1), dx)
 
-class ScaledLinearKernel:
+class ScaledLinearKernel(AmbientKernel):
     def __init__(self, scale : float = 1.):
         self.linear_kernel = LinearKernel()
         self.scale = scale
@@ -65,7 +80,7 @@ class ScaledLinearKernel:
     def grad_y(self, ctx, derivs):
         return self.linear_kernel.grad_y(ctx, derivs)
 
-class RBFKernel:
+class RBFKernel(AmbientKernel):
     def __init__(self, sigma : float):
         self.sigma = sigma
         self._one_over_sigma = 1. / sigma

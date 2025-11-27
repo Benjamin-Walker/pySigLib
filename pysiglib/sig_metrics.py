@@ -1,10 +1,11 @@
-from typing import Union, Optional, Callable
+from typing import Union, Optional
 import numpy as np
 import torch
 
 from .param_checks import check_type_multiple
 from .data_handlers import DoublePathInputHandler
 
+from .ambient_kernels import AmbientKernel
 from .sig_kernel import sig_kernel_gram
 
 def sig_score(
@@ -12,7 +13,7 @@ def sig_score(
         y : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
         lam : float = 1.,
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
@@ -107,7 +108,7 @@ def expected_sig_score(
         sample2 : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
         lam : float = 1.,
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
@@ -184,7 +185,7 @@ def sig_mmd(
         sample1 : Union[np.ndarray, torch.tensor],
         sample2 : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,

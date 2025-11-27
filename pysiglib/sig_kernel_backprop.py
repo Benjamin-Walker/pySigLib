@@ -13,7 +13,7 @@
 # limitations under the License.
 # =========================================================================
 
-from typing import Union, Tuple, Optional, Callable
+from typing import Union, Tuple, Optional
 from ctypes import c_double, POINTER, cast
 
 import numpy as np
@@ -26,7 +26,7 @@ from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
 from .data_handlers import DoublePathInputHandler, ScalarInputHandler, GridOutputHandler, PathInputHandler
-from .ambient_kernels import LinearKernel, Context
+from .ambient_kernels import AmbientKernel, LinearKernel, Context
 
 def sig_kernel_backprop_(data, derivs_data, result, gram, k_grid_data, dyadic_order_1, dyadic_order_2, n_jobs):
 
@@ -90,7 +90,7 @@ def sig_kernel_backprop(
         path1 : Union[np.ndarray, torch.tensor],
         path2 : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
@@ -204,13 +204,10 @@ def sig_kernel_backprop(
 
     if kernel is None:
         kernel = LinearKernel()
+    elif not isinstance(kernel, AmbientKernel):
+        raise ValueError("kernel must be a child class of pysiglib.AmbientKernel")
 
-    if callable(kernel):
-        gram = kernel(ctx, torch_path1, torch_path2)
-    else:
-        raise ValueError()  # TODO
-
-    gram = gram.squeeze()
+    gram = kernel(ctx, torch_path1, torch_path2).squeeze()
 
     k_grid_data = PathInputHandler(k_grid, False, False, 0., "k_grid")
     gram_derivs = gram_deriv(derivs_data, data, gram, k_grid_data, dyadic_order_1, dyadic_order_2, n_jobs)
@@ -234,7 +231,7 @@ def sig_kernel_gram_backprop(
         path1 : Union[np.ndarray, torch.tensor],
         path2 : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,

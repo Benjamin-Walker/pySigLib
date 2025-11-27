@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========================================================================
-from typing import Union, Optional, Callable
+from typing import Union, Optional
 from ctypes import c_double, POINTER, cast
 
 import numpy as np
@@ -23,7 +23,7 @@ from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
 from .data_handlers import DoublePathInputHandler, ScalarOutputHandler, GridOutputHandler
-from .ambient_kernels import LinearKernel, Context
+from .ambient_kernels import AmbientKernel, LinearKernel, Context
 
 def sig_kernel_(data, result, gram, dyadic_order_1, dyadic_order_2, n_jobs, return_grid):
 
@@ -62,7 +62,7 @@ def sig_kernel(
         path1 : Union[np.ndarray, torch.tensor],
         path2 : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
@@ -101,7 +101,7 @@ def sig_kernel(
         and the second path by :math:`2^{\\lambda_2}`.
     :type dyadic_order: int | tuple
     :param kernel: TODO
-    :type kernel: None | callable
+    :type kernel: None | pysiglib.AmbientKernel
     :param time_aug: If set to True, will compute the signature of the time-augmented path, :math:`\\hat{x}_t := (t, x_t)`,
         defined as the original path with an extra channel set to time, :math:`t`. This channel spans :math:`[0, t_L]`,
         where :math:`t_L` is given by the parameter ``end_time``.
@@ -166,11 +166,10 @@ def sig_kernel(
 
     if kernel is None:
         kernel = LinearKernel()
+    elif not isinstance(kernel, AmbientKernel):
+        raise ValueError("kernel must be a child class of pysiglib.AmbientKernel")
 
-    if callable(kernel):
-        gram = kernel(ctx, torch_path1, torch_path2)
-    else:
-        raise ValueError()#TODO
+    gram = kernel(ctx, torch_path1, torch_path2)
 
     if data.device == "cpu":
         sig_kernel_(data, result, gram, dyadic_order_1, dyadic_order_2, n_jobs, return_grid)
@@ -186,7 +185,7 @@ def sig_kernel_gram(
         path1 : Union[np.ndarray, torch.tensor],
         path2 : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,

@@ -22,7 +22,7 @@ from .sig_kernel_backprop import sig_kernel_backprop, sig_kernel_gram_backprop
 from .sig_metrics import sig_score, expected_sig_score, sig_mmd
 from .transform_path import transform_path
 from .transform_path_backprop import transform_path_backprop
-from .ambient_kernels import LinearKernel, ScaledLinearKernel, RBFKernel
+from .ambient_kernels import AmbientKernel, LinearKernel, ScaledLinearKernel, RBFKernel
 
 import pysiglib.torch_api
 

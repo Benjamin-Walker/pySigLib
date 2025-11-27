@@ -13,12 +13,13 @@
 # limitations under the License.
 # =========================================================================
 
-from typing import Union, Optional, Callable
+from typing import Union, Optional
 import numpy as np
 import torch
 from ..sig import signature as sig_forward
 from ..sig import sig_combine as sig_combine_forward
 from ..sig_backprop import sig_backprop, sig_combine_backprop
+from ..ambient_kernels import AmbientKernel
 from ..sig_kernel import sig_kernel as sig_kernel_forward
 from ..sig_kernel_backprop import sig_kernel_backprop
 from ..sig_kernel import sig_kernel_gram as sig_kernel_gram_forward
@@ -159,7 +160,7 @@ def sig_kernel(
         path1 : Union[np.ndarray, torch.tensor],
         path2 : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
@@ -214,7 +215,7 @@ def sig_kernel_gram(
         path1: Union[np.ndarray, torch.tensor],
         path2: Union[np.ndarray, torch.tensor],
         dyadic_order: Union[int, tuple],
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug: bool = False,
         lead_lag: bool = False,
         end_time: float = 1.,
@@ -231,7 +232,7 @@ def sig_score(
         y : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
         lam : float = 1.,
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
@@ -267,7 +268,7 @@ def expected_sig_score(
         sample2 : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
         lam : float = 1.,
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
@@ -285,7 +286,7 @@ def sig_mmd(
         sample2 : Union[np.ndarray, torch.tensor],
         dyadic_order : Union[int, tuple],
         lam : float = 1.,
-        kernel : Optional[Callable] = None,
+        kernel : Optional[AmbientKernel] = None,
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
