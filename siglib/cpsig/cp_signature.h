@@ -157,13 +157,17 @@ void signature_horner_(
 				//Horner stuff
 #ifdef VEC
 				//Add and multiply
-				double left_over_level;
-				double* out_ptr = out + level_index[left_level + 1];
-				double* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1] - dimension;
-				for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
-					left_over_level = (*left_ptr + *(--out_ptr)) * one_over_level;
-					vec_mult_assign(result_ptr, increments, left_over_level, dimension);
-				}
+				tensor_vec_mult_assign(
+					out + level_index[left_level + 1],
+					horner_step + level_index[left_level + 2] - level_index[left_level + 1],
+					horner_step,
+					increments,
+					level_index[left_level + 1] - level_index[left_level],
+					left_level_size,
+					left_level_size,
+					dimension,
+					one_over_level
+				);
 #else
 				//Horner stuff
 				//Add
@@ -191,12 +195,14 @@ void signature_horner_(
 			//Horner stuff
 #ifdef VEC
 			//Add, Multiply and add, writing straight into out
-			double* out_ptr = out + level_index[target_level];
-			double* result_ptr = out + level_index[target_level + 1] - dimension;
-			for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
-				const double scalar = *left_ptr + *(--out_ptr);
-				vec_mult_add(result_ptr, increments, scalar, dimension);
-			}
+			tensor_vec_mult_add(
+				out + level_index[target_level],
+				out + level_index[target_level + 1],
+				horner_step,
+				increments,
+				left_level_size,
+				dimension
+			);
 #else
 			//Add
 			double* left_ptr_1 = out + level_index[target_level - 1];

@@ -93,6 +93,41 @@ FORCE_INLINE void vec_mult_assign(double* out, const double* other, double scala
 	}
 }
 
+FORCE_INLINE void tensor_vec_mult_add(
+	double* a_end, // out + level_index[target_level]
+	double* b_end, // a + a_sz
+	double* c_start, // horner_step
+	double* z_start, // increments
+	uint64_t c_sz, // left_level_size
+	uint64_t z_sz // dimension
+) {
+	--a_end;
+	b_end -= z_sz;
+	for (double* c_end = c_start + c_sz - 1; c_end != c_start - 1;  --a_end, b_end -= z_sz, --c_end) {
+		const double scalar = *c_end + *a_end; // c + a
+		vec_mult_add(b_end, z_start, scalar, z_sz); // b += z * scalar
+	}
+}
+
+FORCE_INLINE void tensor_vec_mult_assign(
+	double* a_end, // out + level_index[left_level + 1]
+	double* b_end, // horner_step + level_index[left_level + 2] - level_index[left_level + 1]
+	double* c_start, // horner_step
+	double* z_start, // increments
+	uint64_t a_sz, // level_index[left_level + 1] - level_index[left_level]
+	uint64_t b_sz, // left_level_size
+	uint64_t c_sz, // left_level_size
+	uint64_t z_sz, // dimension,
+	double one_over_level
+) {
+	--a_end;
+	b_end -= z_sz;
+	for (double* c_end = c_start + c_sz - 1; c_end != c_start - 1; --a_end, b_end -= z_sz, --c_end) {
+		double scalar = (*c_end + *a_end) * one_over_level; // (c + a) * one_over_level
+		vec_mult_assign(b_end, z_start, scalar, z_sz); // b += z * scalar
+	}
+}
+
 FORCE_INLINE double dot_product(const double* a, const double* b, size_t N) {
 	__m256d sum = _mm256_setzero_pd();
 
