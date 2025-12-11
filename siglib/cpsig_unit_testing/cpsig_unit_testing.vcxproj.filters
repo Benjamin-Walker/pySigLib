@@ -65,5 +65,8 @@
     <ClCompile Include="..\cpsig\cp_path_transforms.cpp">
       <Filter>Source Files\cpsig</Filter>
     </ClCompile>
+    <ClCompile Include="..\cpsig\cp_vector_funcs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

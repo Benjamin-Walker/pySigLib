@@ -27,6 +27,7 @@
     <ClCompile Include="..\cpsig\cp_sig_kernel.cpp" />
     <ClCompile Include="..\cpsig\cp_tensor_poly.cpp" />
     <ClCompile Include="..\cpsig\cp_unit_tests.cpp" />
+    <ClCompile Include="..\cpsig\cp_vector_funcs.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

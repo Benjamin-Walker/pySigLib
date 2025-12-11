@@ -157,15 +157,12 @@ void signature_horner_(
 				//Horner stuff
 #ifdef VEC
 				//Add and multiply
-				tensor_vec_mult_assign(
+				call_tensor_vec_mult_assign(dimension,
 					out + level_index[left_level + 1],
 					horner_step + level_index[left_level + 2] - level_index[left_level + 1],
 					horner_step,
 					increments,
-					level_index[left_level + 1] - level_index[left_level],
 					left_level_size,
-					left_level_size,
-					dimension,
 					one_over_level
 				);
 #else
@@ -195,13 +192,12 @@ void signature_horner_(
 			//Horner stuff
 #ifdef VEC
 			//Add, Multiply and add, writing straight into out
-			tensor_vec_mult_add(
+			call_tensor_vec_mult_add(dimension,
 				out + level_index[target_level],
 				out + level_index[target_level + 1],
 				horner_step,
 				increments,
-				left_level_size,
-				dimension
+				left_level_size
 			);
 #else
 			//Add
