@@ -100,14 +100,13 @@ void signature_naive_(
 }
 
 template<typename T>
-void signature_horner_(
+FORCE_INLINE void signature_horner_(
 	const Path<T>& path,
 	double* out,
-	uint64_t degree
+	uint64_t degree,
+	uint64_t dimension // path.dimension()
 )
 {
-	const uint64_t dimension = path.dimension();
-
 	Point<T> prev_pt = path.begin();
 	Point<T> next_pt = path.begin();
 	++next_pt;
@@ -125,7 +124,7 @@ void signature_horner_(
 
 	++prev_pt;
 	++next_pt;
-	
+
 	auto horner_step_uptr = std::make_unique<double[]>(level_index[degree + 1] - level_index[degree]);
 	double* horner_step = horner_step_uptr.get();
 
@@ -148,7 +147,7 @@ void signature_horner_(
 				horner_step[i] = increments[i] * one_over_level;
 
 			for (int64_t left_level = 1LL, right_level = target_level - 1LL;
-				left_level < target_level - 1LL; 
+				left_level < target_level - 1LL;
 				++left_level, --right_level) { //for each, add current left_level and times by z / right_level
 
 				const uint64_t left_level_size = level_index[left_level + 1] - level_index[left_level];
@@ -157,14 +156,13 @@ void signature_horner_(
 				//Horner stuff
 #ifdef VEC
 				//Add and multiply
-				call_tensor_vec_mult_assign(dimension,
-					out + level_index[left_level + 1],
-					horner_step + level_index[left_level + 2] - level_index[left_level + 1],
-					horner_step,
-					increments,
-					left_level_size,
-					one_over_level
-				);
+				double left_over_level;
+				double* out_ptr = out + level_index[left_level + 1];
+				double* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1] - dimension;
+				for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
+					left_over_level = (*left_ptr + *(--out_ptr)) * one_over_level;
+					vec_mult_assign(result_ptr, increments, left_over_level, dimension);
+				}
 #else
 				//Horner stuff
 				//Add
@@ -192,13 +190,12 @@ void signature_horner_(
 			//Horner stuff
 #ifdef VEC
 			//Add, Multiply and add, writing straight into out
-			call_tensor_vec_mult_add(dimension,
-				out + level_index[target_level],
-				out + level_index[target_level + 1],
-				horner_step,
-				increments,
-				left_level_size
-			);
+			double* out_ptr = out + level_index[target_level];
+			double* result_ptr = out + level_index[target_level + 1] - dimension;
+			for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
+				const double scalar = *left_ptr + *(--out_ptr);
+				vec_mult_add(result_ptr, increments, scalar, dimension);
+			}
 #else
 			//Add
 			double* left_ptr_1 = out + level_index[target_level - 1];
@@ -218,6 +215,48 @@ void signature_horner_(
 		//Update target_level == 1
 		for (uint64_t i = 0; i < dimension; ++i)
 			out[i + 1] += increments[i];
+	}
+}
+
+template<typename T, uint64_t dimension>
+void signature_horner_template_(
+	const Path<T>& path,
+	double* out,
+	uint64_t degree
+) {
+	signature_horner_(path, out, degree, dimension);
+}
+
+template<typename T>
+void call_signature_horner_(
+	const Path<T>& path,
+	double* out,
+	uint64_t degree
+) {
+	const uint64_t dimension = path.dimension();
+	switch (dimension) {
+	case 1:  return signature_horner_template_<T, 1>(path, out, degree);
+	case 2:  return signature_horner_template_<T, 2>(path, out, degree);
+	case 3:  return signature_horner_template_<T, 3>(path, out, degree);
+	case 4:  return signature_horner_template_<T, 4>(path, out, degree);
+	case 5:  return signature_horner_template_<T, 5>(path, out, degree);
+	case 6:  return signature_horner_template_<T, 6>(path, out, degree);
+	case 7:  return signature_horner_template_<T, 7>(path, out, degree);
+	case 8:  return signature_horner_template_<T, 8>(path, out, degree);
+	case 9:  return signature_horner_template_<T, 9>(path, out, degree);
+	case 10: return signature_horner_template_<T, 10>(path, out, degree);
+	case 11: return signature_horner_template_<T, 11>(path, out, degree);
+	case 12: return signature_horner_template_<T, 12>(path, out, degree);
+	case 13: return signature_horner_template_<T, 13>(path, out, degree);
+	case 14: return signature_horner_template_<T, 14>(path, out, degree);
+	case 15: return signature_horner_template_<T, 15>(path, out, degree);
+	case 16: return signature_horner_template_<T, 16>(path, out, degree);
+	case 17: return signature_horner_template_<T, 17>(path, out, degree);
+	case 18: return signature_horner_template_<T, 18>(path, out, degree);
+	case 19: return signature_horner_template_<T, 19>(path, out, degree);
+	case 20: return signature_horner_template_<T, 20>(path, out, degree);
+	default:
+		return signature_horner_<T>(path, out, degree, dimension);
 	}
 }
 
@@ -265,7 +304,7 @@ void signature_(
 	}
 
 	if (horner)
-		signature_horner_(path_obj, out, degree);
+		call_signature_horner_(path_obj, out, degree);
 	else
 		signature_naive_(path_obj, out, degree);
 }
@@ -326,7 +365,7 @@ void batch_signature_(
 		if (horner) {
 			sig_func = [&](const T* path_ptr, double* out_ptr) {
 				Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag, end_time);
-				signature_horner_<T>(path_obj, out_ptr, degree);
+				call_signature_horner_<T>(path_obj, out_ptr, degree);
 				};
 		}
 		else {
