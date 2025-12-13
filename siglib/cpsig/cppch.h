@@ -34,8 +34,13 @@
 #include <utility>
 #include <thread>
 #include <functional>
+
+#ifdef VEC
 #ifndef __APPLE__
 #include <immintrin.h>
+#else
+#include <arm_neon.h>
+#endif
 #endif
 
 #endif //CPPCH_H

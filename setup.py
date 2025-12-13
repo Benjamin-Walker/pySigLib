@@ -71,7 +71,7 @@ if USE_CUDA:
 class CustomBuild(_build_py):
     def run(self):
         # These imports are delayed until here because they require the packages in 'setup_requires'
-        from build_utils import get_b2, build_cpsig, build_cusig, get_avx_info, make_jamfiles
+        from build_utils import get_b2, build_cpsig, build_cusig, get_vec_info, make_jamfiles
 
         global REBUILD, SYSTEM, USE_CUDA, USE_AVX, LIBS
 
@@ -106,7 +106,7 @@ class CustomBuild(_build_py):
 
                 print("Building sigLib, output being written to _build_log.txt")
                 get_b2(SYSTEM, log_file)
-                instructions = get_avx_info(SYSTEM, log_file)
+                instructions = get_vec_info(SYSTEM, log_file)
 
                 if not USE_AVX:
                     instructions = []

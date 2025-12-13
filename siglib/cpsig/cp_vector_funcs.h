@@ -18,6 +18,7 @@
 #include "macros.h"
 
 #ifdef VEC
+#ifndef __APPLE__
 FORCE_INLINE void vec_mult_add(double* out, const double* other, double scalar, uint64_t size)
 {
 	const uint64_t N = size / 4UL;
@@ -105,5 +106,51 @@ FORCE_INLINE double dot_product(const double* a, const double* b, size_t N) {
 
 	return out;
 }
+
+#else
+FORCE_INLINE void vec_mult_add(double* out, const double* other, double scalar, uint64_t size) {
+    const uint64_t N = size / 2;
+    const uint64_t tail = size & 1;
+
+    float64x2_t scalar_v = vdupq_n_f64(scalar);
+
+    for (uint64_t i = 0; i < N; ++i) {
+        float64x2_t a = vld1q_f64(other);
+        float64x2_t b = vld1q_f64(out);
+
+        a = vmulq_f64(a, scalar_v);
+        b = vaddq_f64(b, a);
+
+        vst1q_f64(out, b);
+
+        other += 2;
+        out += 2;
+    }
+    if (tail) {
+        *out += (*other) * scalar;
+    }
+}
+
+FORCE_INLINE void vec_mult_assign(double* out, const double* other, double scalar, uint64_t size) {
+    const uint64_t N = size / 2;
+    const uint64_t tail = size & 1;
+
+    float64x2_t scalar_v = vdupq_n_f64(scalar);
+
+    for (uint64_t i = 0; i < N; ++i) {
+        float64x2_t a = vld1q_f64(other);
+        a = vmulq_f64(a, scalar_v);
+        vst1q_f64(out, a);
+
+        other += 2;
+        out += 2;
+    }
+    if (tail) {
+        *out = (*other) * scalar;
+    }
+}
+
+
+#endif
 
 #endif

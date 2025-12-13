@@ -154,9 +154,9 @@ def get_msvc_path(log_file):
 
     return output[start: end]
 
-def get_avx_info(system, log_file):
+def get_vec_info(system, log_file):
     if system == "Darwin":
-        return []
+        return ["neon"]
 
     os.chdir('avx_info')
 
@@ -225,13 +225,14 @@ install dist : cpsig ./cpsig/cpsig.h :
     cpp_files = [x for x in cpp_files if x[-4:] == ".cpp"]
     cpp_files_str = ' '.join(cpp_files)
 
-    # Get AVX info
-    if 'avx2' in instructions:
-        define_avx = '<define>VEC'
-        log_file.write("\nAVX2 supported, defining macro VEC in cpsig\n")
-        print("AVX2 supported, defining macro VEC in cpsig")
+    # Get VEC info
+    sys_vec_instr = "neon" if system == "Darwin" else "avx2"
+    if sys_vec_instr in instructions:
+        define_vec = '<define>VEC'
+        log_file.write("\n" + sys_vec_instr + " supported, defining macro VEC in cpsig\n")
+        print(sys_vec_instr + " supported, defining macro VEC in cpsig")
     else:
-        define_avx = ''
+        define_vec = ''
 
     if system=="Windows":
         toolset = '<toolset>msvc:<cxxflags>"'
@@ -255,7 +256,7 @@ install dist : cpsig ./cpsig/cpsig.h :
         file.write(
     f"""
 lib cpsig : {cpp_files_str}
-        : <define>CPSIG_EXPORTS {define_avx} <cxxstd>20 <threading>multi
+        : <define>CPSIG_EXPORTS {define_vec} <cxxstd>20 <threading>multi
         {toolset}
         : <variant>release
         ;
