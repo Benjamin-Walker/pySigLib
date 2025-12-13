@@ -22,11 +22,14 @@ import pysiglib
 
 np.random.seed(42)
 torch.manual_seed(42)
-EPSILON = 1e-5
+
+SINGLE_EPSILON = 1e-3
+DOUBLE_EPSILON = 1e-5
 
 def check_close(a, b):
     a_ = np.array(a)
     b_ = np.array(b)
+    EPSILON = SINGLE_EPSILON if a_.dtype == np.float32 else DOUBLE_EPSILON
     assert not np.any(np.abs(a_ - b_) > EPSILON)
 
 def lead_lag(x):
@@ -100,8 +103,8 @@ def test_sig_kernel_numpy():
 def test_sig_kernel_dtypes_cpu(dtype):
     batch, len1, len2, dim = 32, 10, 10, 5
     # arr * 3 - 1.5 below gives us non-zero values for int dtypes
-    X = (torch.rand(size=(batch, len1, dim), device="cpu") * 3 - 1.5).to(dtype=dtype)
-    Y = (torch.rand(size=(batch, len2, dim), device="cpu") * 3 - 1.5).to(dtype=dtype)
+    X = (torch.rand(size=(batch, len1, dim), device="cpu") * 3 - 1.5).to(dtype=dtype) / 100
+    Y = (torch.rand(size=(batch, len2, dim), device="cpu") * 3 - 1.5).to(dtype=dtype) / 100
 
     static_kernel = sigkernel.LinearKernel()
     signature_kernel = sigkernel.SigKernel(static_kernel, 0)

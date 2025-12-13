@@ -13,12 +13,12 @@
 # limitations under the License.
 # =========================================================================
 
-from ctypes import c_double, POINTER, cast
+from ctypes import POINTER, cast
 
 import numpy as np
 import torch
 
-from .param_checks import check_type, check_type_multiple, check_dtype, check_dtype_double, ensure_own_contiguous_storage, to_double
+from .param_checks import check_type, check_type_multiple, check_dtype, ensure_own_contiguous_storage
 from .dtypes import DTYPES
 
 class SigInputHandler:
@@ -33,7 +33,7 @@ class SigInputHandler:
 
         check_type_multiple(sig_, param_name, (np.ndarray, torch.Tensor))
         self.sig = ensure_own_contiguous_storage(sig_)
-        check_dtype_double(self.sig, param_name)
+        check_dtype(self.sig, param_name)
 
         if self.sig.shape[-1] != self.sig_len:
             raise ValueError(self.param_name + " is of incorrect length. Expected " + str(self.sig_len) + ", got " + str(self.sig.shape[-1]))
@@ -51,12 +51,14 @@ class SigInputHandler:
 
         if isinstance(self.sig, np.ndarray):
             self.type_ = "numpy"
-            self.data_ptr = self.sig.ctypes.data_as(POINTER(c_double))
+            self.dtype = str(self.sig.dtype)
+            self.data_ptr = self.sig.ctypes.data_as(POINTER(DTYPES[self.dtype]))
         elif isinstance(self.sig, torch.Tensor):
             self.type_ = "torch"
+            self.dtype = str(self.sig.dtype)[6:]
             if not self.sig.device.type == "cpu":
                 raise ValueError(self.param_name + " must be located on the cpu")
-            self.data_ptr = cast(self.sig.data_ptr(), POINTER(c_double))
+            self.data_ptr = cast(self.sig.data_ptr(), POINTER(DTYPES[self.dtype]))
         else:
             raise ValueError(self.param_name + " must be a numpy array or a torch array")
 
@@ -64,13 +66,40 @@ class DoubleSigInputHandler:
     """
     Handle a pair of inputs which are (shaped like) signatures or batches of signatures
     """
-    def __init__(self, sig1, sig2, sig_len, sig1_name, sig2_name):
+    def __init__(self, sig1_, sig2_, sig_len, sig1_name, sig2_name, check_batch = True):
 
         check_type(sig_len, "sig_len", int)
         self.sig_len = sig_len
 
-        self.data1 = SigInputHandler(sig1, sig_len, sig1_name)
-        self.data2 = SigInputHandler(sig2, sig_len, sig2_name)
+        self.data1 = SigInputHandler(sig1_, sig_len, sig1_name)
+        self.data2 = SigInputHandler(sig2_, sig_len, sig2_name)
+        self.sig1 = self.data1.sig
+        self.sig2 = self.data2.sig
+        self.dtype = self.data1.dtype
+
+        if len(self.sig1.shape) == 1:
+            self.is_batch = False
+            self.batch_size = 1
+            self.length_1 = self.sig1.shape[0]
+        elif len(self.sig1.shape) == 2:
+            self.is_batch = True
+            self.batch_size = self.sig1.shape[0]
+            self.length_1 = self.sig1.shape[1]
+        else:
+            raise ValueError(
+                sig1_name + ".shape must have length 1 or 2, got length " + str(len(self.sig1.shape)) + " instead.")
+
+        if len(self.sig2.shape) == 1:
+            if self.batch_size != 1 and check_batch:
+                raise ValueError(sig1_name + ", " + sig2_name + " have different batch sizes")
+            self.length_2 = self.sig2.shape[0]
+        elif len(self.sig2.shape) == 2:
+            if self.batch_size != self.sig2.shape[0] and check_batch:
+                raise ValueError(sig1_name + ", " + sig2_name + " have different batch sizes")
+            self.length_2 = self.sig2.shape[1]
+        else:
+            raise ValueError(
+                sig2_name + ".shape must have length 2 or 3, got length " + str(len(self.sig2.shape)) + " instead.")
 
         if self.data1.batch_size != self.data2.batch_size:
             raise ValueError(sig1_name + ", " + sig2_name + " have different batch sizes")
@@ -84,21 +113,25 @@ class DoubleSigInputHandler:
         self.sig1_ptr = self.data1.data_ptr
         self.sig2_ptr = self.data2.data_ptr
 
-        if self.type_ == "torch" and not (sig1.device.type == "cpu" and sig2.device.type == "cpu"):
+        if self.type_ == "torch" and not (self.sig1.device.type == "cpu" and self.sig2.device.type == "cpu"):
             raise ValueError(sig1_name + ", " + sig2_name + " must be located on the cpu")
 
 class TripleSigInputHandler:
     """
     Handle a triple of inputs which are (shaped like) signatures or batches of signatures
     """
-    def __init__(self, sig1, sig2, sig3, sig_len, sig1_name, sig2_name, sig3_name):
+    def __init__(self, sig1_, sig2_, sig3_, sig_len, sig1_name, sig2_name, sig3_name):
 
         check_type(sig_len, "sig_len", int)
         self.sig_len = sig_len
 
-        self.data1 = SigInputHandler(sig1, sig_len, sig1_name)
-        self.data2 = SigInputHandler(sig2, sig_len, sig2_name)
-        self.data3 = SigInputHandler(sig3, sig_len, sig3_name)
+        self.data1 = SigInputHandler(sig1_, sig_len, sig1_name)
+        self.data2 = SigInputHandler(sig2_, sig_len, sig2_name)
+        self.data3 = SigInputHandler(sig3_, sig_len, sig3_name)
+        self.sig1 = self.data1.sig
+        self.sig2 = self.data2.sig
+        self.sig3 = self.data3.sig
+        self.dtype = self.data1.dtype
 
         if self.data1.batch_size != self.data2.batch_size or self.data2.batch_size != self.data3.batch_size:
             raise ValueError(sig1_name + ", " + sig2_name + ", " + sig3_name + " have different batch sizes")
@@ -126,46 +159,46 @@ class SigOutputHandler:
         self.batch_size = data.batch_size
         self.is_batch = data.is_batch
         self.type_ = data.type_
-
+        self.dtype = data.dtype
         self.result_length = self.batch_size * self.sig_len
 
         if self.type_ == "numpy":
+            dtype_ = np.float32 if data.dtype == "float32" else np.float64
             if self.is_batch:
                 self.data = np.empty(
                     shape=(self.batch_size, self.sig_len),
-                    dtype=np.float64
+                    dtype=dtype_
                 )
             else:
                 self.data = np.empty(
                     shape=self.sig_len,
-                    dtype=np.float64
+                    dtype=dtype_
                 )
-            self.data_ptr = self.data.ctypes.data_as(POINTER(c_double))
+            self.data_ptr = self.data.ctypes.data_as(POINTER(DTYPES[self.dtype]))
 
         else:
+            dtype_ = torch.float32 if data.dtype == "float32" else torch.float64
             if self.is_batch:
                 self.data = torch.empty(
                     size=(self.batch_size, self.sig_len),
-                    dtype=torch.float64
+                    dtype=dtype_
                 )
             else:
                 self.data = torch.empty(
                     size=(self.sig_len,),
-                    dtype=torch.float64
+                    dtype=dtype_
                 )
-            self.data_ptr = cast(self.data.data_ptr(), POINTER(c_double))
+            self.data_ptr = cast(self.data.data_ptr(), POINTER(DTYPES[self.dtype]))
 
 class PathInputHandler:
     """
     Handle input which is (shaped like) a path or a batch of paths
     """
-    def __init__(self, path_, time_aug, lead_lag, end_time, param_name, as_double = False):
+    def __init__(self, path_, time_aug, lead_lag, end_time, param_name):
         self.param_name = param_name
         check_type_multiple(path_, param_name,(np.ndarray, torch.Tensor))
         self.path = ensure_own_contiguous_storage(path_)
         check_dtype(self.path, param_name)
-        if as_double:
-            to_double(self.path)
         check_type(time_aug, "time_aug", bool)
         check_type(lead_lag, "lead_lag", bool)
         check_type(end_time, "end_time", float) #In theory end_time can be negative, we don't prevent this
@@ -220,12 +253,13 @@ class DoublePathInputHandler:
     """
     Handle a pair of inputs which are (shaped like) paths or a batch of paths
     """
-    def __init__(self, path1_, path2_, time_aug, lead_lag, end_time, path1_name = "path1", path2_name = "path2", as_double = False, check_batch = True):
+    def __init__(self, path1_, path2_, time_aug, lead_lag, end_time, path1_name = "path1", path2_name = "path2", check_batch = True):
 
-        self.data1 = PathInputHandler(path1_, time_aug, lead_lag, end_time, path1_name, as_double = as_double)
-        self.data2 = PathInputHandler(path2_, time_aug, lead_lag, end_time, path2_name, as_double = as_double)
+        self.data1 = PathInputHandler(path1_, time_aug, lead_lag, end_time, path1_name)
+        self.data2 = PathInputHandler(path2_, time_aug, lead_lag, end_time, path2_name)
         self.path1 = self.data1.path
         self.path2 = self.data2.path
+        self.dtype = self.data1.dtype
 
         if len(self.path1.shape) == 2:
             self.is_batch = False
@@ -366,15 +400,20 @@ class ScalarOutputHandler:
     Handle output which is (shaped like) a scalar or a batch of scalars
     """
     def __init__(self, data):
+
+        self.dtype = data.dtype
+
         if data.type_ == "numpy":
+            dtype_ = np.float32 if self.dtype == "float32" else np.float64
             self.device = "cpu"
-            self.data = np.empty(shape=data.batch_size, dtype=np.float64)
-            self.data_ptr = self.data.ctypes.data_as(POINTER(c_double))
+            self.data = np.empty(shape=data.batch_size, dtype=dtype_)
+            self.data_ptr = self.data.ctypes.data_as(POINTER(DTYPES[self.dtype]))
 
         else:
+            dtype_ = torch.float32 if self.dtype == "float32" else torch.float64
             self.device = data.path1.device.type
-            self.data = torch.empty(data.batch_size, dtype=torch.float64, device = self.device)
-            self.data_ptr = cast(self.data.data_ptr(), POINTER(c_double))
+            self.data = torch.empty(data.batch_size, dtype=dtype_, device = self.device)
+            self.data_ptr = cast(self.data.data_ptr(), POINTER(DTYPES[self.dtype]))
 
 
 class GridOutputHandler:
@@ -388,36 +427,39 @@ class GridOutputHandler:
         self.batch_size = data.batch_size
         self.is_batch = data.is_batch
         self.type_ = data.type_
+        self.dtype = data.dtype
 
         if self.type_ == "numpy":
+            dtype_ = np.float32 if self.dtype == "float32" else np.float64
             self.device = "cpu"
             if self.is_batch:
                 self.data = np.empty(
                     shape=(self.batch_size, self.x_size, self.y_size),
-                    dtype=np.float64
+                    dtype=dtype_
                 )
             else:
                 self.data = np.empty(
                     shape=(self.x_size, self.y_size),
-                    dtype=np.float64
+                    dtype=dtype_
                 )
-            self.data_ptr = self.data.ctypes.data_as(POINTER(c_double))
+            self.data_ptr = self.data.ctypes.data_as(POINTER(DTYPES[self.dtype]))
 
         else:
+            dtype_ = torch.float32 if self.dtype == "float32" else torch.float64
             self.device = data.device
             if self.is_batch:
                 self.data = torch.empty(
                     size=(self.batch_size, self.x_size, self.y_size),
-                    dtype=torch.float64,
+                    dtype=dtype_,
                     device = self.device
                 )
             else:
                 self.data = torch.empty(
                     size=(self.x_size, self.y_size),
-                    dtype=torch.float64,
+                    dtype=dtype_,
                     device = self.device
                 )
-            self.data_ptr = cast(self.data.data_ptr(), POINTER(c_double))
+            self.data_ptr = cast(self.data.data_ptr(), POINTER(DTYPES[self.dtype]))
 
     def transpose(self):
         if self.type_ == "numpy":

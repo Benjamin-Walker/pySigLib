@@ -19,27 +19,26 @@
 #pragma pack(push)
 //#pragma pack(1)
 
-template<typename T>
+template<std::floating_point T>
 class PointImpl;
 
-template<typename T>
+template<std::floating_point T>
 class PointImplTimeAug;
 
-template<typename T>
+template<std::floating_point T>
 class PointImplLeadLag;
 
-template<typename T>
+template<std::floating_point T>
 class PointImplTimeAugLeadLag;
 
-template<typename T>
+template<std::floating_point T>
 class Point;
 
-template<typename T>
+template<std::floating_point T>
 class Path {
 public:
-	static_assert(std::is_arithmetic<T>::value);
 
-	Path(const T* data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false, double end_time_ = 1.) :
+	Path(const T* data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false, T end_time_ = 1.) :
 		_dimension{ (lead_lag_ ? 2 * dimension_ : dimension_) + (time_aug_ ? 1 : 0) },
 		_length{ lead_lag_ ? length_ * 2 - 1 : length_ },
 		_data{ std::span<const T>(data_, dimension_ * length_) },
@@ -51,7 +50,7 @@ public:
 		_time_step{ end_time_ / (_length - 1) } {
 	}
 
-	Path(const std::span<const T> data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false, double end_time_ = 1.) :
+	Path(const std::span<const T> data_, uint64_t dimension_, uint64_t length_, bool time_aug_ = false, bool lead_lag_ = false, T end_time_ = 1.) :
 		_dimension{ (lead_lag_ ? 2 * dimension_ : dimension_) + (time_aug_ ? 1 : 0) },
 		_length{ lead_lag_ ? length_ * 2 - 1 : length_ },
 		_data{ data_ },
@@ -77,7 +76,7 @@ public:
 		_time_step{ other._time_step } {
 	}
 
-	Path(const Path& other, bool time_aug_, bool lead_lag_, double end_time_ = 1.) :
+	Path(const Path& other, bool time_aug_, bool lead_lag_, T end_time_ = 1.) :
 		_dimension{ (lead_lag_ ? 2 * other._data_dimension : other._data_dimension) + (time_aug_ ? 1 : 0) },
 		_length{ lead_lag_ ? other._data_length * 2 - 1 : other._data_length },
 		_data{ other._data },
@@ -101,8 +100,8 @@ public:
 
 	inline bool time_aug() const { return _time_aug; }
 	inline bool lead_lag() const { return _lead_lag; }
-	inline double time_step() const { return _time_step; }
-	inline double end_time() const { return _time_step * (_length - 1); }
+	inline T time_step() const { return _time_step; }
+	inline T end_time() const { return _time_step * (_length - 1); }
 
 	friend class Point<T>;
 	friend class PointImpl<T>;
@@ -149,10 +148,10 @@ private:
 
 	const bool _time_aug;
 	const bool _lead_lag;
-	const double _time_step;
+	const T _time_step;
 };
 
-template<typename T>
+template<std::floating_point T>
 class PointImpl {
 	friend class Path<T>;
 	friend class Point<T>;
@@ -178,7 +177,7 @@ protected:
 public:
 	virtual ~PointImpl() {}
 
-	virtual inline double operator[](uint64_t i) const { return static_cast<double>(ptr[i]); }
+	virtual inline T operator[](uint64_t i) const { return ptr[i]; }
 	virtual inline void operator++() { ptr += path->_data_dimension; }
 	virtual inline void operator--() { ptr -= path->_data_dimension; }
 
@@ -211,7 +210,7 @@ public:
 	const Path<T>* path;
 };
 
-template<typename T>
+template<std::floating_point T>
 class PointImplTimeAug : public PointImpl<T> {
 public:
 	PointImplTimeAug() : PointImpl<T>(), time{ 0. } {}
@@ -227,7 +226,7 @@ public:
 		return p;
 	}
 
-	inline double operator[](uint64_t i) const override { return static_cast<double>((i < this->path->_data_dimension) ? this->ptr[i] : time);	}
+	inline T operator[](uint64_t i) const override { return (i < this->path->_data_dimension) ? this->ptr[i] : time;	}
 	inline void operator++() override { this->ptr += this->path->_data_dimension; time += this->path->_time_step;	}
 	inline void operator--() override { this->ptr -= this->path->_data_dimension; time -= this->path->_time_step; }
 	inline void advance(int64_t n) override { this->ptr += n * this->path->_data_dimension; time += n * this->path->_time_step; }
@@ -236,10 +235,10 @@ public:
 	inline void set_to_index(int64_t n) override { this->ptr = this->path->_data.data() + n * this->path->_data_dimension; time = n * this->path->_time_step; }
 
 private:
-	double time;
+	T time;
 };
 
-template<typename T>
+template<std::floating_point T>
 class PointImplLeadLag : public PointImpl<T> {
 public:
 	PointImplLeadLag() : PointImpl<T>(), parity{ false } {}
@@ -255,12 +254,12 @@ public:
 		return p;
 	}
 
-	inline double operator[](uint64_t i) const override { 
+	inline T operator[](uint64_t i) const override { 
 		if (i < this->path->_data_dimension)
-			return static_cast<double>(this->ptr[i]);
+			return this->ptr[i];
 		else {
 			uint64_t leadIdx = parity ? i : i - this->path->_data_dimension;
-			return static_cast<double>(this->ptr[leadIdx]);
+			return this->ptr[leadIdx];
 		}
 	}
 	inline void operator++() override { if (parity) this->ptr += this->path->_data_dimension; parity = !parity; }
@@ -292,7 +291,7 @@ private:
 	bool parity;
 };
 
-template<typename T>
+template<std::floating_point T>
 class PointImplTimeAugLeadLag : public PointImpl<T> {
 public:
 	PointImplTimeAugLeadLag() : PointImpl<T>(), parity{ false }, time{ 0. }, _data_dimension_times_2{ 0 } {}
@@ -319,12 +318,12 @@ public:
 		return p;
 	}
 
-	inline double operator[](uint64_t i) const override {
+	inline T operator[](uint64_t i) const override {
 		if (i < this->path->_data_dimension)
-			return static_cast<double>(this->ptr[i]);
+			return this->ptr[i];
 		else if (i < this->_data_dimension_times_2) {
 			uint64_t lead_idx = parity ? i : i - this->path->_data_dimension;
-			return static_cast<double>(this->ptr[lead_idx]);
+			return this->ptr[lead_idx];
 		}
 		else
 			return time;
@@ -372,14 +371,13 @@ public:
 
 private:
 	bool parity;
-	double time;
+	T time;
 	uint64_t _data_dimension_times_2;
 };
 
-template<typename T>
+template<std::floating_point T>
 class Point {
 public:
-	static_assert(std::is_arithmetic<T>::value);
 
 	Point() {
 		_impl.reset(nullptr);
@@ -412,7 +410,7 @@ public:
 	}
 
 
-	inline double operator[](uint64_t i) const { 
+	inline T operator[](uint64_t i) const { 
 #ifdef _DEBUG
 		sq_bracket_bounds_check(i);
 #endif

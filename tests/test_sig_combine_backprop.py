@@ -22,11 +22,14 @@ import pysiglib
 
 np.random.seed(42)
 torch.manual_seed(42)
-EPSILON = 1e-5
+
+SINGLE_EPSILON = 1e-3
+DOUBLE_EPSILON = 1e-5
 
 def check_close(a, b):
     a_ = np.array(a)
     b_ = np.array(b)
+    EPSILON = SINGLE_EPSILON if a_.dtype == np.float32 else DOUBLE_EPSILON
     assert not np.max(np.abs(a_ - b_)) > EPSILON
 
 @pytest.mark.parametrize("deg", range(1, 6))

@@ -31,7 +31,7 @@
 
 #include "cuda_runtime.h"
 
-template<typename FN, typename T, typename... Args>
+template<typename FN, std::floating_point T, typename... Args>
 void check_result(FN f, std::vector<T>& path, std::vector<double>& true_, Args... args) {
     std::vector<double> out;
     out.resize(true_.size() + 1); //+1 at the end just to check we don't write more than expected
@@ -70,7 +70,7 @@ void gram_(
     uint64_t length2
 );
 
-template<typename T>
+template<std::floating_point T>
 std::vector<T> test_data(uint64_t sz) {
     std::vector<T> data;
     data.reserve(sz);

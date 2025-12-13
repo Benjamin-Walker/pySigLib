@@ -19,6 +19,58 @@
 
 #ifdef VEC
 #ifndef __APPLE__
+
+FORCE_INLINE void vec_mult_add(float* out, const float* other, float scalar, uint64_t size)
+{
+	const uint64_t N = size / 8UL;
+	const uint64_t tail4 = size & 4UL;
+	const uint64_t tail2 = size & 2UL;
+	const uint64_t tail1 = size & 1UL;
+
+	__m256 a, b;
+	const __m256 scalar_256 = _mm256_set1_ps(scalar);
+
+	for (uint64_t i = 0; i < N; ++i) {
+		a = _mm256_loadu_ps(other);
+		a = _mm256_mul_ps(a, scalar_256);
+		b = _mm256_loadu_ps(out);
+		b = _mm256_add_ps(a, b);
+		_mm256_storeu_ps(out, b);
+		other += 8;
+		out += 8;
+	}
+
+	if (tail4) {
+		__m128 c, d;
+		const __m128 scalar_128 = _mm_set1_ps(scalar);
+
+		c = _mm_loadu_ps(other);
+		c = _mm_mul_ps(c, scalar_128);
+		d = _mm_loadu_ps(out);
+		d = _mm_add_ps(c, d);
+		_mm_storeu_ps(out, d);
+		other += 4;
+		out += 4;
+	}
+
+	if (tail2) {
+		__m128 c, d;
+		const __m128 scalar_128 = _mm_set1_ps(scalar);
+
+		c = _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(other)));
+		d = _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(out)));
+		c = _mm_mul_ps(c, scalar_128);
+		d = _mm_add_ps(c, d);
+		_mm_store_sd(reinterpret_cast<double*>(out), _mm_castps_pd(d));
+		other += 2;
+		out += 2;
+	}
+
+	if (tail1) {
+		*out += *other * scalar;
+	}
+}
+
 FORCE_INLINE void vec_mult_add(double* out, const double* other, double scalar, uint64_t size)
 {
 	const uint64_t N = size / 4UL;
@@ -54,7 +106,48 @@ FORCE_INLINE void vec_mult_add(double* out, const double* other, double scalar, 
 	}
 }
 
-FORCE_INLINE void vec_mult_assign(double* out, const double* other, double scalar, uint64_t size) 
+FORCE_INLINE void vec_mult_assign(float* out, const float* other, float scalar, uint64_t size)
+{
+	const uint64_t N = size / 8UL;
+	const uint64_t tail4 = size & 4UL;
+	const uint64_t tail2 = size & 2UL;
+	const uint64_t tail1 = size & 1UL;
+
+	__m256 a;
+	const __m256 scalar_ = _mm256_set1_ps(scalar);
+
+	for (uint64_t i = 0; i < N; ++i) {
+		a = _mm256_loadu_ps(other);
+		a = _mm256_mul_ps(a, scalar_);
+		_mm256_storeu_ps(out, a);
+		other += 8;
+		out += 8;
+	}
+
+	if (tail4) {
+		__m128 c;
+		const __m128 scalar_128 = _mm_set1_ps(scalar);
+
+		c = _mm_loadu_ps(other);
+		c = _mm_mul_ps(c, scalar_128);
+		_mm_storeu_ps(out, c);
+		other += 4;
+		out += 4;
+	}
+
+	if (tail2) {
+		out[0] = other[0] * scalar;
+		out[1] = other[1] * scalar;
+		other += 2;
+		out += 2;
+	}
+
+	if (tail1) {
+		*out = *other * scalar;
+	}
+}
+
+FORCE_INLINE void vec_mult_assign(double* out, const double* other, double scalar, uint64_t size)
 {
 	const uint64_t N = size / 4UL;
 	const uint64_t tail2 = size & 2UL;
@@ -108,6 +201,32 @@ FORCE_INLINE double dot_product(const double* a, const double* b, size_t N) {
 }
 
 #else
+
+FORCE_INLINE void vec_mult_add(float* out, const float* other, float scalar, uint64_t size)
+{
+	const uint64_t N = size / 4;
+	const uint64_t tail = size & 3;
+
+	float32x4_t scalar_v = vdupq_n_f32(scalar);
+
+	for (uint64_t i = 0; i < N; ++i) {
+		float32x4_t a = vld1q_f32(other);
+		float32x4_t b = vld1q_f32(out);
+
+		a = vmulq_f32(a, scalar_v);
+		b = vaddq_f32(b, a);
+
+		vst1q_f32(out, b);
+
+		other += 4;
+		out += 4;
+	}
+
+	for (uint64_t i = 0; i < tail; ++i) {
+		out[i] += other[i] * scalar;
+	}
+}
+
 FORCE_INLINE void vec_mult_add(double* out, const double* other, double scalar, uint64_t size) {
     const uint64_t N = size / 2;
     const uint64_t tail = size & 1;
@@ -129,6 +248,27 @@ FORCE_INLINE void vec_mult_add(double* out, const double* other, double scalar, 
     if (tail) {
         *out += (*other) * scalar;
     }
+}
+
+FORCE_INLINE void vec_mult_assign(float* out, const float* other, float scalar, uint64_t size)
+{
+	const uint64_t N = size / 4;
+	const uint64_t tail = size & 3;
+
+	float32x4_t scalar_v = vdupq_n_f32(scalar);
+
+	for (uint64_t i = 0; i < N; ++i) {
+		float32x4_t a = vld1q_f32(other);
+		a = vmulq_f32(a, scalar_v);
+		vst1q_f32(out, a);
+
+		other += 4;
+		out += 4;
+	}
+
+	for (uint64_t i = 0; i < tail; ++i) {
+		out[i] = other[i] * scalar;
+	}
 }
 
 FORCE_INLINE void vec_mult_assign(double* out, const double* other, double scalar, uint64_t size) {

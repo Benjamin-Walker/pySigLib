@@ -91,7 +91,7 @@ def sig_score(
     if len(y.shape) == 2:
         y = y.unsqueeze(0).contiguous().clone()
 
-    data = DoublePathInputHandler(sample, y, time_aug, lead_lag, end_time, "sample_paths", "y", True, False)
+    data = DoublePathInputHandler(sample, y, time_aug, lead_lag, end_time, "sample_paths", "y", False)
 
     B = sample.shape[0]
 
@@ -262,7 +262,7 @@ def sig_mmd(
         If this is not the case, ``pysiglib.sig_mmd`` will internally create a contiguous copy, which may be
         inefficient.
     """
-    data = DoublePathInputHandler(sample1, sample2, time_aug, lead_lag, end_time, "sample1", "sample2", True, False)
+    data = DoublePathInputHandler(sample1, sample2, time_aug, lead_lag, end_time, "sample1", "sample2", False)
 
     # Use torch for simplicity
     sample1 = torch.as_tensor(data.path1)

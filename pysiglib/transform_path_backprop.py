@@ -22,12 +22,12 @@ from .data_handlers import PathOutputHandler
 from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 from .param_checks import check_type, check_cpu
 from .error_codes import err_msg
-from .dtypes import CPSIG_TRANSFORM_PATH, CPSIG_BATCH_TRANSFORM_PATH
+from .dtypes import CPSIG_TRANSFORM_PATH, CPSIG_BATCH_TRANSFORM_PATH, CPSIG_TRANSFORM_PATH_BACKPROP, CPSIG_BATCH_TRANSFORM_PATH_BACKPROP
 
 from .data_handlers import PathInputHandler
 
 def transform_path_backprop_(data, result, length, dimension, time_aug, lead_lag, end_time):
-    err_code = CPSIG.transform_path_backprop(
+    err_code = CPSIG_TRANSFORM_PATH_BACKPROP[data.dtype](
         data.data_ptr,
         result.data_ptr,
         dimension,
@@ -42,7 +42,7 @@ def transform_path_backprop_(data, result, length, dimension, time_aug, lead_lag
     return result.data
 
 def batch_transform_path_backprop_(data, result, length, dimension, time_aug, lead_lag, end_time, n_jobs):
-    err_code = CPSIG.batch_transform_path_backprop(
+    err_code = CPSIG_BATCH_TRANSFORM_PATH_BACKPROP[data.dtype](
         data.data_ptr,
         result.data_ptr,
         data.batch_size,

@@ -110,7 +110,7 @@ class LinearKernel(StaticKernel):
 
     def grad_x(self, ctx : Context, derivs : torch.Tensor):
         dx, dy = ctx.saved_tensors
-        out = torch.empty((dx.shape[0], dx.shape[1] + 1, dy.shape[1]), dtype=torch.float64, device=derivs.device)
+        out = torch.empty((dx.shape[0], dx.shape[1] + 1, dy.shape[1]), dtype=dx.dtype, device=derivs.device)
         out[:, 0, :] = 0
         out[:, 1:, :] = derivs
         out[:, :-1, :] -= derivs
@@ -118,7 +118,7 @@ class LinearKernel(StaticKernel):
 
     def grad_y(self, ctx : Context, derivs : torch.Tensor):
         dx, dy = ctx.saved_tensors
-        out = torch.empty((dx.shape[0], dx.shape[1], dy.shape[1] + 1), dtype=torch.float64, device=derivs.device)
+        out = torch.empty((dx.shape[0], dx.shape[1], dy.shape[1] + 1), dtype=dx.dtype, device=derivs.device)
         out[:, :, 0] = 0
         out[:, :, 1:] = derivs
         out[:, :, :-1] -= derivs

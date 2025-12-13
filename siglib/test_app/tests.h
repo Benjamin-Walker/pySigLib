@@ -15,10 +15,20 @@
 
 #pragma once
 
+void example_signature_float(
+	uint64_t dimension = 5,
+	uint64_t length = 10000,
+	uint64_t degree = 7,
+	bool time_aug = false,
+	bool lead_lag = false,
+	bool horner = true,
+	int num_runs = 50
+);
+
 void example_signature_double(
 	uint64_t dimension = 5,
 	uint64_t length = 10000,
-	uint64_t degree = 6,
+	uint64_t degree = 7,
 	bool time_aug = false,
 	bool lead_lag = false,
 	bool horner = true,
@@ -37,7 +47,18 @@ void example_batch_signature_double(
 	int num_runs = 50
 );
 
-void example_batch_signature_kernel(
+void example_batch_signature_kernel_float(
+	uint64_t batch_size = 100,
+	uint64_t dimension = 5,
+	uint64_t length1 = 1000,
+	uint64_t length2 = 1000,
+	uint64_t dyadic_order_1 = 0,
+	uint64_t dyadic_order_2 = 0,
+	int n_jobs = -1,
+	int num_runs = 50
+);
+
+void example_batch_signature_kernel_double(
 	uint64_t batch_size = 100,
 	uint64_t dimension = 5,
 	uint64_t length1 = 1000,

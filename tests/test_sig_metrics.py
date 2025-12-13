@@ -22,6 +22,7 @@ import pysiglib
 
 np.random.seed(42)
 torch.manual_seed(42)
+
 EPSILON = 1e-5
 
 def check_close(a, b):
