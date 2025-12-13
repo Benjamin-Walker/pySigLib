@@ -76,13 +76,13 @@ void gram_(
 }
 
 
-std::vector<int> int_test_data(uint64_t dimension, uint64_t length) {
-    std::vector<int> data;
+std::vector<float> int_test_data(uint64_t dimension, uint64_t length) {
+    std::vector<float> data;
     uint64_t data_size = dimension * length;
     data.reserve(data_size);
 
     for (int i = 0; i < data_size; i++) {
-        data.push_back(i);
+        data.push_back(static_cast<float>(i));
     }
     return data;
 }
@@ -221,11 +221,11 @@ namespace cpSigTests
         TEST_METHOD(ConstructorTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
-            Path<int> path2(std::span<int>(data), dimension, length);
-            Path<int> path3(path2);
+            Path<float> path(data.data(), dimension, length);
+            Path<float> path2(std::span<float>(data), dimension, length);
+            Path<float> path3(path2);
 
             Assert::IsTrue(path == path2);
             Assert::IsTrue(path == path3);
@@ -233,21 +233,21 @@ namespace cpSigTests
         TEST_METHOD(SqBracketOperatorTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
-            Point<int> pt = path[3];
-            Assert::AreEqual(static_cast<const int*>(data.data() + 3 * dimension), pt.data());
+            Path<float> path(data.data(), dimension, length);
+            Point<float> pt = path[3];
+            Assert::AreEqual(static_cast<const float*>(data.data() + 3 * dimension), pt.data());
         }
         TEST_METHOD(FirstLastTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
+            Path<float> path(data.data(), dimension, length);
             
-            Point<int> first = path.begin();
-            Point<int> last = path.end();
+            Point<float> first = path.begin();
+            Point<float> last = path.end();
             --last;
 
             for (uint64_t j = 0; j < dimension; ++j){
@@ -260,9 +260,9 @@ namespace cpSigTests
         TEST_METHOD(OutOfBoundsTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
+            Path<float> path(data.data(), dimension, length);
 
             try {
                 path[length];
@@ -283,13 +283,13 @@ namespace cpSigTests
         TEST_METHOD(ConstructorTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
+            Path<float> path(data.data(), dimension, length);
 
-            Point<int> pt1(&path, 0);
-            Point<int> pt2(&path, length - 1);
-            Point<int> pt3(pt2);
+            Point<float> pt1(&path, 0);
+            Point<float> pt2(&path, length - 1);
+            Point<float> pt3(pt2);
 
             Assert::IsTrue(pt1 != pt2);
             Assert::IsTrue(pt2 == pt3);
@@ -298,10 +298,10 @@ namespace cpSigTests
         TEST_METHOD(SqBracketOperatorTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
-            Point<int> pt(&path, 0);
+            Path<float> path(data.data(), dimension, length);
+            Point<float> pt(&path, 0);
 
             for (uint64_t i = 0; i < dimension; ++i)
                 Assert::AreEqual(static_cast<double>(data[i]), pt[i]);
@@ -310,11 +310,11 @@ namespace cpSigTests
         TEST_METHOD(IncrementTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
-            Point<int> pt1(&path, 0);
-            Point<int> pt2(&path, 0);
+            Path<float> path(data.data(), dimension, length);
+            Point<float> pt1(&path, 0);
+            Point<float> pt2(&path, 0);
 
             for (uint64_t i = 0; i < length; ++i) {
                 for (uint64_t j = 0; j < dimension; ++j) {
@@ -329,11 +329,11 @@ namespace cpSigTests
         TEST_METHOD(DecrementTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
-            Point<int> pt1 = --path.end();
-            Point<int> pt2 = --path.end();
+            Path<float> path(data.data(), dimension, length);
+            Point<float> pt1 = --path.end();
+            Point<float> pt2 = --path.end();
 
             for (int64_t i = length - 1; i >= 0; --i) {
                 for (uint64_t j = 0; j < dimension; ++j) {
@@ -348,11 +348,11 @@ namespace cpSigTests
         TEST_METHOD(AssignmentTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
-            Point<int> pt1 = path.begin();
-            Point<int> pt2 = pt1;
+            Path<float> path(data.data(), dimension, length);
+            Point<float> pt1 = path.begin();
+            Point<float> pt2 = pt1;
 
             for (uint64_t i = 0; i < dimension; ++i) {
                 Assert::AreEqual(static_cast<double>(data[i]), pt1[i]);
@@ -363,10 +363,10 @@ namespace cpSigTests
         TEST_METHOD(AdvanceTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
-            Point<int> pt(&path, 0);
+            Path<float> path(data.data(), dimension, length);
+            Point<float> pt(&path, 0);
 
             for (uint64_t i = 0; i < length; ++i) {
                 for (uint64_t j = 0; j < dimension; ++j) {
@@ -378,13 +378,13 @@ namespace cpSigTests
         TEST_METHOD(TimeAugTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length, true);
+            Path<float> path(data.data(), dimension, length, true);
 
             int index = 0;
 
-            for (Point<int> pt = path.begin(); pt != path.end(); ++pt) {
+            for (Point<float> pt = path.begin(); pt != path.end(); ++pt) {
                 for (int i = 0; i < dimension; i++) {
                     double val = data[index * dimension + i];
                     Assert::AreEqual(val, pt[i]);
@@ -396,15 +396,15 @@ namespace cpSigTests
         TEST_METHOD(LeadLagTest)
         {
             uint64_t dimension = 2, length = 5;
-            std::vector<int> data = {2, 6, 7, 1, 7, 0, 1, 7, 6, 3};
-            std::vector<int> true_ = { 2, 6, 2, 6, 2, 6, 7, 1, 7, 1, 7, 1, 7, 1, 7, 0, 7, 0, 7, 0, 7, 0, 1, 7, 1, 7, 1, 7, 1, 7, 6, 3, 6, 3, 6, 3};
+            std::vector<float> data = {2, 6, 7, 1, 7, 0, 1, 7, 6, 3};
+            std::vector<float> true_ = { 2, 6, 2, 6, 2, 6, 7, 1, 7, 1, 7, 1, 7, 1, 7, 0, 7, 0, 7, 0, 7, 0, 1, 7, 1, 7, 1, 7, 1, 7, 6, 3, 6, 3, 6, 3};
 
-            Path<int> path(data.data(), dimension, length, false, true);
+            Path<float> path(data.data(), dimension, length, false, true);
 
             int index = 0;
             bool parity = false;
 
-            for (Point<int> pt = path.begin(); pt != path.end(); ++pt) {
+            for (Point<float> pt = path.begin(); pt != path.end(); ++pt) {
                 for (int i = 0; i < path.dimension(); ++i) {
                     double val = pt[i];
                     Assert::AreEqual(static_cast<double>(true_[index]), val);
@@ -415,7 +415,7 @@ namespace cpSigTests
         TEST_METHOD(TimeAugLeadLagTest)
         {
             uint64_t dimension = 2, length = 5;
-            std::vector<int> data = { 2, 6, 7, 1, 7, 0, 1, 7, 6, 3 };
+            std::vector<float> data = { 2, 6, 7, 1, 7, 0, 1, 7, 6, 3 };
             std::vector<double> true_ = { 2., 6., 2., 6., 0., 
                 2., 6., 7., 1., 1. / 8,
                 7., 1., 7., 1., 2. / 8,
@@ -426,12 +426,12 @@ namespace cpSigTests
                 1., 7., 6., 3., 7. / 8,
                 6., 3., 6., 3., 1. };
 
-            Path<int> path(data.data(), dimension, length, true, true);
+            Path<float> path(data.data(), dimension, length, true, true);
 
             int index = 0;
             bool parity = false;
 
-            for (Point<int> pt = path.begin(); pt != path.end(); ++pt) {
+            for (Point<float> pt = path.begin(); pt != path.end(); ++pt) {
                 for (int i = 0; i < path.dimension(); ++i) {
                     double val = pt[i];
                     Assert::IsTrue(abs(static_cast<double>(true_[index]) - pt[i]) < EPSILON);
@@ -443,13 +443,13 @@ namespace cpSigTests
         TEST_METHOD(ReverseTimeAugTest)
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length, true);
+            Path<float> path(data.data(), dimension, length, true);
 
-            int index = static_cast<int>(length) - 1;
+            int index = static_cast<float>(length) - 1;
 
-            for (Point<int> pt = --path.end(); pt != --path.begin(); --pt) {
+            for (Point<float> pt = --path.end(); pt != --path.begin(); --pt) {
                 for (int i = 0; i < dimension; i++) {
                     double val = static_cast<double>(data[index * dimension + i]);
                     Assert::AreEqual(val, pt[i]);
@@ -463,10 +463,10 @@ namespace cpSigTests
         TEST_METHOD(OutOfBoundsTest) 
         {
             uint64_t dimension = 5, length = 10;
-            std::vector<int> data = int_test_data(dimension, length);
+            std::vector<float> data = int_test_data(dimension, length);
 
-            Path<int> path(data.data(), dimension, length);
-            Point<int> pt = path.end();
+            Path<float> path(data.data(), dimension, length);
+            Point<float> pt = path.end();
 
             try { pt[0]; Assert::Fail(); }
             catch (const std::out_of_range& e) { Assert::AreEqual("Point is out of bounds for given path in Point::operator[]", e.what()); }
@@ -477,7 +477,7 @@ namespace cpSigTests
             catch (const std::out_of_range& e) { Assert::AreEqual("Argument out of bounds in Point::operator[]", e.what()); }
             catch (...) { Assert::Fail(); }
 
-            Path<int> path2(path, true, false);
+            Path<float> path2(path, true, false);
             pt = path2.begin();
             try { pt[5]; }
             catch (...) { Assert::Fail(); }
@@ -486,7 +486,7 @@ namespace cpSigTests
             catch (const std::out_of_range& e) { Assert::AreEqual("Argument out of bounds in Point::operator[]", e.what()); }
             catch (...) { Assert::Fail(); }
 
-            Path<int> path3(path, false, true);
+            Path<float> path3(path, false, true);
             pt = path3.begin();
             try { pt[9]; }
             catch (...) { Assert::Fail(); }
@@ -495,7 +495,7 @@ namespace cpSigTests
             catch (const std::out_of_range& e) { Assert::AreEqual(e.what(), "Argument out of bounds in Point::operator[]"); }
             catch (...) { Assert::Fail(); }
 
-            Path<int> path4(path, true, true);
+            Path<float> path4(path, true, true);
             pt = path4.begin();
             try { pt[10]; }
             catch (...) { Assert::Fail(); }
