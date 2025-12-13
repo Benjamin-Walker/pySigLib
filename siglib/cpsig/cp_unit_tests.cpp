@@ -568,9 +568,9 @@ namespace cpSigTests
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., true);
         }
         TEST_METHOD(ManualSigTest2) {
-            auto f = signature_int32;
+            auto f = signature_float;
             uint64_t dimension = 3, length = 4, degree = 3;
-            std::vector<int> path = { 9, 5, 8, 5, 3, 0, 0, 2, 6, 4, 0, 2 };
+            std::vector<float> path = { 9., 5., 8., 5., 3., 0., 0., 2., 6., 4., 0., 2. };
             std::vector<double> true_sig = { 1., -5., - 5., - 6., 12.5, 24.5,
                                                 5., 0.5, 12.5, 9., 25.,
                                                21., 18., - 20.5 - 1./3, - 77.5 - 1./3, 11.,
@@ -613,9 +613,9 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTimeAugTest) {
-            auto f = signature_int32;
+            auto f = signature_float;
             uint64_t dimension = 1, length = 5, degree = 3;
-            std::vector<int> path = { 0, 5, 2, 4, 9 };
+            std::vector<float> path = { 0., 5., 2., 4., 9. };
             std::vector<double> true_sig = { 1., 9., 4., 40.5, 15.5, 20.5, 8., 121.5, 37.5,
                                 64.5, 24.5, 60., 13., 34.5, 10. + 2./3 };
             double end_time = length - 1.;
@@ -623,9 +623,9 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualLeadLagTest) {
-            auto f = signature_int32;
+            auto f = signature_float;
             uint64_t dimension = 1, length = 5, degree = 3;
-            std::vector<int> path = { 0, 5, 2, 4, 9 };
+            std::vector<float> path = { 0., 5., 2., 4., 9. };
             std::vector<double> true_sig = { 1., 9., 9., 40.5, 9., 72., 40.5, 121.5, 6.5, 68., -8.5, 290., 98., 275., 121.5 };
             check_result(f, path, true_sig, dimension, length, degree, false, true, 1., true);
         }

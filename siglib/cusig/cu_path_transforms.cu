@@ -234,28 +234,12 @@ extern "C" {
 		SAFE_CALL(transform_path_<double>(data_in, data_out, 1, dimension, length, time_aug, lead_lag, end_time));
 	}
 
-	CUSIG_API int transform_path_cuda_int32(const int32_t* const data_in, double* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
-		SAFE_CALL(transform_path_<int32_t>(data_in, data_out, 1, dimension, length, time_aug, lead_lag, end_time));
-	}
-
-	CUSIG_API int transform_path_cuda_int64(const int64_t* const data_in, double* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
-		SAFE_CALL(transform_path_<int64_t>(data_in, data_out, 1, dimension, length, time_aug, lead_lag, end_time));
-	}
-
 	CUSIG_API int batch_transform_path_cuda_float(const float* const data_in, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
 		SAFE_CALL(transform_path_<float>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
 	}
 
 	CUSIG_API int batch_transform_path_cuda_double(const double* const data_in, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
 		SAFE_CALL(transform_path_<double>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
-	}
-
-	CUSIG_API int batch_transform_path_cuda_int32(const int32_t* const data_in, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
-		SAFE_CALL(transform_path_<int32_t>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
-	}
-
-	CUSIG_API int batch_transform_path_cuda_int64(const int64_t* const data_in, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
-		SAFE_CALL(transform_path_<int64_t>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
 	}
 
 	CUSIG_API int transform_path_backprop_cuda(const double* const derivs, double* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {

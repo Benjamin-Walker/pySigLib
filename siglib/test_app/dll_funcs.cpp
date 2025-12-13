@@ -152,9 +152,7 @@ HMODULE cusig = nullptr;
 
 sig_length_fn sig_length = nullptr;
 signature_double_fn signature_double = nullptr;
-signature_int32_fn signature_int32 = nullptr;
 batch_signature_double_fn batch_signature_double = nullptr;
-batch_signature_int32_fn batch_signature_int32 = nullptr;
 sig_kernel_fn sig_kernel = nullptr;
 batch_sig_kernel_fn batch_sig_kernel = nullptr;
 batch_sig_combine_fn batch_sig_combine = nullptr;
@@ -174,9 +172,7 @@ void get_cpsig_fn_ptrs()
 {
     GET_FN(sig_length, cpsig);
     GET_FN(signature_double, cpsig);
-    GET_FN(signature_int32, cpsig);
     GET_FN(batch_signature_double, cpsig);
-    GET_FN(batch_signature_int32, cpsig);
     GET_FN(sig_kernel, cpsig);
     GET_FN(batch_sig_kernel, cpsig);
     GET_FN(batch_sig_combine, cpsig);

@@ -37,27 +37,6 @@ void example_signature_double(
     std::cout << "done\n";
 }
 
-void example_signature_int32(
-    uint64_t dimension,
-    uint64_t length,
-    uint64_t degree,
-    bool time_aug,
-    bool lead_lag,
-    bool horner,
-    int num_runs
-) {
-    print_header("Signature Int");
-
-    std::vector<int> path = test_data<int>(dimension * length);
-
-    uint64_t out_size = sig_length(dimension, degree);
-    std::vector<double> out(out_size, 0.);
-
-    time_function(num_runs, signature_int32, path.data(), out.data(), dimension, length, degree, time_aug, lead_lag, 1., horner);
-
-    std::cout << "done\n";
-}
-
 void example_batch_signature_double(
     uint64_t batch_size,
     uint64_t dimension,
@@ -77,29 +56,6 @@ void example_batch_signature_double(
     std::vector<double> out(out_size, 0.);
 
     time_function(num_runs, batch_signature_double, path.data(), out.data(), batch_size, dimension, length, degree, time_aug, lead_lag, 1., horner, n_jobs);
-
-    std::cout << "done\n";
-}
-
-void example_batch_signature_int32(
-    uint64_t batch_size,
-    uint64_t dimension,
-    uint64_t length,
-    uint64_t degree,
-    bool time_aug,
-    bool lead_lag,
-    bool horner,
-    int n_jobs,
-    int num_runs
-) {
-    print_header("Batch Signature Int");
-
-    std::vector<int> path = test_data<int>(batch_size * dimension * length);
-
-    uint64_t out_size = sig_length(dimension, degree) * batch_size;
-    std::vector<double> out(out_size, 0.);
-
-    time_function(num_runs, batch_signature_int32, path.data(), out.data(), batch_size, dimension, length, degree, time_aug, lead_lag, 1., horner, n_jobs);
 
     std::cout << "done\n";
 }

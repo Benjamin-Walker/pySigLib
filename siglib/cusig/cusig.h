@@ -48,10 +48,6 @@ extern "C" {
 	CUSIG_API int transform_path_cuda_float(const float* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
 	/** @brief */
 	CUSIG_API int transform_path_cuda_double(const double* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
-	/** @brief */
-	CUSIG_API int transform_path_cuda_int32(const int32_t* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
-	/** @brief */
-	CUSIG_API int transform_path_cuda_int64(const int64_t* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
 	/** @} */
 	
 	/** @defgroup batch_transform_path_cuda_functions Batch transform path CUDA functions
@@ -76,10 +72,6 @@ extern "C" {
 	CUSIG_API int batch_transform_path_cuda_float(const float* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
 	/** @brief */
 	CUSIG_API int batch_transform_path_cuda_double(const double* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
-	/** @brief */
-	CUSIG_API int batch_transform_path_cuda_int32(const int32_t* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
-	/** @brief */
-	CUSIG_API int batch_transform_path_cuda_int64(const int64_t* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
 	/** @} */
 	
 

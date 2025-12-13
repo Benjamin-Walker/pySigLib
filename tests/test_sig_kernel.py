@@ -93,10 +93,10 @@ def test_sig_kernel_trivial():
     check_close(torch.tensor([1.]), k)
 
 def test_sig_kernel_numpy():
-    x = np.array([[0, 1], [3, 2]])
+    x = np.array([[0., 1.], [3., 2.]])
     pysiglib.sig_kernel(x, x, 0)
 
-@pytest.mark.parametrize("dtype", [torch.float64, torch.float32, torch.int64, torch.int32])
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
 def test_sig_kernel_dtypes_cpu(dtype):
     batch, len1, len2, dim = 32, 10, 10, 5
     # arr * 3 - 1.5 below gives us non-zero values for int dtypes
@@ -264,7 +264,7 @@ def test_sig_kernel_full_grid_time_aug_lead_lag():
 ################################################
 
 @pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
-@pytest.mark.parametrize("dtype", [torch.float64, torch.float32, torch.int64, torch.int32])
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
 def test_sig_kernel_dtypes_cuda(dtype):
     batch, len1, len2, dim = 32, 10, 10, 5
     # arr * 3 - 1.5 below gives us non-zero values for int dtypes

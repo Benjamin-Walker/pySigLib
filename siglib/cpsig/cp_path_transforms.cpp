@@ -135,28 +135,12 @@ extern "C" {
 		SAFE_CALL(transform_path_<double>(data_in, data_out, dimension, length, time_aug, lead_lag, end_time));
 	}
 
-	CPSIG_API int transform_path_int32(const int32_t* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time) noexcept {
-		SAFE_CALL(transform_path_<int32_t>(data_in, data_out, dimension, length, time_aug, lead_lag, end_time));
-	}
-
-	CPSIG_API int transform_path_int64(const int64_t* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time) noexcept {
-		SAFE_CALL(transform_path_<int64_t>(data_in, data_out, dimension, length, time_aug, lead_lag, end_time));
-	}
-
 	CPSIG_API int batch_transform_path_float(const float* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time, int n_jobs) noexcept {
 		SAFE_CALL(batch_transform_path_<float>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time, n_jobs));
 	}
 
 	CPSIG_API int batch_transform_path_double(const double* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time, int n_jobs) noexcept {
 		SAFE_CALL(batch_transform_path_<double>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time, n_jobs));
-	}
-
-	CPSIG_API int batch_transform_path_int32(const int32_t* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time, int n_jobs) noexcept {
-		SAFE_CALL(batch_transform_path_<int32_t>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time, n_jobs));
-	}
-
-	CPSIG_API int batch_transform_path_int64(const int64_t* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time, int n_jobs) noexcept {
-		SAFE_CALL(batch_transform_path_<int64_t>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time, n_jobs));
 	}
 
 	CPSIG_API int transform_path_backprop(const double* derivs, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time) noexcept {

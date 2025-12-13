@@ -71,7 +71,7 @@ def batch_time_aug_lead_lag(x, end_time = 1.):
     return path
 
 @pytest.mark.parametrize("deg", range(1, 6))
-@pytest.mark.parametrize("dtype", [np.float64, np.float32, np.int64, np.int32])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32])
 def test_sig_backprop_random(deg, dtype):
     X = np.random.uniform(size=(100, 5)).astype(dtype)
     sig_derivs = np.random.uniform(size = pysiglib.sig_length(5, deg))
@@ -169,7 +169,7 @@ def test_batch_sig_backprop_lead_lag_random(deg):
     check_close(grad_input1, sig_back2)
 
 @pytest.mark.parametrize("deg", range(1, 5))
-@pytest.mark.parametrize("dtype", [np.float64, np.float32, np.int64, np.int32])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32])
 def test_sig_backprop_time_aug_lead_lag_random(deg, dtype):
     length, dimension = 100, 5
     X = np.random.uniform(size=(length, dimension)).astype(dtype)

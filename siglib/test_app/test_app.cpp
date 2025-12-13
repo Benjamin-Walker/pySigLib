@@ -45,9 +45,7 @@ int main(int argc, char* argv[])
     get_cusig_fn_ptrs();
 
     /*example_signature_double();
-    example_signature_int32();
     example_batch_signature_double();
-    example_batch_signature_int32();
     example_batch_signature_kernel();
     example_batch_signature_kernel_cuda();*/
     example_sig_backprop_double();

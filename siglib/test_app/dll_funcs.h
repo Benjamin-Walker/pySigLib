@@ -45,9 +45,7 @@ void get_cusig_fn_ptrs();
 
 using sig_length_fn = uint64_t(CDECL_*)(uint64_t, uint64_t);
 using signature_double_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, bool, bool, double, bool);
-using signature_int32_fn = void(CDECL_*)(const int*, double*, uint64_t, uint64_t, uint64_t, bool, bool, double, bool);
 using batch_signature_double_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, double, bool, int);
-using batch_signature_int32_fn = void(CDECL_*)(const int*, double*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, double, bool, int);
 
 using sig_kernel_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
 using batch_sig_kernel_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, int, bool);
@@ -69,9 +67,7 @@ extern HMODULE cusig;
 
 extern sig_length_fn sig_length;
 extern signature_double_fn signature_double;
-extern signature_int32_fn signature_int32;
 extern batch_signature_double_fn batch_signature_double;
-extern batch_signature_int32_fn batch_signature_int32;
 extern sig_kernel_fn sig_kernel;
 extern batch_sig_kernel_fn batch_sig_kernel;
 extern batch_sig_combine_fn batch_sig_combine;

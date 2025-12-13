@@ -93,28 +93,6 @@ CPSIG.transform_path_double.argtypes = (
 )
 CPSIG.transform_path_double.restype = c_int
 
-CPSIG.transform_path_int32.argtypes = (
-    POINTER(c_int32),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double
-)
-CPSIG.transform_path_int32.restype = c_int
-
-CPSIG.transform_path_int64.argtypes = (
-    POINTER(c_int64),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double
-)
-CPSIG.transform_path_int64.restype = c_int
-
 ######################################################
 # batch_transform_path
 ######################################################
@@ -144,32 +122,6 @@ CPSIG.batch_transform_path_double.argtypes = (
     c_int
 )
 CPSIG.batch_transform_path_double.restype = c_int
-
-CPSIG.batch_transform_path_int32.argtypes = (
-    POINTER(c_int32),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double,
-    c_int
-)
-CPSIG.batch_transform_path_int32.restype = c_int
-
-CPSIG.batch_transform_path_int64.argtypes = (
-    POINTER(c_int64),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double,
-    c_int
-)
-CPSIG.batch_transform_path_int64.restype = c_int
 
 ######################################################
 # transform_path_backprop
@@ -230,28 +182,6 @@ if BUILT_WITH_CUDA:
     )
     CUSIG.transform_path_cuda_double.restype = c_int
 
-    CUSIG.transform_path_cuda_int32.argtypes = (
-        POINTER(c_int32),
-        POINTER(c_double),
-        c_uint64,
-        c_uint64,
-        c_bool,
-        c_bool,
-        c_double
-    )
-    CUSIG.transform_path_cuda_int32.restype = c_int
-
-    CUSIG.transform_path_cuda_int64.argtypes = (
-        POINTER(c_int64),
-        POINTER(c_double),
-        c_uint64,
-        c_uint64,
-        c_bool,
-        c_bool,
-        c_double
-    )
-    CUSIG.transform_path_cuda_int64.restype = c_int
-
     ######################################################
     # batch_transform_path_cuda
     ######################################################
@@ -279,30 +209,6 @@ if BUILT_WITH_CUDA:
         c_double
     )
     CUSIG.batch_transform_path_cuda_double.restype = c_int
-
-    CUSIG.batch_transform_path_cuda_int32.argtypes = (
-        POINTER(c_int32),
-        POINTER(c_double),
-        c_uint64,
-        c_uint64,
-        c_uint64,
-        c_bool,
-        c_bool,
-        c_double
-    )
-    CUSIG.batch_transform_path_cuda_int32.restype = c_int
-
-    CUSIG.batch_transform_path_cuda_int64.argtypes = (
-        POINTER(c_int64),
-        POINTER(c_double),
-        c_uint64,
-        c_uint64,
-        c_uint64,
-        c_bool,
-        c_bool,
-        c_double
-    )
-    CUSIG.batch_transform_path_cuda_int64.restype = c_int
 
     ######################################################
     # transform_path_backprop_cuda
@@ -409,32 +315,6 @@ CPSIG.batch_sig_combine_backprop.restype = c_int
 # signature
 ######################################################
 
-CPSIG.signature_int32.argtypes = (
-    POINTER(c_int32),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double,
-    c_bool
-)
-CPSIG.signature_int32.restype = c_int
-
-CPSIG.signature_int64.argtypes = (
-    POINTER(c_int64),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double,
-    c_bool
-)
-CPSIG.signature_int64.restype = c_int
-
 CPSIG.signature_float.argtypes = (
     POINTER(c_float),
     POINTER(c_double),
@@ -493,67 +373,9 @@ CPSIG.sig_backprop_double.argtypes = (
 )
 CPSIG.sig_backprop_double.restype = c_int
 
-CPSIG.sig_backprop_int32.argtypes = (
-    POINTER(c_int32),
-    POINTER(c_double),
-    POINTER(c_double),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double
-)
-CPSIG.sig_backprop_int32.restype = c_int
-
-CPSIG.sig_backprop_int64.argtypes = (
-    POINTER(c_int64),
-    POINTER(c_double),
-    POINTER(c_double),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double
-)
-CPSIG.sig_backprop_int64.restype = c_int
-
 ######################################################
 # batch_signature
 ######################################################
-
-CPSIG.batch_signature_int32.argtypes = (
-    POINTER(c_int32),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double,
-    c_bool,
-    c_int
-)
-CPSIG.batch_signature_int32.restype = c_int
-
-CPSIG.batch_signature_int64.argtypes = (
-    POINTER(c_int64),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double,
-    c_bool,
-    c_int
-)
-CPSIG.batch_signature_int64.restype = c_int
 
 CPSIG.batch_signature_float.argtypes = (
     POINTER(c_float),
@@ -620,38 +442,6 @@ CPSIG.batch_sig_backprop_double.argtypes = (
     c_int
 )
 CPSIG.batch_sig_backprop_double.restype = c_int
-
-CPSIG.batch_sig_backprop_int32.argtypes = (
-    POINTER(c_int32),
-    POINTER(c_double),
-    POINTER(c_double),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double,
-    c_int
-)
-CPSIG.batch_sig_backprop_int32.restype = c_int
-
-CPSIG.batch_sig_backprop_int64.argtypes = (
-    POINTER(c_int64),
-    POINTER(c_double),
-    POINTER(c_double),
-    POINTER(c_double),
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_uint64,
-    c_bool,
-    c_bool,
-    c_double,
-    c_int
-)
-CPSIG.batch_sig_backprop_int64.restype = c_int
 
 ######################################################
 # batch_sig_kernel

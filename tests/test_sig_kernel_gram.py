@@ -75,7 +75,7 @@ def batch_time_aug_lead_lag(x):
 ## CPU
 ################################################
 
-@pytest.mark.parametrize("dtype", [torch.float64, torch.float32, torch.int64, torch.int32])
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
 def test_sig_kernel_gram_dtypes_cpu(dtype):
     batch1, batch2, len1, len2, dim = 8, 4, 10, 10, 5
     X = torch.rand(size=(batch1, len1, dim), device="cpu").to(dtype=dtype)

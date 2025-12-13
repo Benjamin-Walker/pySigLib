@@ -23,35 +23,25 @@ from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 ######################################################
 
 DTYPES = {
-    "int32": c_int32,
-    "int64": c_int64,
     "float32": c_float,
     "float64": c_double
 }
 
 SUPPORTED_DTYPES = [
-    np.int32,
-    np.int64,
     np.float32,
     np.float64,
-    torch.int32,
-    torch.int64,
     torch.float32,
     torch.float64
 ]
 
-SUPPORTED_DTYPES_STR = "int32, int64, float or double"
+SUPPORTED_DTYPES_STR = "float or double"
 
 CPSIG_TRANSFORM_PATH = {
-    "int32": CPSIG.transform_path_int32,
-    "int64": CPSIG.transform_path_int64,
     "float32": CPSIG.transform_path_float,
     "float64": CPSIG.transform_path_double
 }
 
 CPSIG_BATCH_TRANSFORM_PATH = {
-    "int32": CPSIG.batch_transform_path_int32,
-    "int64": CPSIG.batch_transform_path_int64,
     "float32": CPSIG.batch_transform_path_float,
     "float64": CPSIG.batch_transform_path_double
 }
@@ -61,43 +51,31 @@ CUSIG_BATCH_TRANSFORM_PATH_CUDA = None
 
 if BUILT_WITH_CUDA:
     CUSIG_TRANSFORM_PATH_CUDA = {
-        "int32": CUSIG.transform_path_cuda_int32,
-        "int64": CUSIG.transform_path_cuda_int64,
         "float32": CUSIG.transform_path_cuda_float,
         "float64": CUSIG.transform_path_cuda_double
     }
 
     CUSIG_BATCH_TRANSFORM_PATH_CUDA = {
-        "int32": CUSIG.batch_transform_path_cuda_int32,
-        "int64": CUSIG.batch_transform_path_cuda_int64,
         "float32": CUSIG.batch_transform_path_cuda_float,
         "float64": CUSIG.batch_transform_path_cuda_double
     }
 
 CPSIG_SIGNATURE = {
-    "int32": CPSIG.signature_int32,
-    "int64": CPSIG.signature_int64,
     "float32": CPSIG.signature_float,
     "float64": CPSIG.signature_double
 }
 
 CPSIG_BATCH_SIGNATURE = {
-    "int32": CPSIG.batch_signature_int32,
-    "int64": CPSIG.batch_signature_int64,
     "float32": CPSIG.batch_signature_float,
     "float64": CPSIG.batch_signature_double
 }
 
 CPSIG_SIG_BACKPROP = {
-    "int32": CPSIG.sig_backprop_int32,
-    "int64": CPSIG.sig_backprop_int64,
     "float32": CPSIG.sig_backprop_float,
     "float64": CPSIG.sig_backprop_double
 }
 
 CPSIG_BATCH_SIG_BACKPROP = {
-    "int32": CPSIG.batch_sig_backprop_int32,
-    "int64": CPSIG.batch_sig_backprop_int64,
     "float32": CPSIG.batch_sig_backprop_float,
     "float64": CPSIG.batch_sig_backprop_double
 }

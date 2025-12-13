@@ -58,10 +58,6 @@ extern "C" {
 	CPSIG_API int transform_path_float(const float* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug = false, bool lead_lag = false, double end_time = 1.) noexcept;
 	/** @brief */
 	CPSIG_API int transform_path_double(const double* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug = false, bool lead_lag = false, double end_time = 1.) noexcept;
-	/** @brief */
-	CPSIG_API int transform_path_int32(const int32_t* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug = false, bool lead_lag = false, double end_time = 1.) noexcept;
-	/** @brief */
-	CPSIG_API int transform_path_int64(const int64_t* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug = false, bool lead_lag = false, double end_time = 1.) noexcept;
 	/** @} */
 
 	/** @defgroup batch_transform_path_functions Batch transform path functions
@@ -89,10 +85,6 @@ extern "C" {
 	CPSIG_API int batch_transform_path_float(const float* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug = false, bool lead_lag = false, double end_time = 1., int n_jobs = 1) noexcept;
 	/** @brief */
 	CPSIG_API int batch_transform_path_double(const double* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug = false, bool lead_lag = false, double end_time = 1., int n_jobs = 1) noexcept;
-	/** @brief */
-	CPSIG_API int batch_transform_path_int32(const int32_t* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug = false, bool lead_lag = false, double end_time = 1., int n_jobs = 1) noexcept;
-	/** @brief */
-	CPSIG_API int batch_transform_path_int64(const int64_t* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug = false, bool lead_lag = false, double end_time = 1., int n_jobs = 1) noexcept;
 	/** @} */
 
 	/**
@@ -226,10 +218,6 @@ extern "C" {
 	CPSIG_API int signature_float(const float* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., bool horner = true) noexcept; //bool time_aug = false, bool lead_lag = false, bool horner = true);
 	/** @brief */
 	CPSIG_API int signature_double(const double* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., bool horner = true) noexcept;
-	/** @brief */
-	CPSIG_API int signature_int32(const int32_t* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., bool horner = true) noexcept;
-	/** @brief */
-	CPSIG_API int signature_int64(const int64_t* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., bool horner = true) noexcept;
 	/** @} */
 
 
@@ -257,10 +245,6 @@ extern "C" {
 	CPSIG_API int batch_signature_float(const float* path, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., bool horner = true, int n_jobs = 1) noexcept;
 	/** @brief */
 	CPSIG_API int batch_signature_double(const double* path, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., bool horner = true, int n_jobs = 1) noexcept;
-	/** @brief */
-	CPSIG_API int batch_signature_int32(const int32_t* path, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., bool horner = true, int n_jobs = 1) noexcept;
-	/** @brief */
-	CPSIG_API int batch_signature_int64(const int64_t* path, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., bool horner = true, int n_jobs = 1) noexcept;
 	/** @} */
 
 
@@ -286,10 +270,6 @@ extern "C" {
 	CPSIG_API int sig_backprop_float(const float* path, double* out, const double* sig_derivs, const double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1.) noexcept;
 	/** @brief */
 	CPSIG_API int sig_backprop_double(const double* path, double* out, const double* sig_derivs, const double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1.) noexcept;
-	/** @brief */
-	CPSIG_API int sig_backprop_int32(const int32_t* path, double* out, const double* sig_derivs, const double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1.) noexcept;
-	/** @brief */
-	CPSIG_API int sig_backprop_int64(const int64_t* path, double* out, const double* sig_derivs, const double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1.) noexcept;
 	/** @} */
 
 
@@ -319,10 +299,6 @@ extern "C" {
 	CPSIG_API int batch_sig_backprop_float(const float* path, double* out, const double* sig_derivs, const double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int n_jobs = 1) noexcept;
 	/** @brief */
 	CPSIG_API int batch_sig_backprop_double(const double* path, double* out, const double* sig_derivs, const double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int n_jobs = 1) noexcept;
-	/** @brief */
-	CPSIG_API int batch_sig_backprop_int32(const int32_t* path, double* out, const double* sig_derivs, const double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int n_jobs = 1) noexcept;
-	/** @brief */
-	CPSIG_API int batch_sig_backprop_int64(const int64_t* path, double* out, const double* sig_derivs, const double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int n_jobs = 1) noexcept;
 	/** @} */
 
 
