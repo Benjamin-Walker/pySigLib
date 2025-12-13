@@ -96,6 +96,10 @@ Y = np.random.uniform(size=(32, 5000, 10))
 sig = pysiglib.sig_kernel(X, Y, dyadic_order=(3, 0))
 ```
 
+## Contribution
+
+Pull requests are not being accepted at this time, but issues and suggestions are welcome.
+
 ## Citation
 If you found this library useful in your research, please consider citing the paper:
 ```bibtex    
