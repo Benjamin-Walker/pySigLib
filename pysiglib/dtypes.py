@@ -134,6 +134,16 @@ CPSIG_BATCH_SIG_COMBINE_BACKPROP = {
     "float64": CPSIG.batch_sig_combine_backprop_d
 }
 
+CPSIG_LOG_SIGNATURE = {
+    "float32": CPSIG.log_signature_f,
+    "float64": CPSIG.log_signature_d
+}
+
+CPSIG_BATCH_LOG_SIGNATURE = {
+    "float32": CPSIG.batch_log_signature_f,
+    "float64": CPSIG.batch_log_signature_d
+}
+
 CPSIG_SIG_KERNEL = {
     "float32": CPSIG.sig_kernel_f,
     "float64": CPSIG.sig_kernel_d

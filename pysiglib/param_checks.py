@@ -101,3 +101,16 @@ def ensure_own_contiguous_storage(arr):
         return arr
 
     raise TypeError("Unexpected error in ensure_own_contiguous_storage: arr must be of type torch.Tensor or numpy.ndarray")
+
+def log_sig_method_parser(s):
+    s = s.lower()
+
+    method = {
+        "x" : 0,
+        "s" : 1
+    }
+
+    if s not in method.keys():
+        raise ValueError("Invalid method string, got " + s)
+
+    return method[s]
