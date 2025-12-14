@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="..\cpsig\cppch.h" />
     <ClInclude Include="..\cpsig\cpsig.h" />
+    <ClInclude Include="..\cpsig\cp_log_signature.h" />
     <ClInclude Include="..\cpsig\cp_path.h" />
     <ClInclude Include="..\cpsig\cp_path_transforms.h" />
     <ClInclude Include="..\cpsig\cp_signature.h" />
@@ -22,6 +23,7 @@
   <ItemGroup>
     <ClCompile Include="..\cpsig\cppch.cpp" />
     <ClCompile Include="..\cpsig\cpsig.cpp" />
+    <ClCompile Include="..\cpsig\cp_log_signatures.cpp" />
     <ClCompile Include="..\cpsig\cp_path_transforms.cpp" />
     <ClCompile Include="..\cpsig\cp_signature.cpp" />
     <ClCompile Include="..\cpsig\cp_sig_kernel.cpp" />

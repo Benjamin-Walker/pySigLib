@@ -101,6 +101,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="cpsig.h" />
+    <ClInclude Include="cp_log_signature.h" />
     <ClInclude Include="cp_path.h" />
     <ClInclude Include="cppch.h" />
     <ClInclude Include="cp_path_transforms.h" />
@@ -112,6 +113,7 @@
     <ClInclude Include="multithreading.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cp_log_signatures.cpp" />
     <ClCompile Include="cp_path_transforms.cpp" />
     <ClCompile Include="cpsig.cpp" />
     <ClCompile Include="cp_sig_kernel.cpp" />

@@ -353,6 +353,55 @@ extern "C" {
 	*/
 	CPSIG_API uint64_t log_sig_length(uint64_t dimension, uint64_t degree) noexcept;
 
+	/** @defgroup log_signature_functions Log signature functions
+	* @{
+	*/
+
+	/**
+	* @brief Computes the log signature of a path of type float.
+	* @param path Pointer to path data (row-major), size = `length * dimension`.
+	* @param out Pointer to output buffer (preallocated), size = `log_sig_length(dimension, degree)`.
+	* @param dimension Dimension of the path.
+	* @param length Length of the path.
+	* @param degree Truncation degree of the signature.
+	* @param time_aug Whether to add time augmentation (default = false).
+	* @param lead_lag Whether to apply lead-lag transform (default = false).
+	* @param end_time End time for time augmentation (default = 1.0).
+	* @param method
+	* @return Status code (0 = success).
+	*/
+	CPSIG_API int log_signature_f(const float* path, float* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, float end_time = 1., int method = 0) noexcept; //bool time_aug = false, bool lead_lag = false, bool horner = true);
+	/** @brief */
+	CPSIG_API int log_signature_d(const double* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int method = 0) noexcept;
+	/** @} */
+
+
+	/** @defgroup batch_log_signature_functions Batch log signature functions
+	* @{
+	*/
+
+	/**
+	* @brief Computes the log signature of a path of type float.
+	* @param path Pointer to path batch data (row-major), size = `batch_size * length * dimension`.
+	* @param out Pointer to output buffer (row-major, preallocated), size = `batch_size * sig_length(dimension, degree)`.
+	* @param batch_size Batch size of the paths.
+	* @param dimension Dimension of the path.
+	* @param length Length of the path.
+	* @param degree Truncation degree of the signature.
+	* @param time_aug Whether to add time augmentation (default = false).
+	* @param lead_lag Whether to apply lead-lag transform (default = false).
+	* @param end_time End time for time augmentation (default = 1.0).
+	* @param method
+	* @param n_jobs Number of threads to run in parallel. If n_jobs = 1, the computation is run serially. If set to -1, all
+	*				available threads are used. For n_jobs below -1, (max_threads + 1 + n_jobs) threads are used. For example
+	*				if n_jobs = -2, all threads but one are used (default = 1).
+	* @return Status code (0 = success).
+	*/
+	CPSIG_API int batch_log_signature_f(const float* path, float* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, float end_time = 1., int method = 0, int n_jobs = 1) noexcept;
+	/** @brief */
+	CPSIG_API int batch_log_signature_d(const double* path, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int method = 0, int n_jobs = 1) noexcept;
+	/** @} */
+
 	/** @defgroup sig_kernel_functions Signature kernel functions
 	* @{
 	*/

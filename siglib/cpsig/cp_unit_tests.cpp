@@ -837,6 +837,90 @@ namespace cpSigTests
         }
     };
 
+    TEST_CLASS(logSignatureDoubleTest) {
+    public:
+
+        TEST_METHOD(LinearPathTest) {
+            auto f = log_signature_d;
+            uint64_t dimension = 2, length = 3, degree = 3;
+            std::vector<double> path = { 0., 0., 0.5, 0.5, 1.,1. };
+            std::vector<double> true_sig = { 0., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0. };
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 0);
+        }
+
+        TEST_METHOD(LinearPathTest2) {
+            auto f = log_signature_d;
+            uint64_t dimension = 2, length = 4, degree = 3;
+            std::vector<double> path = { 0.,0., 0.25, 0.25, 0.75, 0.75, 1.,1. };
+            std::vector<double> true_sig = { 0., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0. };
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 0);
+        }
+
+        TEST_METHOD(ManualSigTest) {
+            auto f = log_signature_d;
+            uint64_t dimension = 2, length = 4, degree = 2;
+            std::vector<double> path = { 0., 0., 1., 0.5, 4., 0., 0., 1. };
+            std::vector<double> true_sig = { 0., 0., 1., 0., 1., -1., 0. };
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 0);
+        }
+
+        TEST_METHOD(ManualSigTest2) {
+            auto f = log_signature_f;
+            uint64_t dimension = 3, length = 4, degree = 3;
+            std::vector<float> path = { 9., 5., 8., 5., 3., 0., 0., 2., 6., 4., 0., 2. };
+            std::vector<float> true_sig = { 0., -5., -5., -6., 0., 12., -10., -12.,
+            0., -6., 10., 6., 0., 0., -27.,
+            11., 54., 5., 3. + 2./3, -22., 20. + 2./3, -18.,
+            -27., -10., -24. - 1./3, 5., 0., -9., 20. + 2./3,
+            18., -4. - 2./3, 11., -24. - 1./3, 36., 3. + 2./3, -9.,
+            9. + 1./3, -18., -4.-2./3, 0.};
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., true);
+        }
+
+        TEST_METHOD(BatchSigTest) {
+            auto f = batch_log_signature_d;
+            uint64_t dimension = 2, length = 4, degree = 2;
+            std::vector<double> path = { 0., 0., 0.25, 0.25, 0.5, 0.5, 1., 1.,
+                0., 0., 0.4, 0.4, 0.6, 0.6, 1., 1.,
+                0., 0., 1., 0.5, 4., 0., 0., 1. };
+
+            std::vector<double> true_sig = { 0., 1., 1., 0., 0., 0., 0.,
+                0., 1., 1., 0., 0., 0., 0.,
+                0., 0., 1., 0., 1., -1., 0.};
+
+            check_result(f, path, true_sig, 3, dimension, length, degree, false, false, 1., 0, 1);
+            check_result(f, path, true_sig, 3, dimension, length, degree, false, false, 1., 0, -1);
+        }
+
+        TEST_METHOD(ManualTimeAugTest) {
+            auto f = log_signature_f;
+            uint64_t dimension = 1, length = 5, degree = 3;
+            std::vector<float> path = { 0., 5., 2., 4., 9. };
+            std::vector<float> true_sig = { 0., 9., 4., 0., -2.5, 2.5, 0., 0., -5.25,
+            10.5, 5.5, -5.25, -11., 5.5, 0.};
+            double end_time = length - 1.;
+            check_result(f, path, true_sig, dimension, length, degree, true, false, end_time, 0);
+        }
+
+        TEST_METHOD(ManualLeadLagTest) {
+            auto f = log_signature_f;
+            uint64_t dimension = 1, length = 5, degree = 3;
+            std::vector<float> path = { 0., 5., 2., 4., 9. };
+            std::vector<float> true_sig = { 0., 9., 9., 0., -31.5, 31.5, 0., 0., 26.75, -53.5, 11.75, 26.75, -23.5, 11.75, 0. };
+            check_result(f, path, true_sig, dimension, length, degree, false, true, 1., 0);
+        }
+
+        TEST_METHOD(BigLeadLagTest) {
+            auto f = batch_log_signature_d;
+            uint64_t dimension = 2, length = 10, degree = 2, batch = 1;
+            std::vector<double> path;
+            path.resize(batch * length * dimension);
+            std::vector<double> out;
+            out.resize(batch * sig_length(dimension * 2, degree));
+            f(path.data(), out.data(), batch, dimension, length, degree, false, true, 1., 0, 1);
+        }
+    };
+
     TEST_CLASS(sigKernelTest) {
     public:
 
