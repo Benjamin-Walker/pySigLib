@@ -48,6 +48,12 @@ Fast Signature Computations on CPU and GPU.
    :titlesonly:
    :maxdepth: 2
 
+   /pages/log_signatures
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 2
+
    /pages/signature_kernels
 
 .. toctree::
