@@ -154,7 +154,7 @@ void get_sig_kernel_diag_internal_(
 	T* next_diag = diagonals + 2 * diag_len;
 
 	// Initialization
-	std::fill(diagonals, diagonals + 3 * diag_len, 1.);
+	std::fill(diagonals, diagonals + 3 * diag_len, static_cast<T>(1.));
 
 	for (uint64_t p = 2; p < num_anti_diag; ++p) { // First two antidiagonals are initialised to 1
 
@@ -273,8 +273,8 @@ void get_sig_kernel_backprop_diag_internal_(
 	// Initialization
 	std::fill(out, out + (length1 - 1) * (length2 - 1), static_cast<T>(0.));
 	std::fill(diagonals, diagonals + 3 * diag_len, static_cast<T>(0.));
-	std::fill(a, a + diag_len, 0.);
-	std::fill(b, b + diag_len, 0.);
+	std::fill(a, a + diag_len, static_cast<T>(0.));
+	std::fill(b, b + diag_len, static_cast<T>(0.));
 	
 	*(prev_diag + 1) = deriv;
 	T da, db;
@@ -427,7 +427,7 @@ void batch_sig_kernel_(
 ) {
 	if (dimension == 0) { throw std::invalid_argument("signature kernel received path of dimension 0"); }
 	if (!gram) {
-		std::fill(out, out + batch_size, 1.);
+		std::fill(out, out + batch_size, static_cast<T>(1.));
 		return;
 	}
 

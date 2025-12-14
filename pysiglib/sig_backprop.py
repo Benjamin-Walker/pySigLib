@@ -18,8 +18,7 @@ from typing import Union
 import numpy as np
 import torch
 
-from .param_checks import check_cpu, check_type
-from .load_siglib import CPSIG
+from .param_checks import check_type
 from .error_codes import err_msg
 from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, DoubleSigInputHandler, TripleSigInputHandler, DeviceToHost
 from .dtypes import CPSIG_SIG_BACKPROP, CPSIG_BATCH_SIG_BACKPROP, CPSIG_SIG_COMBINE_BACKPROP, CPSIG_BATCH_SIG_COMBINE_BACKPROP

@@ -22,10 +22,10 @@ import torch
 from .transform_path import transform_path
 from .transform_path_backprop import transform_path_backprop
 from .sig_kernel import sig_kernel
-from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
+from .load_siglib import BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
-from .dtypes import CPSIG_SIG_KERNEL_BACKPROP, CPSIG_BATCH_SIG_KERNEL_BACKPROP, DTYPES, CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA
+from .dtypes import CPSIG_BATCH_SIG_KERNEL_BACKPROP, DTYPES, CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA
 from .data_handlers import DoublePathInputHandler, ScalarInputHandler, GridOutputHandler, PathInputHandler
 from .static_kernels import StaticKernel, LinearKernel, Context
 

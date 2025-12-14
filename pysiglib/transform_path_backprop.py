@@ -19,10 +19,10 @@ import numpy as np
 import torch
 
 from .data_handlers import PathOutputHandler
-from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
-from .param_checks import check_type, check_cpu
+from .load_siglib import BUILT_WITH_CUDA
+from .param_checks import check_type
 from .error_codes import err_msg
-from .dtypes import CPSIG_TRANSFORM_PATH, CPSIG_BATCH_TRANSFORM_PATH, CPSIG_TRANSFORM_PATH_BACKPROP, CPSIG_BATCH_TRANSFORM_PATH_BACKPROP, CUSIG_TRANSFORM_PATH_BACKPROP_CUDA, CUSIG_BATCH_TRANSFORM_PATH_BACKPROP_CUDA
+from .dtypes import CPSIG_TRANSFORM_PATH_BACKPROP, CPSIG_BATCH_TRANSFORM_PATH_BACKPROP, CUSIG_TRANSFORM_PATH_BACKPROP_CUDA, CUSIG_BATCH_TRANSFORM_PATH_BACKPROP_CUDA
 
 from .data_handlers import PathInputHandler
 

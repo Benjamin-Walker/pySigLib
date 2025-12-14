@@ -19,10 +19,10 @@ import numpy as np
 import torch
 
 from .transform_path import transform_path
-from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
+from .load_siglib import BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
-from .dtypes import CPSIG_SIG_KERNEL, CPSIG_BATCH_SIG_KERNEL, DTYPES, CUSIG_BATCH_SIG_KERNEL_CUDA
+from .dtypes import CPSIG_BATCH_SIG_KERNEL, DTYPES, CUSIG_BATCH_SIG_KERNEL_CUDA
 from .data_handlers import DoublePathInputHandler, ScalarOutputHandler, GridOutputHandler
 from .static_kernels import StaticKernel, LinearKernel, Context
 

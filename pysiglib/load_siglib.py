@@ -17,7 +17,7 @@ import os
 import sys
 import platform
 import ctypes
-from ctypes import c_float, c_double, c_int, c_int32, c_int64, c_uint64, c_bool, POINTER
+from ctypes import c_float, c_double, c_int, c_uint64, c_bool, POINTER
 
 ######################################################
 # Figure out how pysiglib was built, in particular

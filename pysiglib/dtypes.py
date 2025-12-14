@@ -13,7 +13,7 @@
 # limitations under the License.
 # =========================================================================
 
-from ctypes import c_float, c_double, c_int32, c_int64
+from ctypes import c_float, c_double
 import numpy as np
 import torch
 from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA

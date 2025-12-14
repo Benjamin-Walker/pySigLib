@@ -18,8 +18,7 @@ from typing import Union
 import numpy as np
 import torch
 
-from .load_siglib import CPSIG
-from .param_checks import check_type, check_non_neg, check_cpu
+from .param_checks import check_type, check_non_neg
 from .error_codes import err_msg
 from .dtypes import CPSIG_SIGNATURE, CPSIG_BATCH_SIGNATURE, CPSIG_SIG_COMBINE, CPSIG_BATCH_SIG_COMBINE
 from .sig_length import sig_length

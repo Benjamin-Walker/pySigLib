@@ -37,7 +37,7 @@ FORCE_INLINE void linear_signature_(
 )
 {
 	//Computes the signature of a linear segment joining start_pt and end_pt
-	out[0] = 1.;
+	out[0] = static_cast<T>(1.);
 
 	for (uint64_t i = 0; i < dimension; ++i)
 		out[i + 1] = end_pt[i] - start_pt[i];
@@ -364,16 +364,16 @@ void signature_(
 	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time); //Work with path_obj to capture time_aug, lead_lag transformations
 
 	if (path_obj.length() <= 1) {
-		out[0] = 1.;
+		out[0] = static_cast<T>(1.);
 		uint64_t result_length = ::sig_length(path_obj.dimension(), degree);
-		std::fill(out + 1, out + result_length, 0.);
+		std::fill(out + 1, out + result_length, static_cast<T>(0.));
 		return;
 	}
-	if (degree == 0) { out[0] = 1.; return; }
+	if (degree == 0) { out[0] = static_cast<T>(1.); return; }
 	if (degree == 1) {
 		Point<T> first_pt = path_obj.begin();
 		Point<T> last_pt = --path_obj.end();
-		out[0] = 1.;
+		out[0] = static_cast<T>(1.);
 		uint64_t dimension_ = path_obj.dimension();
 		for (uint64_t i = 0; i < dimension_; ++i)
 			out[i + 1] = last_pt[i] - first_pt[i];
@@ -410,7 +410,7 @@ void batch_signature_(
 
 	if (dummy_path_obj.length() <= 1) {
 		T* const out_end = out + result_length * batch_size;
-		std::fill(out, out_end, 0.);
+		std::fill(out, out_end, static_cast<T>(0.));
 		for (T* out_ptr = out;
 			out_ptr < out_end;
 			out_ptr += result_length) {
@@ -419,7 +419,7 @@ void batch_signature_(
 		return;
 	}
 	if (degree == 0) { 
-		std::fill(out, out + batch_size, 1.);
+		std::fill(out, out + batch_size, static_cast<T>(1.));
 		return; }
 
 	//General case and degree = 1 case
@@ -494,11 +494,11 @@ void sig_backprop_(
 
 	if (path_obj.length() <= 1 || degree == 0) {
 		uint64_t result_length = dimension * length;
-		std::fill(out, out + result_length, 0.);
+		std::fill(out, out + result_length, static_cast<T>(0.));
 		return;
 	}
 
-	std::fill(out, out + length * dimension, 0.);
+	std::fill(out, out + length * dimension, static_cast<T>(0.));
 	const uint64_t sig_len_ = ::sig_length(path_obj.dimension(), degree);
 
 	auto sig_derivs_copy_uptr = std::make_unique<T[]>(sig_len_);
@@ -527,7 +527,7 @@ void batch_sig_backprop_(
 	int n_jobs = 1
 )
 {
-	std::fill(out, out + length * dimension * batch_size, 0.);
+	std::fill(out, out + length * dimension * batch_size, static_cast<T>(0.));
 	//Deal with trivial cases
 	if (dimension == 0) { throw std::invalid_argument("sig_backprop received path of dimension 0"); }
 
@@ -538,7 +538,7 @@ void batch_sig_backprop_(
 
 	if (dummy_path_obj.length() <= 1 || degree == 0) {
 		T* const out_end = out + flat_path_length * batch_size;
-		std::fill(out, out_end, 0.);
+		std::fill(out, out_end, static_cast<T>(0.));
 		return;
 	}
 
