@@ -343,6 +343,16 @@ extern "C" {
 	CPSIG_API int batch_sig_backprop_d(const double* path, double* out, const double* sig_derivs, const double* sig, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int n_jobs = 1) noexcept;
 	/** @} */
 
+	/**
+	* @brief Returns the length of a truncated log signature.
+	*
+	*
+	* @param dimension Dimension of the underlying path.
+	* @param degree Truncation degree of the log signature.
+	* @return Length of a truncated log signature. A returned value of 0 indicates integer overflow or invalid parameters (dimension == 0 or degree == 0).
+	*/
+	CPSIG_API uint64_t log_sig_length(uint64_t dimension, uint64_t degree) noexcept;
+
 	/** @defgroup sig_kernel_functions Signature kernel functions
 	* @{
 	*/

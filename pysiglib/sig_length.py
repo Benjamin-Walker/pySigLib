@@ -14,7 +14,7 @@
 # =========================================================================
 
 from .load_siglib import CPSIG
-from .param_checks import check_type, check_non_neg
+from .param_checks import check_type, check_non_neg, check_pos
 
 def sig_length(dimension : int, degree : int) -> int:
     """
@@ -40,6 +40,35 @@ def sig_length(dimension : int, degree : int) -> int:
     check_non_neg(degree, "degree")
 
     out = CPSIG.sig_length(dimension, degree)
+    if out == 0:
+        raise ValueError("Integer overflow encountered in sig_length")
+    return out
+
+def log_sig_length(dimension : int, degree : int) -> int:
+    """
+    Returns the length of a truncated log signature,
+
+    .. math::
+
+        \\sum_{i=0}^N \\frac{1}{i} \\sum_{x | i} \\mu\\left(\\frac{i}{x}\\right) d^x,
+
+    where :math:`d` is the dimension of the underlying path, :math:`N`
+    is the truncation level of the log signature and :math:`\\mu` is
+    the Möbius function.
+
+    :param dimension: Dimension of the underlying path, :math:`d`
+    :type dimension: int
+    :param degree: Truncation level of the log signature, :math:`N`
+    :type degree: int
+    :return: Length of a truncated log signature
+    :rtype: int
+    """
+    check_type(dimension, "dimension", int)
+    check_type(degree, "degree", int)
+    check_pos(dimension, "dimension")
+    check_pos(degree, "degree")
+
+    out = CPSIG.log_sig_length(dimension, degree)
     if out == 0:
         raise ValueError("Integer overflow encountered in sig_length")
     return out

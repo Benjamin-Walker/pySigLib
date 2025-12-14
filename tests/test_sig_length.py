@@ -20,7 +20,6 @@ import pysiglib
 
 np.random.seed(42)
 torch.manual_seed(42)
-EPSILON = 1e-10
 
 def test_sig_length():
     assert pysiglib.sig_length(0, 0) == 1
@@ -30,3 +29,9 @@ def test_sig_length():
     assert pysiglib.sig_length(10, 10) == 11111111111
     assert pysiglib.sig_length(11, 11) == 313842837672
     assert pysiglib.sig_length(400, 5) == 10265664160401
+
+def test_log_sig_length():
+    assert pysiglib.log_sig_length(2, 3) == 5
+    assert pysiglib.log_sig_length(9, 9) == 49212093
+    assert pysiglib.log_sig_length(10, 10) == 1125217654
+    assert pysiglib.log_sig_length(5, 12) == 26039187

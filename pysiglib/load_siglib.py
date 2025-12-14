@@ -535,6 +535,16 @@ CPSIG.batch_sig_backprop_d.argtypes = (
 CPSIG.batch_sig_backprop_d.restype = c_int
 
 ######################################################
+# log_sig_length
+######################################################
+
+CPSIG.log_sig_length.argtypes = (
+    c_uint64,
+    c_uint64
+)
+CPSIG.log_sig_length.restype = c_uint64
+
+######################################################
 # batch_sig_kernel
 ######################################################
 

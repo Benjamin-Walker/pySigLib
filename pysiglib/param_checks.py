@@ -42,6 +42,10 @@ def check_non_neg(param, param_name):
     if param < 0:
         raise ValueError(param_name + " must be a non-negative integer, got " + param_name + " = " + str(param))
 
+def check_pos(param, param_name):
+    if param <= 0:
+        raise ValueError(param_name + " must be a positive integer, got " + param_name + " = " + str(param))
+
 def check_dtype(arr, arr_name):
     if arr.dtype not in SUPPORTED_DTYPES:
         raise TypeError(arr_name + ".dtype must be " + SUPPORTED_DTYPES_STR + ", got " + str(arr.dtype) + " instead")

@@ -53,6 +53,78 @@ extern "C" CPSIG_API uint64_t sig_length(uint64_t dimension, uint64_t degree) no
     }
 }
 
+
+std::vector<std::vector<uint64_t>> compute_divisors(uint64_t N) {
+    std::vector<std::vector<uint64_t>> divisors(N + 1);
+
+    for (uint64_t d = 1; d <= N; ++d) {
+        for (uint64_t multiple = d; multiple <= N; multiple += d) {
+            divisors[multiple].push_back(d);
+        }
+    }
+    return divisors;
+}
+
+bool is_prime(uint64_t n)
+{
+    if (n < 2)
+        return false;
+    for (uint64_t i = 2; i * i <= n; i++)
+        if (n % i == 0)
+            return false;
+    return true;
+}
+
+int64_t mobius(uint64_t N)
+{
+    if (N == 1)
+        return 1;
+
+    uint64_t p = 0;
+    for (uint64_t i = 1; i <= N; i++) {
+        if (N % i == 0 && is_prime(i)) {
+            if (N % (i * i) == 0)
+                return 0;
+            else
+                p++;
+        }
+    }
+
+    return (p % 2 != 0) ? -1 : 1;
+}
+
+extern "C" CPSIG_API uint64_t log_sig_length(uint64_t dimension, uint64_t degree) noexcept {
+    if (!dimension || !degree) {
+        return 0;
+    }
+    std::vector<std::vector<uint64_t>> divisors = compute_divisors(degree);
+    uint64_t result = 0;
+    for (uint64_t i = 1; i <= degree; ++i) {
+        int64_t i_sum = 0;
+        for (uint64_t d : divisors[i]) {
+            uint64_t p = power(dimension, d);
+            if (!p)
+                return 0; // overflow
+
+            int64_t m = mobius(i / d);
+
+            int64_t term = 0;
+            if (m == 1)
+                term = static_cast<int64_t>(p);
+            else if (m == -1)
+                term = -static_cast<int64_t>(p);
+
+            if ((term > 0 && i_sum > INT64_MAX - term) ||
+                (term < 0 && i_sum < INT64_MIN - term))
+                return 0; // overflow
+
+            i_sum += term;
+        }
+        result += i_sum / i;
+    }
+    return result;
+}
+
 extern "C" {
 
 	CPSIG_API int sig_combine_f(const float* sig1, const float* sig2, float* out, uint64_t dimension, uint64_t degree) noexcept {

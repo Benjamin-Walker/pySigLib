@@ -122,9 +122,8 @@ namespace cpSigTests
     TEST_CLASS(PolyTest)
     {
     public:
-        TEST_METHOD(PolyLengthTest)
+        TEST_METHOD(SigLengthTest)
         {
-            Assert::AreEqual((uint64_t)1, sig_length(0, 0));
             Assert::AreEqual((uint64_t)1, sig_length(0, 0));
             Assert::AreEqual((uint64_t)1, sig_length(0, 1));
             Assert::AreEqual((uint64_t)1, sig_length(1, 0));
@@ -134,6 +133,23 @@ namespace cpSigTests
             Assert::AreEqual((uint64_t)313842837672, sig_length(11, 11));
 
             Assert::AreEqual((uint64_t)10265664160401, sig_length(400, 5));
+
+            Assert::AreEqual((uint64_t)0, sig_length(100, 100)); // overflow
+        }
+
+        TEST_METHOD(LogSigLengthTest)
+        {
+            Assert::AreEqual((uint64_t)0, log_sig_length(0, 0));
+            Assert::AreEqual((uint64_t)0, log_sig_length(0, 1));
+            Assert::AreEqual((uint64_t)0, log_sig_length(1, 0));
+
+            Assert::AreEqual((uint64_t)5, log_sig_length(2, 3));
+
+            Assert::AreEqual((uint64_t)49212093, log_sig_length(9, 9));
+            Assert::AreEqual((uint64_t)1125217654, log_sig_length(10, 10));
+            Assert::AreEqual((uint64_t)26039187, log_sig_length(5, 12));
+
+            Assert::AreEqual((uint64_t)0, log_sig_length(100, 100)); // overflow
         }
 
         TEST_METHOD(PolyMultTestLinear)
