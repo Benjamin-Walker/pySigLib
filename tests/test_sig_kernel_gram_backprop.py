@@ -22,11 +22,14 @@ import pysiglib
 
 np.random.seed(42)
 torch.manual_seed(42)
-EPSILON = 1e-1
+
+SINGLE_EPSILON = 1e-1
+DOUBLE_EPSILON = 1e-1
 
 def check_close(a, b):
     a_ = np.array(a)
     b_ = np.array(b)
+    EPSILON = SINGLE_EPSILON if a_.dtype == np.float32 else DOUBLE_EPSILON
     assert not np.any(np.abs(a_ - b_) > EPSILON)
 
 def finite_difference(x1, x2, dyadic_order, time_aug = False, lead_lag = False):

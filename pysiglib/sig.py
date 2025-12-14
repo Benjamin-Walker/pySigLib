@@ -18,10 +18,9 @@ from typing import Union
 import numpy as np
 import torch
 
-from .load_siglib import CPSIG
-from .param_checks import check_type, check_non_neg, check_cpu
+from .param_checks import check_type, check_non_neg
 from .error_codes import err_msg
-from .dtypes import CPSIG_SIGNATURE, CPSIG_BATCH_SIGNATURE
+from .dtypes import CPSIG_SIGNATURE, CPSIG_BATCH_SIGNATURE, CPSIG_SIG_COMBINE, CPSIG_BATCH_SIG_COMBINE
 from .sig_length import sig_length
 from .data_handlers import PathInputHandler, DoubleSigInputHandler, SigOutputHandler, DeviceToHost
 
@@ -118,7 +117,7 @@ def sig_combine(
     result = SigOutputHandler(data, sig_len)
 
     if data.is_batch:
-        err_code = CPSIG.batch_sig_combine(
+        err_code = CPSIG_BATCH_SIG_COMBINE[data.dtype](
             data.sig1_ptr,
             data.sig2_ptr,
             result.data_ptr,
@@ -128,7 +127,7 @@ def sig_combine(
             n_jobs
         )
     else:
-        err_code = CPSIG.sig_combine(
+        err_code = CPSIG_SIG_COMBINE[data.dtype](
             data.sig1_ptr,
             data.sig2_ptr,
             result.data_ptr,

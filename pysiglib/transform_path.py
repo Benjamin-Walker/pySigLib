@@ -20,7 +20,7 @@ import torch
 
 from .load_siglib import BUILT_WITH_CUDA
 from .data_handlers import PathOutputHandler
-from .param_checks import check_type, check_cpu
+from .param_checks import check_type
 from .error_codes import err_msg
 from .dtypes import CPSIG_TRANSFORM_PATH, CPSIG_BATCH_TRANSFORM_PATH, CUSIG_TRANSFORM_PATH_CUDA, CUSIG_BATCH_TRANSFORM_PATH_CUDA
 

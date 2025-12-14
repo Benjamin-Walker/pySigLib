@@ -66,6 +66,10 @@ X = np.random.uniform(size=(32, 1000, 10))
 sig = pysiglib.signature(X, degree = 5)
 ```
 
+### Log Signatures
+
+Log signatures will be available from version 0.3.0 (exp. Jan 2026)
+
 ### Signature Kernels
 
 pySigLib implements signature kernels through the function `pysiglib.sig_kernel`,

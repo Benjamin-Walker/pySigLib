@@ -22,11 +22,14 @@ import pysiglib
 
 np.random.seed(42)
 torch.manual_seed(42)
-EPSILON = 1e-5
+
+SINGLE_EPSILON = 1e-4
+DOUBLE_EPSILON = 1e-5
 
 def check_close(a, b):
     a_ = np.array(a)
     b_ = np.array(b)
+    EPSILON = SINGLE_EPSILON if a_.dtype == np.float32 else DOUBLE_EPSILON
     assert not np.max(np.abs(a_ - b_)) > EPSILON
 
 def lead_lag(x):
@@ -71,10 +74,10 @@ def batch_time_aug_lead_lag(x, end_time = 1.):
     return path
 
 @pytest.mark.parametrize("deg", range(1, 6))
-@pytest.mark.parametrize("dtype", [np.float64, np.float32, np.int64, np.int32])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32])
 def test_sig_backprop_random(deg, dtype):
     X = np.random.uniform(size=(100, 5)).astype(dtype)
-    sig_derivs = np.random.uniform(size = pysiglib.sig_length(5, deg))
+    sig_derivs = np.random.uniform(size = pysiglib.sig_length(5, deg)).astype(dtype)
 
     sig = pysiglib.signature(X, deg)
 
@@ -86,7 +89,7 @@ def test_sig_backprop_random(deg, dtype):
 @pytest.mark.parametrize("deg", range(1, 6))
 def test_sig_backprop_random_cuda(deg):
     X = torch.rand(size=(100, 5), device = "cuda")
-    sig_derivs = torch.rand(size = (pysiglib.sig_length(5, deg),), device = "cuda", dtype = torch.float64)
+    sig_derivs = torch.rand(size = (pysiglib.sig_length(5, deg),), device = "cuda")
 
     sig = pysiglib.signature(X, deg)
 
@@ -169,7 +172,7 @@ def test_batch_sig_backprop_lead_lag_random(deg):
     check_close(grad_input1, sig_back2)
 
 @pytest.mark.parametrize("deg", range(1, 5))
-@pytest.mark.parametrize("dtype", [np.float64, np.float32, np.int64, np.int32])
+@pytest.mark.parametrize("dtype", [np.float64, np.float32])
 def test_sig_backprop_time_aug_lead_lag_random(deg, dtype):
     length, dimension = 100, 5
     X = np.random.uniform(size=(length, dimension)).astype(dtype)

@@ -22,7 +22,6 @@ __constant__ uint64_t path_dimension;
 __constant__ uint64_t length;
 __constant__ bool time_aug;
 __constant__ bool lead_lag;
-__constant__ double end_time;
 __constant__ uint64_t path_size;
 
 __constant__ uint64_t transformed_dimension;
@@ -32,16 +31,17 @@ __constant__ uint64_t transformed_path_size;
 template<typename T>
 __global__ void transform_path_internal_(
 	const T* data_in,
-	double* data_out
+	T* data_out,
+	T end_time
 ) {
 	const int thread_id = threadIdx.x;
 
 	const T* const data_in_ = data_in + blockIdx.x * path_size;
-	double* const data_out_ = data_out + blockIdx.x * transformed_path_size;
+	T* const data_out_ = data_out + blockIdx.x * transformed_path_size;
 
 	if (!(time_aug || lead_lag)) {
 		for (uint64_t i = thread_id; i < path_size; i += 32)
-			data_out_[i] = static_cast<double>(data_in_[i]);
+			data_out_[i] = static_cast<T>(data_in_[i]);
 	}
 
 	if (lead_lag) {
@@ -50,27 +50,27 @@ __global__ void transform_path_internal_(
 
 		for (uint64_t i = thread_id; i < length; i += 32) {
 			for (uint64_t j = 0; j < path_dimension; ++j) {
-				data_out_[i * twice_transformed_dimension + j] = static_cast<double>(data_in_[i * path_dimension + j]);
-				data_out_[i * twice_transformed_dimension + j + path_dimension] = static_cast<double>(data_in_[i * path_dimension + j]);
+				data_out_[i * twice_transformed_dimension + j] = static_cast<T>(data_in_[i * path_dimension + j]);
+				data_out_[i * twice_transformed_dimension + j + path_dimension] = static_cast<T>(data_in_[i * path_dimension + j]);
 			}
 		}
 
 		for (uint64_t i = thread_id; i < length - 1; i += 32) {
 			for (uint64_t j = 0; j < twice_dimension; ++j) {
-				data_out_[i * twice_transformed_dimension + transformed_dimension + j] = static_cast<double>(data_in_[i * path_dimension + j]);
+				data_out_[i * twice_transformed_dimension + transformed_dimension + j] = static_cast<T>(data_in_[i * path_dimension + j]);
 			}
 		}
 	}
 	else {
 		for (uint64_t i = thread_id; i < length; i += 32) {
 			for (uint64_t j = 0; j < path_dimension; ++j) {
-				data_out_[i * transformed_dimension + j] = static_cast<double>(data_in_[i * path_dimension + j]);
+				data_out_[i * transformed_dimension + j] = static_cast<T>(data_in_[i * path_dimension + j]);
 			}
 		}
 	}
 
 	if (time_aug) {
-		const double scale = end_time / (transformed_length - 1);
+		const T scale = end_time / (transformed_length - 1);
 
 		for (uint64_t i = thread_id; i < transformed_length; i += 32) {
 			data_out_[(i + 1) * transformed_dimension - 1] = i * scale;
@@ -78,16 +78,26 @@ __global__ void transform_path_internal_(
 	}
 }
 
+//template __global__ void transform_path_internal_<float>(
+//	const float* data_in,
+//	float* data_out
+//);
+//
+//template __global__ void transform_path_internal_<double>(
+//	const double* data_in,
+//	double* data_out
+//);
+
 template<typename T>
 void transform_path_(
 	const T* data_in,
-	double* data_out,
+	T* data_out,
 	uint64_t batch_size_,
 	uint64_t dimension_,
 	uint64_t length_,
 	bool time_aug_,
 	bool lead_lag_,
-	double end_time_
+	T end_time
 ) {
 	const uint64_t path_size_ = dimension_ * length_;
 
@@ -99,14 +109,13 @@ void transform_path_(
 	cudaMemcpyToSymbol(length, &length_, sizeof(uint64_t));
 	cudaMemcpyToSymbol(time_aug, &time_aug_, sizeof(bool));
 	cudaMemcpyToSymbol(lead_lag, &lead_lag_, sizeof(bool));
-	cudaMemcpyToSymbol(end_time, &end_time_, sizeof(double));
 	cudaMemcpyToSymbol(path_size, &path_size_, sizeof(uint64_t));
 
 	cudaMemcpyToSymbol(transformed_dimension, &transformed_dimension_, sizeof(uint64_t));
 	cudaMemcpyToSymbol(transformed_length, &transformed_length_, sizeof(uint64_t));
 	cudaMemcpyToSymbol(transformed_path_size, &transformed_path_size_, sizeof(uint64_t));
 
-	transform_path_internal_ << <static_cast<unsigned int>(batch_size_), 32U >> > (data_in, data_out);
+	transform_path_internal_ << <static_cast<unsigned int>(batch_size_), 32U >> > (data_in, data_out, end_time);
 
 	cudaError_t err = cudaGetLastError();
 	if (err != cudaSuccess) {
@@ -115,14 +124,16 @@ void transform_path_(
 	}
 }
 
+template<typename T>
 __global__ void transform_path_backprop_internal_(
-	const double* derivs,
-	double* data_out
+	const T* derivs,
+	T* data_out,
+	T end_time
 ) {
 	const int thread_id = threadIdx.x;
 
-	const double* const derivs_ = derivs + blockIdx.x * transformed_path_size;
-	double* const data_out_ = data_out + blockIdx.x * path_size;
+	const T* const derivs_ = derivs + blockIdx.x * transformed_path_size;
+	T* const data_out_ = data_out + blockIdx.x * path_size;
 
 	if (lead_lag) {
 		const uint64_t twice_dimension = 2 * path_dimension;
@@ -150,15 +161,16 @@ __global__ void transform_path_backprop_internal_(
 	}
 }
 
+template<typename T>
 void transform_path_backprop_(
-	const double* derivs,
-	double* data_out,
+	const T* derivs,
+	T* data_out,
 	uint64_t batch_size_,
 	uint64_t dimension_,
 	uint64_t length_,
 	bool time_aug_,
 	bool lead_lag_,
-	double end_time_
+	T end_time
 ) {
 	const uint64_t path_size_ = dimension_ * length_;
 
@@ -170,7 +182,6 @@ void transform_path_backprop_(
 	cudaMemcpyToSymbol(length, &length_, sizeof(uint64_t));
 	cudaMemcpyToSymbol(time_aug, &time_aug_, sizeof(bool));
 	cudaMemcpyToSymbol(lead_lag, &lead_lag_, sizeof(bool));
-	cudaMemcpyToSymbol(end_time, &end_time_, sizeof(double));
 	cudaMemcpyToSymbol(path_size, &path_size_, sizeof(uint64_t));
 
 	cudaMemcpyToSymbol(transformed_dimension, &transformed_dimension_, sizeof(uint64_t));
@@ -178,10 +189,10 @@ void transform_path_backprop_(
 	cudaMemcpyToSymbol(transformed_path_size, &transformed_path_size_, sizeof(uint64_t));
 
 	if (!(lead_lag_ || time_aug_)) {
-		cudaMemcpy(data_out, derivs, batch_size_ * path_size_ * sizeof(double), cudaMemcpyDeviceToDevice);
+		cudaMemcpy(data_out, derivs, batch_size_ * path_size_ * sizeof(T), cudaMemcpyDeviceToDevice);
 	}
 	else {
-		transform_path_backprop_internal_ << <static_cast<unsigned int>(batch_size_), 32U >> > (derivs, data_out);
+		transform_path_backprop_internal_ << <static_cast<unsigned int>(batch_size_), 32U >> > (derivs, data_out, end_time);
 	}
 
 	cudaError_t err = cudaGetLastError();
@@ -226,43 +237,35 @@ void transform_path_backprop_(
 
 extern "C" {
 
-	CUSIG_API int transform_path_cuda_float(const float* const data_in, double* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
+	CUSIG_API int transform_path_cuda_f(const float* const data_in, float* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const float end_time) noexcept {
 		SAFE_CALL(transform_path_<float>(data_in, data_out, 1, dimension, length, time_aug, lead_lag, end_time));
 	}
 
-	CUSIG_API int transform_path_cuda_double(const double* const data_in, double* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
+	CUSIG_API int transform_path_cuda_d(const double* const data_in, double* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
 		SAFE_CALL(transform_path_<double>(data_in, data_out, 1, dimension, length, time_aug, lead_lag, end_time));
 	}
 
-	CUSIG_API int transform_path_cuda_int32(const int32_t* const data_in, double* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
-		SAFE_CALL(transform_path_<int32_t>(data_in, data_out, 1, dimension, length, time_aug, lead_lag, end_time));
-	}
-
-	CUSIG_API int transform_path_cuda_int64(const int64_t* const data_in, double* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
-		SAFE_CALL(transform_path_<int64_t>(data_in, data_out, 1, dimension, length, time_aug, lead_lag, end_time));
-	}
-
-	CUSIG_API int batch_transform_path_cuda_float(const float* const data_in, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
+	CUSIG_API int batch_transform_path_cuda_f(const float* const data_in, float* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const float end_time) noexcept {
 		SAFE_CALL(transform_path_<float>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
 	}
 
-	CUSIG_API int batch_transform_path_cuda_double(const double* const data_in, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
+	CUSIG_API int batch_transform_path_cuda_d(const double* const data_in, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
 		SAFE_CALL(transform_path_<double>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
 	}
 
-	CUSIG_API int batch_transform_path_cuda_int32(const int32_t* const data_in, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
-		SAFE_CALL(transform_path_<int32_t>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
+	CUSIG_API int transform_path_backprop_cuda_f(const float* const derivs, float* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const float end_time) noexcept {
+		SAFE_CALL(transform_path_backprop_<float>(derivs, data_out, 1, dimension, length, time_aug, lead_lag, end_time));
 	}
 
-	CUSIG_API int batch_transform_path_cuda_int64(const int64_t* const data_in, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
-		SAFE_CALL(transform_path_<int64_t>(data_in, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
+	CUSIG_API int transform_path_backprop_cuda_d(const double* const derivs, double* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
+		SAFE_CALL(transform_path_backprop_<double>(derivs, data_out, 1, dimension, length, time_aug, lead_lag, end_time));
 	}
 
-	CUSIG_API int transform_path_backprop_cuda(const double* const derivs, double* const data_out, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
-		SAFE_CALL(transform_path_backprop_(derivs, data_out, 1, dimension, length, time_aug, lead_lag, end_time));
+	CUSIG_API int batch_transform_path_backprop_cuda_f(const float* const derivs, float* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const float end_time) noexcept {
+		SAFE_CALL(transform_path_backprop_<float>(derivs, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
 	}
 
-	CUSIG_API int batch_transform_path_backprop_cuda(const double* const derivs, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
-		SAFE_CALL(transform_path_backprop_(derivs, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
+	CUSIG_API int batch_transform_path_backprop_cuda_d(const double* const derivs, double* const data_out, const uint64_t batch_size, const uint64_t dimension, const uint64_t length, const bool time_aug, const bool lead_lag, const double end_time) noexcept {
+		SAFE_CALL(transform_path_backprop_<double>(derivs, data_out, batch_size, dimension, length, time_aug, lead_lag, end_time));
 	}
 }

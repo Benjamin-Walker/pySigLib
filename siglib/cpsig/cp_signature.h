@@ -26,43 +26,43 @@
 #endif
 
 
-template<typename T>
+template<std::floating_point T>
 FORCE_INLINE void linear_signature_(
 	const Point<T>& start_pt,
 	const Point<T>& end_pt,
-	double* out,
+	T* out,
 	uint64_t dimension,
 	uint64_t degree,
 	uint64_t* level_index
 )
 {
 	//Computes the signature of a linear segment joining start_pt and end_pt
-	out[0] = 1.;
+	out[0] = static_cast<T>(1.);
 
 	for (uint64_t i = 0; i < dimension; ++i)
 		out[i + 1] = end_pt[i] - start_pt[i];
 	
-	double one_over_level;
-	double left_over_level;
+	T one_over_level;
+	T left_over_level;
 
 	for (uint64_t level = 2; level <= degree; ++level) {
-		one_over_level = 1. / static_cast<double>(level);
-		double* result_ptr = out + level_index[level];
-		const double* left_ptr_upper_bound = out + level_index[level];
+		one_over_level = static_cast<T>(1.) / level;
+		T* result_ptr = out + level_index[level];
+		const T* left_ptr_upper_bound = out + level_index[level];
 
-		for (double* left_ptr = out + level_index[level - 1]; left_ptr != left_ptr_upper_bound; ++left_ptr) {
+		for (T* left_ptr = out + level_index[level - 1]; left_ptr != left_ptr_upper_bound; ++left_ptr) {
 			left_over_level = (*left_ptr) * one_over_level;
-			for (double* right_ptr = out + 1; right_ptr != out + dimension + 1; ++right_ptr) {
+			for (T* right_ptr = out + 1; right_ptr != out + dimension + 1; ++right_ptr) {
 				*(result_ptr++) = left_over_level * (*right_ptr);
 			}
 		}
 	}
 }
 
-template<typename T>
+template<std::floating_point T>
 void signature_naive_(
 	const Path<T>& path,
-	double* out,
+	T* out,
 	uint64_t degree
 )
 {
@@ -86,8 +86,8 @@ void signature_naive_(
 	++prev_pt;
 	++next_pt;
 
-	auto linear_signature_uptr = std::make_unique<double[]>(::sig_length(dimension, degree));
-	double* linear_signature = linear_signature_uptr.get();
+	auto linear_signature_uptr = std::make_unique<T[]>(::sig_length(dimension, degree));
+	T* linear_signature = linear_signature_uptr.get();
 
 	Point<T> last_pt(path.end());
 
@@ -99,10 +99,10 @@ void signature_naive_(
 	}
 }
 
-template<typename T>
+template<std::floating_point T>
 FORCE_INLINE void signature_horner_(
 	const Path<T>& path,
-	double* out,
+	T* out,
 	uint64_t degree,
 	uint64_t dimension // path.dimension()
 )
@@ -125,11 +125,11 @@ FORCE_INLINE void signature_horner_(
 	++prev_pt;
 	++next_pt;
 
-	auto horner_step_uptr = std::make_unique<double[]>(level_index[degree + 1] - level_index[degree]);
-	double* horner_step = horner_step_uptr.get();
+	auto horner_step_uptr = std::make_unique<T[]>(level_index[degree + 1] - level_index[degree]);
+	T* horner_step = horner_step_uptr.get();
 
-	auto increments_uptr = std::make_unique<double[]>(dimension);
-	double* increments = increments_uptr.get();
+	auto increments_uptr = std::make_unique<T[]>(dimension);
+	T* increments = increments_uptr.get();
 
 	Point<T> last_pt(path.end());
 
@@ -139,7 +139,7 @@ FORCE_INLINE void signature_horner_(
 
 		for (int64_t target_level = static_cast<int64_t>(degree); target_level > 1LL; --target_level) {
 
-			double one_over_level = 1. / static_cast<double>(target_level);
+			T one_over_level = static_cast<T>(1.) / target_level;
 
 			//left_level = 0
 			//assign z / target_level to horner_step
@@ -151,32 +151,32 @@ FORCE_INLINE void signature_horner_(
 				++left_level, --right_level) { //for each, add current left_level and times by z / right_level
 
 				const uint64_t left_level_size = level_index[left_level + 1] - level_index[left_level];
-				one_over_level = 1. / static_cast<double>(right_level);
+				one_over_level = static_cast<T>(1.) / right_level;
 
 				//Horner stuff
 #ifdef VEC
 				//Add and multiply
-				double left_over_level;
-				double* out_ptr = out + level_index[left_level + 1];
-				double* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1] - dimension;
-				for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
+				T left_over_level;
+				T* out_ptr = out + level_index[left_level + 1];
+				T* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1] - dimension;
+				for (T* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
 					left_over_level = (*left_ptr + *(--out_ptr)) * one_over_level;
 					vec_mult_assign(result_ptr, increments, left_over_level, dimension);
 				}
 #else
 				//Horner stuff
 				//Add
-				double* left_ptr_1 = out + level_index[left_level];
+				T* left_ptr_1 = out + level_index[left_level];
 				for (uint64_t i = 0; i < left_level_size; ++i) {
 					horner_step[i] += *(left_ptr_1++);
 				}
 
 				//Multiply
-				double left_over_level;
-				double* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1];
-				for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr) {
+				T left_over_level;
+				T* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1];
+				for (T* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr) {
 					left_over_level = (*left_ptr) * one_over_level;
-					for (double* right_ptr = increments + dimension - 1; right_ptr != increments - 1; --right_ptr) {
+					for (T* right_ptr = increments + dimension - 1; right_ptr != increments - 1; --right_ptr) {
 						*(--result_ptr) = left_over_level * (*right_ptr);
 					}
 				}
@@ -190,23 +190,23 @@ FORCE_INLINE void signature_horner_(
 			//Horner stuff
 #ifdef VEC
 			//Add, Multiply and add, writing straight into out
-			double* out_ptr = out + level_index[target_level];
-			double* result_ptr = out + level_index[target_level + 1] - dimension;
-			for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
-				const double scalar = *left_ptr + *(--out_ptr);
+			T* out_ptr = out + level_index[target_level];
+			T* result_ptr = out + level_index[target_level + 1] - dimension;
+			for (T* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
+				const T scalar = *left_ptr + *(--out_ptr);
 				vec_mult_add(result_ptr, increments, scalar, dimension);
 			}
 #else
 			//Add
-			double* left_ptr_1 = out + level_index[target_level - 1];
+			T* left_ptr_1 = out + level_index[target_level - 1];
 			for (uint64_t i = 0; i < left_level_size; ++i) {
 				horner_step[i] += *(left_ptr_1++);
 			}
 
 			//Multiply and add, writing straight into out
-			double* result_ptr = out + level_index[target_level + 1];
-			for (double* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr) {
-				for (double* right_ptr = increments + dimension - 1; right_ptr != increments - 1; --right_ptr) {
+			T* result_ptr = out + level_index[target_level + 1];
+			for (T* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr) {
+				for (T* right_ptr = increments + dimension - 1; right_ptr != increments - 1; --right_ptr) {
 					*(--result_ptr) += (*left_ptr) * (*right_ptr); //no one_over_level here, as right_level = 1
 				}
 			}
@@ -218,19 +218,19 @@ FORCE_INLINE void signature_horner_(
 	}
 }
 
-template<typename T, uint64_t dimension>
+template<std::floating_point T, uint64_t dimension>
 void signature_horner_template_(
 	const Path<T>& path,
-	double* out,
+	T* out,
 	uint64_t degree
 ) {
 	signature_horner_(path, out, degree, dimension);
 }
 
-template<typename T>
+template<std::floating_point T>
 void call_signature_horner_(
 	const Path<T>& path,
-	double* out,
+	T* out,
 	uint64_t degree
 ) {
 	const uint64_t dimension = path.dimension();
@@ -260,25 +260,102 @@ void call_signature_horner_(
 	}
 }
 
+template<std::floating_point T>
 void signature_horner_step_(
-	double* sig,
-	const double* increments,
+	T* sig,
+	const T* increments,
 	uint64_t dimension,
 	uint64_t degree,
 	const uint64_t* level_index,
-	double* horner_step
-);
+	T* horner_step
+)
+{
+	//Combines sig with the signature of a linear path given by increments using horner's algorithm
 
-template<typename T>
+	for (int64_t target_level = static_cast<int64_t>(degree); target_level > 1; --target_level) {
+
+		T one_over_level = static_cast<T>(1.) / target_level;
+
+		//left_level = 0
+		//assign z / target_level to horner_step
+		for (uint64_t i = 0; i < dimension; ++i)
+			horner_step[i] = increments[i] * one_over_level;
+
+		for (int64_t left_level = 1, right_level = target_level - 1;
+			left_level < target_level - 1;
+			++left_level, --right_level) { //for each, add current left_level and times by z / right_level
+
+			const uint64_t left_level_size = level_index[left_level + 1] - level_index[left_level];
+			one_over_level = static_cast<T>(1. / right_level);
+
+			//Horner stuff
+			//Add
+			T* left_ptr_1 = sig + level_index[left_level];
+			for (uint64_t i = 0; i < left_level_size; ++i) {
+				horner_step[i] += *(left_ptr_1++);
+			}
+
+			//Multiply
+#ifdef VEC
+			T left_over_level;
+			T* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1] - dimension;
+			for (T* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
+				left_over_level = (*left_ptr) * one_over_level;
+				vec_mult_assign(result_ptr, increments, left_over_level, dimension);
+			}
+#else
+			T left_over_level;
+			T* result_ptr = horner_step + level_index[left_level + 2] - level_index[left_level + 1];
+			for (T* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr) {
+				left_over_level = (*left_ptr) * one_over_level;
+				for (const T* right_ptr = increments + dimension - 1; right_ptr != increments - 1; --right_ptr) {
+					*(--result_ptr) = left_over_level * (*right_ptr);
+				}
+			}
+#endif
+		}
+
+		//======================= Do last iteration (left_level = target_level - 1) separately for speed, and add result straight into out
+
+		const uint64_t left_level_size = level_index[target_level] - level_index[target_level - 1];
+
+		//Horner stuff
+		//Add
+		T* left_ptr_1 = sig + level_index[target_level - 1];
+		for (uint64_t i = 0; i < left_level_size; ++i) {
+			horner_step[i] += *(left_ptr_1++);
+		}
+
+		//Multiply and add, writing straight into out
+#ifdef VEC
+		T* result_ptr = sig + level_index[target_level + 1] - dimension;
+		for (T* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr, result_ptr -= dimension) {
+			vec_mult_add(result_ptr, increments, *left_ptr, dimension);
+		}
+#else
+		T* result_ptr = sig + level_index[target_level + 1];
+		for (T* left_ptr = horner_step + left_level_size - 1; left_ptr != horner_step - 1; --left_ptr) {
+			for (const T* right_ptr = increments + dimension - 1; right_ptr != increments - 1; --right_ptr) {
+				*(--result_ptr) += (*left_ptr) * (*right_ptr); //no one_over_level here, as right_level = 1
+			}
+		}
+#endif
+	}
+	//Update target_level == 1
+	for (uint64_t i = 0; i < dimension; ++i)
+		sig[i + 1] += increments[i];
+}
+
+template<std::floating_point T>
 void signature_(
 	const T* path,
-	double* out,
+	T* out,
 	uint64_t dimension,
 	uint64_t length,
 	uint64_t degree,
 	bool time_aug = false,
 	bool lead_lag = false,
-	double end_time = 1.,
+	T end_time = 1.,
 	bool horner = true
 )
 {
@@ -287,16 +364,16 @@ void signature_(
 	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time); //Work with path_obj to capture time_aug, lead_lag transformations
 
 	if (path_obj.length() <= 1) {
-		out[0] = 1.;
+		out[0] = static_cast<T>(1.);
 		uint64_t result_length = ::sig_length(path_obj.dimension(), degree);
-		std::fill(out + 1, out + result_length, 0.);
+		std::fill(out + 1, out + result_length, static_cast<T>(0.));
 		return;
 	}
-	if (degree == 0) { out[0] = 1.; return; }
+	if (degree == 0) { out[0] = static_cast<T>(1.); return; }
 	if (degree == 1) {
 		Point<T> first_pt = path_obj.begin();
 		Point<T> last_pt = --path_obj.end();
-		out[0] = 1.;
+		out[0] = static_cast<T>(1.);
 		uint64_t dimension_ = path_obj.dimension();
 		for (uint64_t i = 0; i < dimension_; ++i)
 			out[i + 1] = last_pt[i] - first_pt[i];
@@ -309,17 +386,17 @@ void signature_(
 		signature_naive_(path_obj, out, degree);
 }
 
-template<typename T>
+template<std::floating_point T>
 void batch_signature_(
 	const T* path, 
-	double* out, 
+	T* out, 
 	uint64_t batch_size,
 	uint64_t dimension,
 	uint64_t length, 
 	uint64_t degree, 
 	bool time_aug = false,
 	bool lead_lag = false,
-	double end_time = 1.,
+	T end_time = 1.,
 	bool horner = true,
 	int n_jobs = 1
 )
@@ -332,9 +409,9 @@ void batch_signature_(
 	const uint64_t result_length = ::sig_length(dummy_path_obj.dimension(), degree);
 
 	if (dummy_path_obj.length() <= 1) {
-		double* const out_end = out + result_length * batch_size;
-		std::fill(out, out_end, 0.);
-		for (double* out_ptr = out;
+		T* const out_end = out + result_length * batch_size;
+		std::fill(out, out_end, static_cast<T>(0.));
+		for (T* out_ptr = out;
 			out_ptr < out_end;
 			out_ptr += result_length) {
 			out_ptr[0] = 1.;
@@ -342,17 +419,17 @@ void batch_signature_(
 		return;
 	}
 	if (degree == 0) { 
-		std::fill(out, out + batch_size, 1.);
+		std::fill(out, out + batch_size, static_cast<T>(1.));
 		return; }
 
 	//General case and degree = 1 case
 	const uint64_t flat_path_length = dimension * length;
 	const T* const data_end = path + flat_path_length * batch_size;
 
-	std::function<void(const T*, double*)> sig_func;
+	std::function<void(const T*, T*)> sig_func;
 
 	if (degree == 1) {
-		sig_func = [&](const T* path_ptr, double* out_ptr) {
+		sig_func = [&](const T* path_ptr, T* out_ptr) {
 			Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag, end_time);
 			Point<T> first_pt = path_obj.begin();
 			Point<T> last_pt = --path_obj.end();
@@ -363,13 +440,13 @@ void batch_signature_(
 	}
 	else {
 		if (horner) {
-			sig_func = [&](const T* path_ptr, double* out_ptr) {
+			sig_func = [&](const T* path_ptr, T* out_ptr) {
 				Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag, end_time);
 				call_signature_horner_<T>(path_obj, out_ptr, degree);
 				};
 		}
 		else {
-			sig_func = [&](const T* path_ptr, double* out_ptr) {
+			sig_func = [&](const T* path_ptr, T* out_ptr) {
 				Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag, end_time);
 				signature_naive_<T>(path_obj, out_ptr, degree);
 				};
@@ -377,7 +454,7 @@ void batch_signature_(
 	}
 
 	const T* path_ptr;
-	double* out_ptr;
+	T* out_ptr;
 
 	if (n_jobs != 1) {
 		multi_threaded_batch(sig_func, path, out, batch_size, flat_path_length, result_length, n_jobs);
@@ -397,18 +474,18 @@ void batch_signature_(
 // backpropagation
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T>
+template<std::floating_point T>
 void sig_backprop_(
 	const T* path,
-	double* out, 
-	const double* sig_derivs, 
-	const double* sig, 
+	T* out, 
+	const T* sig_derivs, 
+	const T* sig, 
 	uint64_t dimension,
 	uint64_t length,
 	uint64_t degree,
 	bool time_aug = false,
 	bool lead_lag = false,
-	double end_time = 1.
+	T end_time = 1.
 ) {
 	
 	if (dimension == 0) { throw std::invalid_argument("sig_backprop received path of dimension 0"); }
@@ -417,40 +494,40 @@ void sig_backprop_(
 
 	if (path_obj.length() <= 1 || degree == 0) {
 		uint64_t result_length = dimension * length;
-		std::fill(out, out + result_length, 0.);
+		std::fill(out, out + result_length, static_cast<T>(0.));
 		return;
 	}
 
-	std::fill(out, out + length * dimension, 0.);
+	std::fill(out, out + length * dimension, static_cast<T>(0.));
 	const uint64_t sig_len_ = ::sig_length(path_obj.dimension(), degree);
 
-	auto sig_derivs_copy_uptr = std::make_unique<double[]>(sig_len_);
-	double* sig_derivs_copy = sig_derivs_copy_uptr.get();
-	std::memcpy(sig_derivs_copy, sig_derivs, sig_len_ * sizeof(double));
+	auto sig_derivs_copy_uptr = std::make_unique<T[]>(sig_len_);
+	T* sig_derivs_copy = sig_derivs_copy_uptr.get();
+	std::memcpy(sig_derivs_copy, sig_derivs, sig_len_ * sizeof(T));
 	
-	auto sig_copy_uptr = std::make_unique<double[]>(sig_len_);
-	double* sig_copy = sig_copy_uptr.get();
-	std::memcpy(sig_copy, sig, sig_len_ * sizeof(double));
+	auto sig_copy_uptr = std::make_unique<T[]>(sig_len_);
+	T* sig_copy = sig_copy_uptr.get();
+	std::memcpy(sig_copy, sig, sig_len_ * sizeof(T));
 	sig_backprop_inplace_(path_obj, out, sig_derivs_copy, sig_copy, degree, sig_len_);
 }
 
-template<typename T>
+template<std::floating_point T>
 void batch_sig_backprop_(
 	const T* path, 
-	double* out,
-	const double* sig_derivs, 
-	const double* sig, 
+	T* out,
+	const T* sig_derivs, 
+	const T* sig, 
 	uint64_t batch_size,
 	uint64_t dimension, 
 	uint64_t length, 
 	uint64_t degree, 
 	bool time_aug = false,
 	bool lead_lag = false,
-	double end_time = 1.,
+	T end_time = 1.,
 	int n_jobs = 1
 )
 {
-	std::fill(out, out + length * dimension * batch_size, 0.);
+	std::fill(out, out + length * dimension * batch_size, static_cast<T>(0.));
 	//Deal with trivial cases
 	if (dimension == 0) { throw std::invalid_argument("sig_backprop received path of dimension 0"); }
 
@@ -460,33 +537,33 @@ void batch_sig_backprop_(
 	const uint64_t sig_len_ = ::sig_length(dummy_path_obj.dimension(), degree);
 
 	if (dummy_path_obj.length() <= 1 || degree == 0) {
-		double* const out_end = out + flat_path_length * batch_size;
-		std::fill(out, out_end, 0.);
+		T* const out_end = out + flat_path_length * batch_size;
+		std::fill(out, out_end, static_cast<T>(0.));
 		return;
 	}
 
 	//General case
 	const T* const data_end = path + flat_path_length * batch_size;
 
-	auto sig_derivs_copy_uptr = std::make_unique<double[]>(sig_len_ * batch_size);
-	double* sig_derivs_copy = sig_derivs_copy_uptr.get();
-	std::memcpy(sig_derivs_copy, sig_derivs, sig_len_ * batch_size * sizeof(double));
+	auto sig_derivs_copy_uptr = std::make_unique<T[]>(sig_len_ * batch_size);
+	T* sig_derivs_copy = sig_derivs_copy_uptr.get();
+	std::memcpy(sig_derivs_copy, sig_derivs, sig_len_ * batch_size * sizeof(T));
 
-	auto sig_copy_uptr = std::make_unique<double[]>(sig_len_ * batch_size);
-	double* sig_copy = sig_copy_uptr.get();
-	std::memcpy(sig_copy, sig, sig_len_ * batch_size * sizeof(double));
+	auto sig_copy_uptr = std::make_unique<T[]>(sig_len_ * batch_size);
+	T* sig_copy = sig_copy_uptr.get();
+	std::memcpy(sig_copy, sig, sig_len_ * batch_size * sizeof(T));
 
-	std::function<void(const T*, double*, double*, double*)> sig_backprop_func;
+	std::function<void(const T*, T*, T*, T*)> sig_backprop_func;
 
-	sig_backprop_func = [&](const T* path_ptr, double* sig_derivs_ptr, double* sig_ptr, double* out_ptr) {
+	sig_backprop_func = [&](const T* path_ptr, T* sig_derivs_ptr, T* sig_ptr, T* out_ptr) {
 		Path<T> path_obj(path_ptr, dimension, length, time_aug, lead_lag, end_time);
 		sig_backprop_inplace_<T>(path_obj, out_ptr, sig_derivs_ptr, sig_ptr, degree, sig_len_);
 	};
 
 	const T* path_ptr;
-	double* sig_derivs_ptr;
-	double* sig_ptr;
-	double* out_ptr;
+	T* sig_derivs_ptr;
+	T* sig_ptr;
+	T* out_ptr;
 
 	if (n_jobs != 1) {
 		multi_threaded_batch_3(
@@ -514,12 +591,12 @@ void batch_sig_backprop_(
 	return;
 }
 
-template<typename T>
+template<std::floating_point T>
 void sig_backprop_inplace_(
 	const Path<T>& path, 
-	double* out, 
-	double* sig_derivs,
-	double* sig, 
+	T* out, 
+	T* sig_derivs,
+	T* sig,
 	uint64_t degree, 
 	uint64_t sig_len
 ) {
@@ -529,14 +606,14 @@ void sig_backprop_inplace_(
 
 	const uint64_t data_length = path.data_length();
 
-	auto local_derivs_uptr = std::make_unique<double[]>(sig_len);
-	double* local_derivs = local_derivs_uptr.get();
+	auto local_derivs_uptr = std::make_unique<T[]>(sig_len);
+	T* local_derivs = local_derivs_uptr.get();
 
-	auto linear_signature_uptr = std::make_unique<double[]>(sig_len);
-	double* linear_signature = linear_signature_uptr.get();
+	auto linear_signature_uptr = std::make_unique<T[]>(sig_len);
+	T* linear_signature = linear_signature_uptr.get();
 
-	auto increments_uptr = std::make_unique<double[]>(dimension);
-	double* increments = increments_uptr.get();
+	auto increments_uptr = std::make_unique<T[]>(dimension);
+	T* increments = increments_uptr.get();
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
@@ -545,8 +622,8 @@ void sig_backprop_inplace_(
 	for (uint64_t i = 1; i <= degree + 1; i++)
 		level_index[i] = level_index[i - 1] * dimension + 1;
 
-	auto horner_step_uptr = std::make_unique<double[]>(level_index[degree + 1] - level_index[degree]);
-	double* horner_step = horner_step_uptr.get();
+	auto horner_step_uptr = std::make_unique<T[]>(level_index[degree + 1] - level_index[degree]);
+	T* horner_step = horner_step_uptr.get();
 
 	Point<T> prev_pt(path.end());
 	Point<T> next_pt(path.end());
@@ -557,8 +634,8 @@ void sig_backprop_inplace_(
 	Point<T> first_pt(path.begin());
 
 	if (path.lead_lag()) {
-		double* pos = out + (data_length - 1) * data_dimension;
-		double* neg = pos - data_dimension;
+		T* pos = out + (data_length - 1) * data_dimension;
+		T* neg = pos - data_dimension;
 		bool parity = false;
 
 		for (; next_pt != first_pt; --prev_pt, --next_pt, parity = !parity) {
@@ -575,7 +652,7 @@ void sig_backprop_inplace_(
 
 			//TODO: can we exploit the structure and avoid computing derivatives which are a priori zero?
 
-			double* s = parity ? local_derivs + 1 + data_dimension : local_derivs + 1;
+			T* s = parity ? local_derivs + 1 + data_dimension : local_derivs + 1;
 			for (uint64_t d = 0; d < data_dimension; ++d) {
 				pos[d] += s[d];
 				neg[d] -= s[d];
@@ -587,7 +664,7 @@ void sig_backprop_inplace_(
 		}
 	}
 	else {
-		for (double* pos = out + (path.length() - 1) * data_dimension; next_pt != first_pt; --prev_pt, --next_pt, pos -= data_dimension) {
+		for (T* pos = out + (path.length() - 1) * data_dimension; next_pt != first_pt; --prev_pt, --next_pt, pos -= data_dimension) {
 
 			for (uint64_t i = 0; i < dimension; ++i)
 				increments[i] = prev_pt[i] - next_pt[i];
@@ -598,9 +675,9 @@ void sig_backprop_inplace_(
 			uncombine_sig_deriv(sig, linear_signature, sig_derivs, local_derivs, dimension, degree, level_index);
 			linear_sig_deriv_to_increment_deriv(linear_signature, local_derivs, dimension, degree, level_index);
 
-			//double* pos = out + i * dimension;
-			double* neg = pos - data_dimension;
-			double* s = local_derivs + 1;
+			//T* pos = out + i * dimension;
+			T* neg = pos - data_dimension;
+			T* s = local_derivs + 1;
 			for (uint64_t d = 0; d < data_dimension; ++d) {
 				pos[d] += s[d];
 				neg[d] -= s[d];

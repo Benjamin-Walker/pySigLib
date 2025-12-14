@@ -34,6 +34,7 @@
 #include <utility>
 #include <thread>
 #include <functional>
+#include <concepts>
 
 #ifdef VEC
 #ifndef __APPLE__

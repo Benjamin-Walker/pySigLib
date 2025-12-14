@@ -14,7 +14,7 @@
 # =========================================================================
 
 from typing import Union, Tuple, Optional
-from ctypes import c_double, POINTER, cast
+from ctypes import POINTER, cast
 
 import numpy as np
 import torch
@@ -22,16 +22,17 @@ import torch
 from .transform_path import transform_path
 from .transform_path_backprop import transform_path_backprop
 from .sig_kernel import sig_kernel
-from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
+from .load_siglib import BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
+from .dtypes import CPSIG_BATCH_SIG_KERNEL_BACKPROP, DTYPES, CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA
 from .data_handlers import DoublePathInputHandler, ScalarInputHandler, GridOutputHandler, PathInputHandler
 from .static_kernels import StaticKernel, LinearKernel, Context
 
 def sig_kernel_backprop_(data, derivs_data, result, gram, k_grid_data, dyadic_order_1, dyadic_order_2, n_jobs):
 
-    err_code = CPSIG.batch_sig_kernel_backprop(
-        cast(gram.data_ptr(), POINTER(c_double)),
+    err_code = CPSIG_BATCH_SIG_KERNEL_BACKPROP[data.dtype](
+        cast(gram.data_ptr(), POINTER(DTYPES[str(gram.dtype)[6:]])),
         result.data_ptr,
         derivs_data.data_ptr,
         k_grid_data.data_ptr,
@@ -48,8 +49,8 @@ def sig_kernel_backprop_(data, derivs_data, result, gram, k_grid_data, dyadic_or
         raise Exception("Error in pysiglib.sig_kernel_backprop: " + err_msg(err_code))#
 
 def sig_kernel_backprop_cuda_(data, derivs_data, result, gram, k_grid_data, dyadic_order_1, dyadic_order_2):
-    err_code = CUSIG.batch_sig_kernel_backprop_cuda(
-        cast(gram.data_ptr(), POINTER(c_double)),
+    err_code = CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA[data.dtype](
+        cast(gram.data_ptr(), POINTER(DTYPES[str(gram.dtype)[6:]])),
         result.data_ptr,
         derivs_data.data_ptr,
         k_grid_data.data_ptr,
@@ -183,7 +184,7 @@ def sig_kernel_backprop(
 
     data = DoublePathInputHandler(path1, path2, False, False, end_time, "path1", "path2")
 
-    derivs = torch.as_tensor(derivs, dtype=torch.double)
+    derivs = torch.as_tensor(derivs)
     derivs_data = ScalarInputHandler(derivs, data.is_batch, "derivs")
 
     if not (derivs_data.type_ == data.type_ and derivs_data.device == data.device):
@@ -191,8 +192,8 @@ def sig_kernel_backprop(
     if data.batch_size != derivs_data.batch_size:
         raise ValueError("batch size for derivs does not match batch size of paths")
 
-    torch_path1 = torch.as_tensor(data.path1, dtype = torch.double)  # Avoids data copy
-    torch_path2 = torch.as_tensor(data.path2, dtype = torch.double)
+    torch_path1 = torch.as_tensor(data.path1)  # Avoids data copy
+    torch_path2 = torch.as_tensor(data.path2)
 
     if k_grid is None:
         k_grid = sig_kernel(torch.as_tensor(path1), torch.as_tensor(path2), dyadic_order, static_kernel, False, False, end_time, n_jobs, True)
@@ -324,9 +325,9 @@ def sig_kernel_gram_backprop(
     if max_batch == 0 or max_batch < -1:
         raise ValueError("max_batch must be a positive integer or -1")
 
-    data = DoublePathInputHandler(path1, path2, time_aug, lead_lag, end_time, "path1", "path2", True, False)
+    data = DoublePathInputHandler(path1, path2, time_aug, lead_lag, end_time, "path1", "path2", False)
 
-    derivs = torch.as_tensor(derivs, dtype=torch.double)
+    derivs = torch.as_tensor(derivs)
     # derivs_data = ScalarInputHandler(derivs, data.is_batch, "derivs")
     #
     # if not (derivs_data.type_ == data.type_ and derivs_data.device == data.device):

@@ -18,15 +18,14 @@ from typing import Union
 import numpy as np
 import torch
 
-from .param_checks import check_cpu, check_type
-from .load_siglib import CPSIG
+from .param_checks import check_type
 from .error_codes import err_msg
 from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, DoubleSigInputHandler, TripleSigInputHandler, DeviceToHost
-from .dtypes import CPSIG_SIG_BACKPROP, CPSIG_BATCH_SIG_BACKPROP
+from .dtypes import CPSIG_SIG_BACKPROP, CPSIG_BATCH_SIG_BACKPROP, CPSIG_SIG_COMBINE_BACKPROP, CPSIG_BATCH_SIG_COMBINE_BACKPROP
 from .sig_length import sig_length
 
 def sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree):
-    err_code = CPSIG.sig_combine_backprop(
+    err_code = CPSIG_SIG_COMBINE_BACKPROP[sig_data.dtype](
         sig_data.sig3_ptr,
         sig1_deriv.data_ptr,
         sig2_deriv.data_ptr,
@@ -41,7 +40,7 @@ def sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree):
     return sig1_deriv.data, sig2_deriv.data
 
 def batch_sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree, n_jobs):
-    err_code = CPSIG.batch_sig_combine_backprop(
+    err_code = CPSIG_BATCH_SIG_COMBINE_BACKPROP[sig_data.dtype](
         sig_data.sig3_ptr,
         sig1_deriv.data_ptr,
         sig2_deriv.data_ptr,

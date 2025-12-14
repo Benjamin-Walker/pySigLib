@@ -22,11 +22,14 @@ import pysiglib
 
 np.random.seed(42)
 torch.manual_seed(42)
-EPSILON = 1e-5
+
+SINGLE_EPSILON = 1e-3
+DOUBLE_EPSILON = 1e-5
 
 def check_close(a, b):
     a_ = np.array(a)
     b_ = np.array(b)
+    EPSILON = SINGLE_EPSILON if a_.dtype == np.float32 else DOUBLE_EPSILON
     assert not np.any(np.abs(a_ - b_) > EPSILON)
 
 def lead_lag(x):
@@ -75,7 +78,7 @@ def batch_time_aug_lead_lag(x):
 ## CPU
 ################################################
 
-@pytest.mark.parametrize("dtype", [torch.float64, torch.float32, torch.int64, torch.int32])
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
 def test_sig_kernel_gram_dtypes_cpu(dtype):
     batch1, batch2, len1, len2, dim = 8, 4, 10, 10, 5
     X = torch.rand(size=(batch1, len1, dim), device="cpu").to(dtype=dtype)

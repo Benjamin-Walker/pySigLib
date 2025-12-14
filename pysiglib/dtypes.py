@@ -13,7 +13,7 @@
 # limitations under the License.
 # =========================================================================
 
-from ctypes import c_float, c_double, c_int32, c_int64
+from ctypes import c_float, c_double
 import numpy as np
 import torch
 from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
@@ -23,81 +23,133 @@ from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 ######################################################
 
 DTYPES = {
-    "int32": c_int32,
-    "int64": c_int64,
     "float32": c_float,
     "float64": c_double
 }
 
 SUPPORTED_DTYPES = [
-    np.int32,
-    np.int64,
     np.float32,
     np.float64,
-    torch.int32,
-    torch.int64,
     torch.float32,
     torch.float64
 ]
 
-SUPPORTED_DTYPES_STR = "int32, int64, float or double"
+SUPPORTED_DTYPES_STR = "float or double"
 
 CPSIG_TRANSFORM_PATH = {
-    "int32": CPSIG.transform_path_int32,
-    "int64": CPSIG.transform_path_int64,
-    "float32": CPSIG.transform_path_float,
-    "float64": CPSIG.transform_path_double
+    "float32": CPSIG.transform_path_f,
+    "float64": CPSIG.transform_path_d
 }
 
 CPSIG_BATCH_TRANSFORM_PATH = {
-    "int32": CPSIG.batch_transform_path_int32,
-    "int64": CPSIG.batch_transform_path_int64,
-    "float32": CPSIG.batch_transform_path_float,
-    "float64": CPSIG.batch_transform_path_double
+    "float32": CPSIG.batch_transform_path_f,
+    "float64": CPSIG.batch_transform_path_d
+}
+
+CPSIG_TRANSFORM_PATH_BACKPROP = {
+    "float32": CPSIG.transform_path_backprop_f,
+    "float64": CPSIG.transform_path_backprop_d
+}
+
+CPSIG_BATCH_TRANSFORM_PATH_BACKPROP = {
+    "float32": CPSIG.batch_transform_path_backprop_f,
+    "float64": CPSIG.batch_transform_path_backprop_d
 }
 
 CUSIG_TRANSFORM_PATH_CUDA = None
 CUSIG_BATCH_TRANSFORM_PATH_CUDA = None
+CUSIG_TRANSFORM_PATH_BACKPROP_CUDA = None
+CUSIG_BATCH_TRANSFORM_PATH_BACKPROP_CUDA = None
+CUSIG_BATCH_SIG_KERNEL_CUDA = None
+CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA = None
 
 if BUILT_WITH_CUDA:
     CUSIG_TRANSFORM_PATH_CUDA = {
-        "int32": CUSIG.transform_path_cuda_int32,
-        "int64": CUSIG.transform_path_cuda_int64,
-        "float32": CUSIG.transform_path_cuda_float,
-        "float64": CUSIG.transform_path_cuda_double
+        "float32": CUSIG.transform_path_cuda_f,
+        "float64": CUSIG.transform_path_cuda_d
     }
 
     CUSIG_BATCH_TRANSFORM_PATH_CUDA = {
-        "int32": CUSIG.batch_transform_path_cuda_int32,
-        "int64": CUSIG.batch_transform_path_cuda_int64,
-        "float32": CUSIG.batch_transform_path_cuda_float,
-        "float64": CUSIG.batch_transform_path_cuda_double
+        "float32": CUSIG.batch_transform_path_cuda_f,
+        "float64": CUSIG.batch_transform_path_cuda_d
+    }
+
+    CUSIG_TRANSFORM_PATH_BACKPROP_CUDA = {
+        "float32": CUSIG.transform_path_backprop_cuda_f,
+        "float64": CUSIG.transform_path_backprop_cuda_d
+    }
+
+    CUSIG_BATCH_TRANSFORM_PATH_BACKPROP_CUDA = {
+        "float32": CUSIG.batch_transform_path_backprop_cuda_f,
+        "float64": CUSIG.batch_transform_path_backprop_cuda_d
+    }
+
+    CUSIG_BATCH_SIG_KERNEL_CUDA = {
+        "float32": CUSIG.batch_sig_kernel_cuda_f,
+        "float64": CUSIG.batch_sig_kernel_cuda_d
+    }
+
+    CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA = {
+        "float32": CUSIG.batch_sig_kernel_backprop_cuda_f,
+        "float64": CUSIG.batch_sig_kernel_backprop_cuda_d
     }
 
 CPSIG_SIGNATURE = {
-    "int32": CPSIG.signature_int32,
-    "int64": CPSIG.signature_int64,
-    "float32": CPSIG.signature_float,
-    "float64": CPSIG.signature_double
+    "float32": CPSIG.signature_f,
+    "float64": CPSIG.signature_d
 }
 
 CPSIG_BATCH_SIGNATURE = {
-    "int32": CPSIG.batch_signature_int32,
-    "int64": CPSIG.batch_signature_int64,
-    "float32": CPSIG.batch_signature_float,
-    "float64": CPSIG.batch_signature_double
+    "float32": CPSIG.batch_signature_f,
+    "float64": CPSIG.batch_signature_d
 }
 
 CPSIG_SIG_BACKPROP = {
-    "int32": CPSIG.sig_backprop_int32,
-    "int64": CPSIG.sig_backprop_int64,
-    "float32": CPSIG.sig_backprop_float,
-    "float64": CPSIG.sig_backprop_double
+    "float32": CPSIG.sig_backprop_f,
+    "float64": CPSIG.sig_backprop_d
 }
 
 CPSIG_BATCH_SIG_BACKPROP = {
-    "int32": CPSIG.batch_sig_backprop_int32,
-    "int64": CPSIG.batch_sig_backprop_int64,
-    "float32": CPSIG.batch_sig_backprop_float,
-    "float64": CPSIG.batch_sig_backprop_double
+    "float32": CPSIG.batch_sig_backprop_f,
+    "float64": CPSIG.batch_sig_backprop_d
+}
+
+CPSIG_SIG_COMBINE = {
+    "float32": CPSIG.sig_combine_f,
+    "float64": CPSIG.sig_combine_d
+}
+
+CPSIG_BATCH_SIG_COMBINE = {
+    "float32": CPSIG.batch_sig_combine_f,
+    "float64": CPSIG.batch_sig_combine_d
+}
+
+CPSIG_SIG_COMBINE_BACKPROP = {
+    "float32": CPSIG.sig_combine_backprop_f,
+    "float64": CPSIG.sig_combine_backprop_d
+}
+
+CPSIG_BATCH_SIG_COMBINE_BACKPROP = {
+    "float32": CPSIG.batch_sig_combine_backprop_f,
+    "float64": CPSIG.batch_sig_combine_backprop_d
+}
+
+CPSIG_SIG_KERNEL = {
+    "float32": CPSIG.sig_kernel_f,
+    "float64": CPSIG.sig_kernel_d
+}
+
+CPSIG_BATCH_SIG_KERNEL = {
+    "float32": CPSIG.batch_sig_kernel_f,
+    "float64": CPSIG.batch_sig_kernel_d
+}
+
+CPSIG_SIG_KERNEL_BACKPROP = {
+    "float32": CPSIG.sig_kernel_backprop_f,
+    "float64": CPSIG.sig_kernel_backprop_d
+}
+
+CPSIG_BATCH_SIG_KERNEL_BACKPROP = {
+    "float32": CPSIG.batch_sig_kernel_backprop_f,
+    "float64": CPSIG.batch_sig_kernel_backprop_d
 }
