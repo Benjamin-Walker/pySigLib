@@ -37,23 +37,23 @@ SUPPORTED_DTYPES = [
 SUPPORTED_DTYPES_STR = "float or double"
 
 CPSIG_TRANSFORM_PATH = {
-    "float32": CPSIG.transform_path_float,
-    "float64": CPSIG.transform_path_double
+    "float32": CPSIG.transform_path_f,
+    "float64": CPSIG.transform_path_d
 }
 
 CPSIG_BATCH_TRANSFORM_PATH = {
-    "float32": CPSIG.batch_transform_path_float,
-    "float64": CPSIG.batch_transform_path_double
+    "float32": CPSIG.batch_transform_path_f,
+    "float64": CPSIG.batch_transform_path_d
 }
 
 CPSIG_TRANSFORM_PATH_BACKPROP = {
-    "float32": CPSIG.transform_path_backprop_float,
-    "float64": CPSIG.transform_path_backprop_double
+    "float32": CPSIG.transform_path_backprop_f,
+    "float64": CPSIG.transform_path_backprop_d
 }
 
 CPSIG_BATCH_TRANSFORM_PATH_BACKPROP = {
-    "float32": CPSIG.batch_transform_path_backprop_float,
-    "float64": CPSIG.batch_transform_path_backprop_double
+    "float32": CPSIG.batch_transform_path_backprop_f,
+    "float64": CPSIG.batch_transform_path_backprop_d
 }
 
 CUSIG_TRANSFORM_PATH_CUDA = None
@@ -65,91 +65,91 @@ CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA = None
 
 if BUILT_WITH_CUDA:
     CUSIG_TRANSFORM_PATH_CUDA = {
-        "float32": CUSIG.transform_path_cuda_float,
-        "float64": CUSIG.transform_path_cuda_double
+        "float32": CUSIG.transform_path_cuda_f,
+        "float64": CUSIG.transform_path_cuda_d
     }
 
     CUSIG_BATCH_TRANSFORM_PATH_CUDA = {
-        "float32": CUSIG.batch_transform_path_cuda_float,
-        "float64": CUSIG.batch_transform_path_cuda_double
+        "float32": CUSIG.batch_transform_path_cuda_f,
+        "float64": CUSIG.batch_transform_path_cuda_d
     }
 
     CUSIG_TRANSFORM_PATH_BACKPROP_CUDA = {
-        "float32": CUSIG.transform_path_backprop_cuda_float,
-        "float64": CUSIG.transform_path_backprop_cuda_double
+        "float32": CUSIG.transform_path_backprop_cuda_f,
+        "float64": CUSIG.transform_path_backprop_cuda_d
     }
 
     CUSIG_BATCH_TRANSFORM_PATH_BACKPROP_CUDA = {
-        "float32": CUSIG.batch_transform_path_backprop_cuda_float,
-        "float64": CUSIG.batch_transform_path_backprop_cuda_double
+        "float32": CUSIG.batch_transform_path_backprop_cuda_f,
+        "float64": CUSIG.batch_transform_path_backprop_cuda_d
     }
 
     CUSIG_BATCH_SIG_KERNEL_CUDA = {
-        "float32": CUSIG.batch_sig_kernel_cuda_float,
-        "float64": CUSIG.batch_sig_kernel_cuda_double
+        "float32": CUSIG.batch_sig_kernel_cuda_f,
+        "float64": CUSIG.batch_sig_kernel_cuda_d
     }
 
     CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA = {
-        "float32": CUSIG.batch_sig_kernel_backprop_cuda_float,
-        "float64": CUSIG.batch_sig_kernel_backprop_cuda_double
+        "float32": CUSIG.batch_sig_kernel_backprop_cuda_f,
+        "float64": CUSIG.batch_sig_kernel_backprop_cuda_d
     }
 
 CPSIG_SIGNATURE = {
-    "float32": CPSIG.signature_float,
-    "float64": CPSIG.signature_double
+    "float32": CPSIG.signature_f,
+    "float64": CPSIG.signature_d
 }
 
 CPSIG_BATCH_SIGNATURE = {
-    "float32": CPSIG.batch_signature_float,
-    "float64": CPSIG.batch_signature_double
+    "float32": CPSIG.batch_signature_f,
+    "float64": CPSIG.batch_signature_d
 }
 
 CPSIG_SIG_BACKPROP = {
-    "float32": CPSIG.sig_backprop_float,
-    "float64": CPSIG.sig_backprop_double
+    "float32": CPSIG.sig_backprop_f,
+    "float64": CPSIG.sig_backprop_d
 }
 
 CPSIG_BATCH_SIG_BACKPROP = {
-    "float32": CPSIG.batch_sig_backprop_float,
-    "float64": CPSIG.batch_sig_backprop_double
+    "float32": CPSIG.batch_sig_backprop_f,
+    "float64": CPSIG.batch_sig_backprop_d
 }
 
 CPSIG_SIG_COMBINE = {
-    "float32": CPSIG.sig_combine_float,
-    "float64": CPSIG.sig_combine_double
+    "float32": CPSIG.sig_combine_f,
+    "float64": CPSIG.sig_combine_d
 }
 
 CPSIG_BATCH_SIG_COMBINE = {
-    "float32": CPSIG.batch_sig_combine_float,
-    "float64": CPSIG.batch_sig_combine_double
+    "float32": CPSIG.batch_sig_combine_f,
+    "float64": CPSIG.batch_sig_combine_d
 }
 
 CPSIG_SIG_COMBINE_BACKPROP = {
-    "float32": CPSIG.sig_combine_backprop_float,
-    "float64": CPSIG.sig_combine_backprop_double
+    "float32": CPSIG.sig_combine_backprop_f,
+    "float64": CPSIG.sig_combine_backprop_d
 }
 
 CPSIG_BATCH_SIG_COMBINE_BACKPROP = {
-    "float32": CPSIG.batch_sig_combine_backprop_float,
-    "float64": CPSIG.batch_sig_combine_backprop_double
+    "float32": CPSIG.batch_sig_combine_backprop_f,
+    "float64": CPSIG.batch_sig_combine_backprop_d
 }
 
 CPSIG_SIG_KERNEL = {
-    "float32": CPSIG.sig_kernel_float,
-    "float64": CPSIG.sig_kernel_double
+    "float32": CPSIG.sig_kernel_f,
+    "float64": CPSIG.sig_kernel_d
 }
 
 CPSIG_BATCH_SIG_KERNEL = {
-    "float32": CPSIG.batch_sig_kernel_float,
-    "float64": CPSIG.batch_sig_kernel_double
+    "float32": CPSIG.batch_sig_kernel_f,
+    "float64": CPSIG.batch_sig_kernel_d
 }
 
 CPSIG_SIG_KERNEL_BACKPROP = {
-    "float32": CPSIG.sig_kernel_backprop_float,
-    "float64": CPSIG.sig_kernel_backprop_double
+    "float32": CPSIG.sig_kernel_backprop_f,
+    "float64": CPSIG.sig_kernel_backprop_d
 }
 
 CPSIG_BATCH_SIG_KERNEL_BACKPROP = {
-    "float32": CPSIG.batch_sig_kernel_backprop_float,
-    "float64": CPSIG.batch_sig_kernel_backprop_double
+    "float32": CPSIG.batch_sig_kernel_backprop_f,
+    "float64": CPSIG.batch_sig_kernel_backprop_d
 }

@@ -44,53 +44,53 @@ void get_cpsig_fn_ptrs();
 void get_cusig_fn_ptrs();
 
 using sig_length_fn = uint64_t(CDECL_*)(uint64_t, uint64_t);
-using signature_double_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, bool, bool, double, bool);
-using batch_signature_double_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, double, bool, int);
+using signature_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, bool, bool, double, bool);
+using batch_signature_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, double, bool, int);
 
-using signature_float_fn = void(CDECL_*)(const float*, float*, uint64_t, uint64_t, uint64_t, bool, bool, float, bool);
-using batch_signature_float_fn = void(CDECL_*)(const float*, float*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, float, bool, int);
+using signature_f_fn = void(CDECL_*)(const float*, float*, uint64_t, uint64_t, uint64_t, bool, bool, float, bool);
+using batch_signature_f_fn = void(CDECL_*)(const float*, float*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, float, bool, int);
 
-using sig_kernel_float_fn = void(CDECL_*)(const float*, float*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
-using batch_sig_kernel_float_fn = void(CDECL_*)(const float*, float*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, int, bool);
+using sig_kernel_f_fn = void(CDECL_*)(const float*, float*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
+using batch_sig_kernel_f_fn = void(CDECL_*)(const float*, float*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, int, bool);
 
-using sig_kernel_double_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
-using batch_sig_kernel_double_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, int, bool);
+using sig_kernel_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
+using batch_sig_kernel_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, int, bool);
 
-using sig_kernel_cuda_double_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
-using batch_sig_kernel_cuda_double_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
+using sig_kernel_cuda_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
+using batch_sig_kernel_cuda_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, bool);
 
-using batch_sig_combine_double_fn = void(CDECL_*)(const double*, const double*, double*, uint64_t, uint64_t, uint64_t, int);
-using sig_backprop_double_fn = void(CDECL_*)(const double*, double*, const double*, const double*, uint64_t, uint64_t, uint64_t, bool, bool, double);
+using batch_sig_combine_d_fn = void(CDECL_*)(const double*, const double*, double*, uint64_t, uint64_t, uint64_t, int);
+using sig_backprop_d_fn = void(CDECL_*)(const double*, double*, const double*, const double*, uint64_t, uint64_t, uint64_t, bool, bool, double);
 
-using sig_kernel_backprop_double_fn = void(CDECL_*)(const double*, double*, double, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
-using batch_sig_kernel_backprop_double_fn = void(CDECL_*)(const double*, double*, const double*, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, int);
+using sig_kernel_backprop_d_fn = void(CDECL_*)(const double*, double*, double, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+using batch_sig_kernel_backprop_d_fn = void(CDECL_*)(const double*, double*, const double*, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, int);
 
-using sig_kernel_backprop_cuda_double_fn = void(CDECL_*)(const double*, double*, double, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
-using batch_sig_kernel_backprop_cuda_double_fn = void(CDECL_*)(const double*, double*, const double*, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+using sig_kernel_backprop_cuda_d_fn = void(CDECL_*)(const double*, double*, double, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+using batch_sig_kernel_backprop_cuda_d_fn = void(CDECL_*)(const double*, double*, const double*, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
 
 extern HMODULE cpsig;
 extern HMODULE cusig;
 
 extern sig_length_fn sig_length;
-extern signature_double_fn signature_double;
-extern batch_signature_double_fn batch_signature_double;
-extern signature_float_fn signature_float;
-extern batch_signature_float_fn batch_signature_float;
-extern sig_kernel_float_fn sig_kernel_float;
-extern batch_sig_kernel_float_fn batch_sig_kernel_float;
-extern sig_kernel_double_fn sig_kernel_double;
-extern batch_sig_kernel_double_fn batch_sig_kernel_double;
-extern batch_sig_combine_double_fn batch_sig_combine;
-extern sig_backprop_double_fn sig_backprop_double;
+extern signature_d_fn signature_d;
+extern batch_signature_d_fn batch_signature_d;
+extern signature_f_fn signature_f;
+extern batch_signature_f_fn batch_signature_f;
+extern sig_kernel_f_fn sig_kernel_f;
+extern batch_sig_kernel_f_fn batch_sig_kernel_f;
+extern sig_kernel_d_fn sig_kernel_d;
+extern batch_sig_kernel_d_fn batch_sig_kernel_d;
+extern batch_sig_combine_d_fn batch_sig_combine;
+extern sig_backprop_d_fn sig_backprop_d;
 
-extern sig_kernel_cuda_double_fn sig_kernel_cuda_double;
-extern batch_sig_kernel_cuda_double_fn batch_sig_kernel_cuda_double;
+extern sig_kernel_cuda_d_fn sig_kernel_cuda_d;
+extern batch_sig_kernel_cuda_d_fn batch_sig_kernel_cuda_d;
 
-extern sig_kernel_backprop_double_fn sig_kernel_backprop;
-extern batch_sig_kernel_backprop_double_fn batch_sig_kernel_backprop_double;
+extern sig_kernel_backprop_d_fn sig_kernel_backprop;
+extern batch_sig_kernel_backprop_d_fn batch_sig_kernel_backprop_d;
 
-extern sig_kernel_backprop_cuda_double_fn sig_kernel_backprop_cuda_double;
-extern batch_sig_kernel_backprop_cuda_double_fn batch_sig_kernel_backprop_cuda_double;
+extern sig_kernel_backprop_cuda_d_fn sig_kernel_backprop_cuda_d;
+extern batch_sig_kernel_backprop_cuda_d_fn batch_sig_kernel_backprop_cuda_d;
 
 #if defined(_WIN32)
 #define GET_FN_PTR ::GetProcAddress

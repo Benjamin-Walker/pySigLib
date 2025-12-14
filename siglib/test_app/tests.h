@@ -15,7 +15,7 @@
 
 #pragma once
 
-void example_signature_float(
+void example_signature_f(
 	uint64_t dimension = 5,
 	uint64_t length = 10000,
 	uint64_t degree = 7,
@@ -25,7 +25,7 @@ void example_signature_float(
 	int num_runs = 50
 );
 
-void example_signature_double(
+void example_signature_d(
 	uint64_t dimension = 5,
 	uint64_t length = 10000,
 	uint64_t degree = 7,
@@ -35,7 +35,7 @@ void example_signature_double(
 	int num_runs = 50
 );
 
-void example_batch_signature_double(
+void example_batch_signature_d(
 	uint64_t batch_size = 100,
 	uint64_t dimension = 5,
 	uint64_t length = 1000,
@@ -47,7 +47,7 @@ void example_batch_signature_double(
 	int num_runs = 50
 );
 
-void example_batch_signature_kernel_float(
+void example_batch_signature_kernel_f(
 	uint64_t batch_size = 100,
 	uint64_t dimension = 5,
 	uint64_t length1 = 1000,
@@ -58,7 +58,7 @@ void example_batch_signature_kernel_float(
 	int num_runs = 50
 );
 
-void example_batch_signature_kernel_double(
+void example_batch_signature_kernel_d(
 	uint64_t batch_size = 100,
 	uint64_t dimension = 5,
 	uint64_t length1 = 1000,
@@ -89,7 +89,7 @@ void example_batch_signature_kernel_cuda_full_grid(
 	int num_runs = 50
 );
 
-void example_sig_backprop_double(
+void example_sig_backprop_d(
 	uint64_t dimension = 5,
 	uint64_t length = 1000,
 	uint64_t degree = 5,

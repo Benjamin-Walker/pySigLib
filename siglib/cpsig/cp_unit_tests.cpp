@@ -139,7 +139,7 @@ namespace cpSigTests
         TEST_METHOD(PolyMultTestLinear)
         {
             // Test signatures of linear 2d paths
-            auto f = sig_combine_double;
+            auto f = sig_combine_d;
             std::vector<double> poly = { 1., 1., 1., 1./2, 1./2, 1./2, 1./2 };
             std::vector<double> true_res = { 1., 2., 2., 2., 2., 2., 2. };
 
@@ -149,7 +149,7 @@ namespace cpSigTests
         TEST_METHOD(PolyMultSigTest)
         {
             uint64_t dimension = 2, length = 4, degree = 5;
-            auto f = sig_combine_double;
+            auto f = sig_combine_d;
             std::vector<double> path1 = { 0., 0., 1., 0.5, 0.4, 2. };
             std::vector<double> path2 = { 0.4, 2., 6., 0.1, 2.3, 4.1 };
             std::vector<double> path = { 0., 0., 1., 0.5, 0.4, 2., 6., 0.1, 2.3, 4.1 };
@@ -158,22 +158,22 @@ namespace cpSigTests
 
             std::vector<double> poly1;
             poly1.resize(poly_len_);
-            signature_double(path1.data(), poly1.data(), dimension, 3, degree);
+            signature_d(path1.data(), poly1.data(), dimension, 3, degree);
 
             std::vector<double> poly2;
             poly2.resize(poly_len_);
-            signature_double(path2.data(), poly2.data(), dimension, 3, degree);
+            signature_d(path2.data(), poly2.data(), dimension, 3, degree);
 
             std::vector<double> true_sig;
             true_sig.resize(poly_len_);
-            signature_double(path.data(), true_sig.data(), dimension, 5, degree);
+            signature_d(path.data(), true_sig.data(), dimension, 5, degree);
             check_result_2(f, poly1, poly2, true_sig, dimension, degree);
         }
 
         TEST_METHOD(BatchPolyMultSigTest)
         {
             uint64_t batch_size = 3, dimension = 2, length = 4, degree = 2;
-            auto f = batch_sig_combine_double;
+            auto f = batch_sig_combine_d;
             std::vector<double> path1 = { 0., 0., 0.25, 0.25, 0.5, 0.5,
                 0., 0., 0.4, 0.4, 0.6, 0.6,
                 0., 0., 1., 0.5, 4., 0. };
@@ -188,15 +188,15 @@ namespace cpSigTests
 
             std::vector<double> poly1;
             poly1.resize(res_len_);
-            batch_signature_double(path1.data(), poly1.data(), batch_size, dimension, 3, degree);
+            batch_signature_d(path1.data(), poly1.data(), batch_size, dimension, 3, degree);
 
             std::vector<double> poly2;
             poly2.resize(res_len_);
-            batch_signature_double(path2.data(), poly2.data(), batch_size, dimension, 2, degree);
+            batch_signature_d(path2.data(), poly2.data(), batch_size, dimension, 2, degree);
 
             std::vector<double> true_sig;
             true_sig.resize(res_len_);
-            batch_signature_double(path.data(), true_sig.data(), batch_size, dimension, 4, degree);
+            batch_signature_d(path.data(), true_sig.data(), batch_size, dimension, 4, degree);
             check_result_2(f, poly1, poly2, true_sig, batch_size, dimension, degree, 1);
             check_result_2(f, poly1, poly2, true_sig, batch_size, dimension, degree, -1);
         }
@@ -212,7 +212,7 @@ namespace cpSigTests
             std::vector<double> out;
             out.resize(batch_size * sig_length(dimension, degree));
 
-            int err = batch_sig_combine_double(poly.data(), poly.data(), out.data(), batch_size, dimension, degree, -1);
+            int err = batch_sig_combine_d(poly.data(), poly.data(), out.data(), batch_size, dimension, degree, -1);
             Assert::IsFalse(err);
         }
     };
@@ -513,7 +513,7 @@ namespace cpSigTests
     {
     public:
         TEST_METHOD(TrivialCases) {
-            auto f = signature_double;
+            auto f = signature_d;
             std::vector<double> path;
             std::vector<double> true_sig;
             Assert::AreEqual(2, f(path.data(), true_sig.data(), 0, 0, 0, false, false, 1., true));
@@ -533,7 +533,7 @@ namespace cpSigTests
             check_result(f, path, true_sig, 1, 2, 1, false, false, 1., true);
         }
         TEST_METHOD(LinearPathTest) {
-            auto f = signature_double;
+            auto f = signature_d;
             uint64_t dimension = 2, length = 3, degree = 3;
             uint64_t level_3_start = sig_length(dimension, 2);
             uint64_t level_4_start = sig_length(dimension, 3);
@@ -548,7 +548,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(LinearPathTest2) {
-            auto f = signature_double;
+            auto f = signature_d;
             uint64_t dimension = 2, length = 4, degree = 3;
             uint64_t level_3_start = sig_length(dimension, 2);
             uint64_t level_4_start = sig_length(dimension, 3);
@@ -563,14 +563,14 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualSigTest) {
-            auto f = signature_double;
+            auto f = signature_d;
             uint64_t dimension = 2, length = 4, degree = 2;
             std::vector<double> path = { 0., 0., 1., 0.5, 4., 0., 0., 1. };
             std::vector<double> true_sig = { 1., 0., 1., 0., 1., -1., 0.5 };
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., true);
         }
         TEST_METHOD(ManualSigTest2) {
-            auto f = signature_float;
+            auto f = signature_f;
             uint64_t dimension = 3, length = 4, degree = 3;
             std::vector<float> path = { 9., 5., 8., 5., 3., 0., 0., 2., 6., 4., 0., 2. };
             std::vector<float> true_sig = { 1., -5., - 5., - 6., 12.5, 24.5,
@@ -585,7 +585,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(BatchSigTest) {
-            auto f = batch_signature_double;
+            auto f = batch_signature_d;
             uint64_t dimension = 2, length = 4, degree = 2;
             std::vector<double> path = { 0., 0., 0.25, 0.25, 0.5, 0.5, 1., 1.,
                 0., 0., 0.4, 0.4, 0.6, 0.6, 1., 1.,
@@ -600,7 +600,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(BatchSigTestDegree1) {
-            auto f = batch_signature_double;
+            auto f = batch_signature_d;
             uint64_t dimension = 2, length = 4, degree = 1;
             std::vector<double> path = { 0., 0., 0.25, 0.25, 0.5, 0.5, 1., 1.,
                 0., 0., 0.4, 0.4, 0.6, 0.6, 1., 1.,
@@ -615,7 +615,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTimeAugTest) {
-            auto f = signature_float;
+            auto f = signature_f;
             uint64_t dimension = 1, length = 5, degree = 3;
             std::vector<float> path = { 0., 5., 2., 4., 9. };
             std::vector<float> true_sig = { 1., 9., 4., 40.5, 15.5, 20.5, 8., 121.5, 37.5,
@@ -625,7 +625,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualLeadLagTest) {
-            auto f = signature_float;
+            auto f = signature_f;
             uint64_t dimension = 1, length = 5, degree = 3;
             std::vector<float> path = { 0., 5., 2., 4., 9. };
             std::vector<float> true_sig = { 1., 9., 9., 40.5, 9., 72., 40.5, 121.5, 6.5, 68., -8.5, 290., 98., 275., 121.5 };
@@ -633,7 +633,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(BigLeadLagTest) {
-            auto f = batch_signature_double;
+            auto f = batch_signature_d;
             uint64_t dimension = 2, length = 10, degree = 2, batch = 1;
             std::vector<double> path;
             path.resize(batch * length * dimension);
@@ -646,7 +646,7 @@ namespace cpSigTests
     TEST_CLASS(sigBackpropTest) {
     public:
         TEST_METHOD(LinearPathTest) {
-            auto f = sig_backprop_double;
+            auto f = sig_backprop_d;
             uint64_t dimension = 2, length = 2, degree = 2;
             std::vector<double> path = { 0., 0., 1.,1. };
             std::vector<double> deriv = { 1., 1., 1., 1., 1., 1., 1. };
@@ -656,7 +656,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest) {
-            auto f = sig_backprop_double;
+            auto f = sig_backprop_d;
             uint64_t dimension = 2, length = 3, degree = 2;
             std::vector<double> path = { 0., 0., 1.,2., 0.5, 1. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6. };
@@ -666,7 +666,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest2) {
-            auto f = sig_backprop_double;
+            auto f = sig_backprop_d;
             uint64_t dimension = 2, length = 3, degree = 3;
             std::vector<double> path = { 0., 0., 1.,2., 0.5, 1. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14. };
@@ -676,7 +676,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTestAsBatch) {
-            auto f = batch_sig_backprop_double;
+            auto f = batch_sig_backprop_d;
             uint64_t dimension = 2, length = 3, degree = 2;
             std::vector<double> path = { 0., 0., 1.,2., 0.5, 1. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6. };
@@ -686,7 +686,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest2AsBatch) {
-            auto f = batch_sig_backprop_double;
+            auto f = batch_sig_backprop_d;
             uint64_t dimension = 2, length = 3, degree = 3;
             std::vector<double> path = { 0., 0., 1.,2., 0.5, 1. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14. };
@@ -696,7 +696,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualBatchTest) {
-            auto f = batch_sig_backprop_double;
+            auto f = batch_sig_backprop_d;
             uint64_t dimension = 2, length = 3, degree = 3, batch_size = 3;
             std::vector<double> path = { 0., 0., 1., 2., 0.5, 1., 0., 0., 3., 2., 5., 2., 0., 0., -1., 2., 0.5, -1. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 1., 1., -2., 3., -4., 5., -6., 7., -8., 9., -10., 11., -12., 13., -14., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1. };
@@ -707,7 +707,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(TimeAugTest) {
-            auto f = sig_backprop_double;
+            auto f = sig_backprop_d;
             uint64_t dimension = 1, length = 3, degree = 3;
             std::vector<double> path = { 0., 2., 1. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14. };
@@ -718,7 +718,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(BatchTimeAugTest) {
-            auto f = batch_sig_backprop_double;
+            auto f = batch_sig_backprop_d;
             uint64_t dimension = 1, length = 3, degree = 3, batch_size = 2;
             std::vector<double> path = { 0., 2., 1., 0., 3., 6. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1. };
@@ -731,7 +731,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(LeadLagTest) {
-            auto f = sig_backprop_double;
+            auto f = sig_backprop_d;
             uint64_t dimension = 1, length = 3, degree = 3;
             std::vector<double> path = { 0., 2., 1. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14. };
@@ -741,7 +741,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(BatchLeadLagTest) {
-            auto f = batch_sig_backprop_double;
+            auto f = batch_sig_backprop_d;
             uint64_t dimension = 1, length = 3, degree = 3, batch_size = 2;
             std::vector<double> path = { 0., 2., 1., 0., 3., 6. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1. };
@@ -753,7 +753,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(TimeAugLeadLagTest) {
-            auto f = sig_backprop_double;
+            auto f = sig_backprop_d;
             uint64_t dimension = 1, length = 3, degree = 2;
             std::vector<double> path = { 0., 2., 1. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12. };
@@ -764,7 +764,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(BatchTimeAugLeadLagTest) {
-            auto f = batch_sig_backprop_double;
+            auto f = batch_sig_backprop_d;
             uint64_t dimension = 1, length = 3, degree = 2, batch_size = 2;
             std::vector<double> path = { 0., 2., 1., 0., 3., 6. };
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1. };
@@ -780,7 +780,7 @@ namespace cpSigTests
     TEST_CLASS(sigCombineBackpropTest) {
     public:
         TEST_METHOD(ManualTest) {
-            auto f = sig_combine_backprop_double;
+            auto f = sig_combine_backprop_d;
             uint64_t dimension = 2, degree = 2;
             uint64_t result_length = 7;
             std::vector<double> sig1 = { 1., 1., 1., .5, .5, .5, .5 };
@@ -797,7 +797,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualBatchTest) {
-            auto f = batch_sig_combine_backprop_double;
+            auto f = batch_sig_combine_backprop_d;
             uint64_t dimension = 2, degree = 2, batch_size = 2;
             uint64_t result_length = 7 * batch_size;
             std::vector<double> sig1 = { 1., 1., 1., .5, .5, .5, .5, 
@@ -825,7 +825,7 @@ namespace cpSigTests
     public:
 
         TEST_METHOD(Trivial) {
-            auto f = sig_kernel_double;
+            auto f = sig_kernel_d;
             uint64_t dimension = 1, length = 1;
             std::vector<double> path = { 0. };
             std::vector<double> true_sig = { 1. };
@@ -834,7 +834,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(TrivialBatch) {
-            auto f = batch_sig_kernel_double;
+            auto f = batch_sig_kernel_d;
             uint64_t dimension = 1, length = 1, batch_size = 5;
             std::vector<double> path = { 0. };
             std::vector<double> true_sig = { 1., 1., 1., 1., 1. };
@@ -842,7 +842,7 @@ namespace cpSigTests
             check_result(f, gram, true_sig, batch_size, dimension, length, length, 0, 0, 1, false);
         }
         TEST_METHOD(LinearPathTest) {
-            auto f = sig_kernel_double;
+            auto f = sig_kernel_d;
             uint64_t dimension = 2, length = 3;
             std::vector<double> path = { 0., 0., 0.5, 0.5, 1.,1. };
             std::vector<double> true_sig = { 4.256702149748847 };
@@ -852,7 +852,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest) {
-            auto f = sig_kernel_double;
+            auto f = sig_kernel_d;
             uint64_t dimension = 3, length = 4;
             std::vector<double> path = { .9, .5, .8, .5, .3, .0, .0, .2, .6, .4, .0, .2 };
             std::vector<double> true_sig = { 2.1529809076880486 };
@@ -862,7 +862,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(NonSquare1) {
-            auto f = sig_kernel_double;
+            auto f = sig_kernel_d;
             uint64_t dimension = 1, length1 = 3, length2 = 2;
             std::vector<double> path1 = { 0., 1., 2. };
             std::vector<double> path2 = { 0., 2. };
@@ -873,7 +873,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(NonSquare2) {
-            auto f = sig_kernel_double;
+            auto f = sig_kernel_d;
             uint64_t dimension = 1, length1 = 2, length2 = 3;
             std::vector<double> path2 = { 0., 1., 2. };
             std::vector<double> path1 = { 0., 2. };
@@ -884,7 +884,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(FullGrid) {
-            auto f = sig_kernel_double;
+            auto f = sig_kernel_d;
             uint64_t dimension = 1, length1 = 3, length2 = 2;
             std::vector<double> path1 = { 0., 1., 2. };
             std::vector<double> path2 = { 0., 2. };
@@ -900,7 +900,7 @@ namespace cpSigTests
     TEST_CLASS(sigKernelBackpropTest) {
     public:
         TEST_METHOD(ManualTest1) {
-            auto f = sig_kernel_backprop_double;
+            auto f = sig_kernel_backprop_d;
             uint64_t dimension = 1, length1 = 2, length2 = 3;
             std::vector<double> path1 = { 0., 2. };
             std::vector<double> path2 = { 0., 1., 2. };
@@ -913,7 +913,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest1Extended) {
-            auto f = sig_kernel_backprop_double;
+            auto f = sig_kernel_backprop_d;
             uint64_t dimension = 1, length1 = 34, length2 = 35;
             std::vector<double> path1(length1, 0.);
             path1[length1 - 1] = 2.;
@@ -942,7 +942,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest1Rev) {
-            auto f = sig_kernel_backprop_double;
+            auto f = sig_kernel_backprop_d;
             uint64_t dimension = 1, length2 = 2, length1 = 3;
             std::vector<double> path2 = { 0., 2. };
             std::vector<double> path1 = { 0., 1., 2. };
@@ -955,7 +955,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest2) {
-            auto f = sig_kernel_backprop_double;
+            auto f = sig_kernel_backprop_d;
             uint64_t dimension = 1, length1 = 3, length2 = 3;
             std::vector<double> path1 = { 0., 2., 3. };
             std::vector<double> path2 = { 0., 1., 2. };
@@ -968,7 +968,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest2Rev) {
-            auto f = sig_kernel_backprop_double;
+            auto f = sig_kernel_backprop_d;
             uint64_t dimension = 1, length2 = 3, length1 = 3;
             std::vector<double> path2 = { 0., 2., 3. };
             std::vector<double> path1 = { 0., 1., 2. };
@@ -981,7 +981,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest3) {
-            auto f = sig_kernel_backprop_double;
+            auto f = sig_kernel_backprop_d;
             uint64_t dimension = 1, length1 = 2, length2 = 3;
             std::vector<double> path1 = { 0., 2. };
             std::vector<double> path2 = { 0., 1., 2. };
@@ -1010,7 +1010,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest3Rev) {
-            auto f = sig_kernel_backprop_double;
+            auto f = sig_kernel_backprop_d;
             uint64_t dimension = 1, length2 = 2, length1 = 3;
             std::vector<double> path2 = { 0., 2. };
             std::vector<double> path1 = { 0., 1., 2. };
@@ -1039,7 +1039,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest4) {
-            auto f = sig_kernel_backprop_double;
+            auto f = sig_kernel_backprop_d;
             uint64_t dimension = 2, length1 = 3, length2 = 3;
             std::vector<double> path1 = { 0., 1., 2., 4., 5., 5. };
             std::vector<double> path2 = { 0., 2., 1., 3., 2., 1. };
@@ -1062,7 +1062,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(ManualTest4Rev) {
-            auto f = sig_kernel_backprop_double;
+            auto f = sig_kernel_backprop_d;
             uint64_t dimension = 2, length2 = 3, length1 = 3;
             std::vector<double> path2 = { 0., 1., 2., 4., 5., 5. };
             std::vector<double> path1 = { 0., 2., 1., 3., 2., 1. };
@@ -1085,7 +1085,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(BatchManualTest1) {
-            auto f = batch_sig_kernel_backprop_double;
+            auto f = batch_sig_kernel_backprop_d;
             uint64_t batch_size = 2, dimension = 1, length1 = 2, length2 = 3;
             std::vector<double> path1 = { 0., 2., 0., 2. };
             std::vector<double> path2 = { 0., 1., 2., 0., 1., 2. };
@@ -1099,7 +1099,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(BatchManualTest2) {
-            auto f = batch_sig_kernel_backprop_double;
+            auto f = batch_sig_kernel_backprop_d;
             uint64_t batch_size = 2, dimension = 1, length1 = 3, length2 = 3;
             std::vector<double> path1 = { 0., 2., 3., 0., 2., 3. };
             std::vector<double> path2 = { 0., 1., 2., 0., 1., 2. };
@@ -1117,14 +1117,14 @@ namespace cpSigTests
     public:
 
         TEST_METHOD(TimeAugTest) {
-            auto f = transform_path_backprop_double;
+            auto f = transform_path_backprop_d;
             uint64_t dimension = 2, length = 3;
             std::vector<double> derivs((dimension + 1) * length, 1.);
             std::vector<double> true_ = { 1., 1., 1., 1., 1., 1. };
             check_result(f, derivs, true_, dimension, length, true, false, 1.);
         }
         TEST_METHOD(LeadLagTest) {
-            auto f = transform_path_backprop_double;
+            auto f = transform_path_backprop_d;
             uint64_t dimension = 2, length = 3;
             std::vector<double> derivs(2 * dimension * (2 * length - 1));
             for (int i = 0; i < derivs.size(); ++i)
@@ -1134,7 +1134,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(LeadLagTest2) {
-            auto f = transform_path_backprop_double;
+            auto f = transform_path_backprop_d;
             uint64_t dimension = 5, length = 100;
             std::vector<double> derivs(2 * dimension * (2 * length - 1));
             for (uint64_t i = 0; i < derivs.size(); ++i)
@@ -1150,7 +1150,7 @@ namespace cpSigTests
         }
 
         TEST_METHOD(TimeAugLeadLagTest) {
-            auto f = transform_path_backprop_double;
+            auto f = transform_path_backprop_d;
             uint64_t dimension = 2, length = 3;
             std::vector<double> derivs((2 * dimension + 1) * (2 * length - 1), 1.);
             std::vector<double> true_ = { 3., 3., 4., 4., 3., 3. };

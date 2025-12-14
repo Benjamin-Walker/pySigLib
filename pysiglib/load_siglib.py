@@ -71,7 +71,7 @@ else:
 # transform_path
 ######################################################
 
-CPSIG.transform_path_float.argtypes = (
+CPSIG.transform_path_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     c_uint64,
@@ -80,9 +80,9 @@ CPSIG.transform_path_float.argtypes = (
     c_bool,
     c_float
 )
-CPSIG.transform_path_float.restype = c_int
+CPSIG.transform_path_f.restype = c_int
 
-CPSIG.transform_path_double.argtypes = (
+CPSIG.transform_path_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     c_uint64,
@@ -91,13 +91,13 @@ CPSIG.transform_path_double.argtypes = (
     c_bool,
     c_double
 )
-CPSIG.transform_path_double.restype = c_int
+CPSIG.transform_path_d.restype = c_int
 
 ######################################################
 # batch_transform_path
 ######################################################
 
-CPSIG.batch_transform_path_float.argtypes = (
+CPSIG.batch_transform_path_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     c_uint64,
@@ -108,9 +108,9 @@ CPSIG.batch_transform_path_float.argtypes = (
     c_float,
     c_int
 )
-CPSIG.batch_transform_path_float.restype = c_int
+CPSIG.batch_transform_path_f.restype = c_int
 
-CPSIG.batch_transform_path_double.argtypes = (
+CPSIG.batch_transform_path_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     c_uint64,
@@ -121,13 +121,13 @@ CPSIG.batch_transform_path_double.argtypes = (
     c_double,
     c_int
 )
-CPSIG.batch_transform_path_double.restype = c_int
+CPSIG.batch_transform_path_d.restype = c_int
 
 ######################################################
 # transform_path_backprop
 ######################################################
 
-CPSIG.transform_path_backprop_float.argtypes = (
+CPSIG.transform_path_backprop_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     c_uint64,
@@ -136,9 +136,9 @@ CPSIG.transform_path_backprop_float.argtypes = (
     c_bool,
     c_float
 )
-CPSIG.transform_path_backprop_float.restype = c_int
+CPSIG.transform_path_backprop_f.restype = c_int
 
-CPSIG.transform_path_backprop_double.argtypes = (
+CPSIG.transform_path_backprop_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     c_uint64,
@@ -147,13 +147,13 @@ CPSIG.transform_path_backprop_double.argtypes = (
     c_bool,
     c_double
 )
-CPSIG.transform_path_backprop_double.restype = c_int
+CPSIG.transform_path_backprop_d.restype = c_int
 
 ######################################################
 # batch_transform_path_backprop
 ######################################################
 
-CPSIG.batch_transform_path_backprop_float.argtypes = (
+CPSIG.batch_transform_path_backprop_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     c_uint64,
@@ -164,9 +164,9 @@ CPSIG.batch_transform_path_backprop_float.argtypes = (
     c_float,
     c_int
 )
-CPSIG.batch_transform_path_backprop_float.restype = c_int
+CPSIG.batch_transform_path_backprop_f.restype = c_int
 
-CPSIG.batch_transform_path_backprop_double.argtypes = (
+CPSIG.batch_transform_path_backprop_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     c_uint64,
@@ -177,14 +177,14 @@ CPSIG.batch_transform_path_backprop_double.argtypes = (
     c_double,
     c_int
 )
-CPSIG.batch_transform_path_backprop_double.restype = c_int
+CPSIG.batch_transform_path_backprop_d.restype = c_int
 
 if BUILT_WITH_CUDA:
     ######################################################
     # transform_path_cuda
     ######################################################
 
-    CUSIG.transform_path_cuda_float.argtypes = (
+    CUSIG.transform_path_cuda_f.argtypes = (
         POINTER(c_float),
         POINTER(c_float),
         c_uint64,
@@ -193,9 +193,9 @@ if BUILT_WITH_CUDA:
         c_bool,
         c_float
     )
-    CUSIG.transform_path_cuda_float.restype = c_int
+    CUSIG.transform_path_cuda_f.restype = c_int
 
-    CUSIG.transform_path_cuda_double.argtypes = (
+    CUSIG.transform_path_cuda_d.argtypes = (
         POINTER(c_double),
         POINTER(c_double),
         c_uint64,
@@ -204,13 +204,13 @@ if BUILT_WITH_CUDA:
         c_bool,
         c_double
     )
-    CUSIG.transform_path_cuda_double.restype = c_int
+    CUSIG.transform_path_cuda_d.restype = c_int
 
     ######################################################
     # batch_transform_path_cuda
     ######################################################
 
-    CUSIG.batch_transform_path_cuda_float.argtypes = (
+    CUSIG.batch_transform_path_cuda_f.argtypes = (
         POINTER(c_float),
         POINTER(c_float),
         c_uint64,
@@ -220,9 +220,9 @@ if BUILT_WITH_CUDA:
         c_bool,
         c_float
     )
-    CUSIG.batch_transform_path_cuda_float.restype = c_int
+    CUSIG.batch_transform_path_cuda_f.restype = c_int
 
-    CUSIG.batch_transform_path_cuda_double.argtypes = (
+    CUSIG.batch_transform_path_cuda_d.argtypes = (
         POINTER(c_double),
         POINTER(c_double),
         c_uint64,
@@ -232,13 +232,13 @@ if BUILT_WITH_CUDA:
         c_bool,
         c_double
     )
-    CUSIG.batch_transform_path_cuda_double.restype = c_int
+    CUSIG.batch_transform_path_cuda_d.restype = c_int
 
     ######################################################
     # transform_path_backprop_cuda
     ######################################################
 
-    CUSIG.transform_path_backprop_cuda_float.argtypes = (
+    CUSIG.transform_path_backprop_cuda_f.argtypes = (
         POINTER(c_float),
         POINTER(c_float),
         c_uint64,
@@ -247,9 +247,9 @@ if BUILT_WITH_CUDA:
         c_bool,
         c_float
     )
-    CUSIG.transform_path_backprop_cuda_float.restype = c_int
+    CUSIG.transform_path_backprop_cuda_f.restype = c_int
 
-    CUSIG.transform_path_backprop_cuda_double.argtypes = (
+    CUSIG.transform_path_backprop_cuda_d.argtypes = (
         POINTER(c_double),
         POINTER(c_double),
         c_uint64,
@@ -258,13 +258,13 @@ if BUILT_WITH_CUDA:
         c_bool,
         c_double
     )
-    CUSIG.transform_path_backprop_cuda_double.restype = c_int
+    CUSIG.transform_path_backprop_cuda_d.restype = c_int
 
     ######################################################
     # batch_transform_path_backprop_cuda
     ######################################################
 
-    CUSIG.batch_transform_path_backprop_cuda_float.argtypes = (
+    CUSIG.batch_transform_path_backprop_cuda_f.argtypes = (
         POINTER(c_float),
         POINTER(c_float),
         c_uint64,
@@ -274,9 +274,9 @@ if BUILT_WITH_CUDA:
         c_bool,
         c_float
     )
-    CUSIG.batch_transform_path_backprop_cuda_float.restype = c_int
+    CUSIG.batch_transform_path_backprop_cuda_f.restype = c_int
 
-    CUSIG.batch_transform_path_backprop_cuda_double.argtypes = (
+    CUSIG.batch_transform_path_backprop_cuda_d.argtypes = (
         POINTER(c_double),
         POINTER(c_double),
         c_uint64,
@@ -286,7 +286,7 @@ if BUILT_WITH_CUDA:
         c_bool,
         c_double
     )
-    CUSIG.batch_transform_path_backprop_cuda_double.restype = c_int
+    CUSIG.batch_transform_path_backprop_cuda_d.restype = c_int
 
 ######################################################
 # sig_length
@@ -302,29 +302,29 @@ CPSIG.sig_length.restype = c_uint64
 # sig_combine
 ######################################################
 
-CPSIG.sig_combine_float.argtypes = (
+CPSIG.sig_combine_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     POINTER(c_float),
     c_uint64,
     c_uint64
 )
-CPSIG.sig_combine_float.restype = c_int
+CPSIG.sig_combine_f.restype = c_int
 
-CPSIG.sig_combine_double.argtypes = (
+CPSIG.sig_combine_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     POINTER(c_double),
     c_uint64,
     c_uint64
 )
-CPSIG.sig_combine_double.restype = c_int
+CPSIG.sig_combine_d.restype = c_int
 
 ######################################################
 # batch_sig_combine
 ######################################################
 
-CPSIG.batch_sig_combine_float.argtypes = (
+CPSIG.batch_sig_combine_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     POINTER(c_float),
@@ -333,9 +333,9 @@ CPSIG.batch_sig_combine_float.argtypes = (
     c_uint64,
     c_int
 )
-CPSIG.batch_sig_combine_float.restype = c_int
+CPSIG.batch_sig_combine_f.restype = c_int
 
-CPSIG.batch_sig_combine_double.argtypes = (
+CPSIG.batch_sig_combine_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     POINTER(c_double),
@@ -344,13 +344,13 @@ CPSIG.batch_sig_combine_double.argtypes = (
     c_uint64,
     c_int
 )
-CPSIG.batch_sig_combine_double.restype = c_int
+CPSIG.batch_sig_combine_d.restype = c_int
 
 ######################################################
 # sig_combine_backprop
 ######################################################
 
-CPSIG.sig_combine_backprop_float.argtypes = (
+CPSIG.sig_combine_backprop_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     POINTER(c_float),
@@ -359,9 +359,9 @@ CPSIG.sig_combine_backprop_float.argtypes = (
     c_uint64,
     c_uint64
 )
-CPSIG.sig_combine_backprop_float.restype = c_int
+CPSIG.sig_combine_backprop_f.restype = c_int
 
-CPSIG.sig_combine_backprop_double.argtypes = (
+CPSIG.sig_combine_backprop_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     POINTER(c_double),
@@ -370,13 +370,13 @@ CPSIG.sig_combine_backprop_double.argtypes = (
     c_uint64,
     c_uint64
 )
-CPSIG.sig_combine_backprop_double.restype = c_int
+CPSIG.sig_combine_backprop_d.restype = c_int
 
 ######################################################
 # batch_sig_combine_backprop
 ######################################################
 
-CPSIG.batch_sig_combine_backprop_float.argtypes = (
+CPSIG.batch_sig_combine_backprop_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     POINTER(c_float),
@@ -387,9 +387,9 @@ CPSIG.batch_sig_combine_backprop_float.argtypes = (
     c_uint64,
     c_int
 )
-CPSIG.batch_sig_combine_backprop_float.restype = c_int
+CPSIG.batch_sig_combine_backprop_f.restype = c_int
 
-CPSIG.batch_sig_combine_backprop_double.argtypes = (
+CPSIG.batch_sig_combine_backprop_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     POINTER(c_double),
@@ -400,13 +400,13 @@ CPSIG.batch_sig_combine_backprop_double.argtypes = (
     c_uint64,
     c_int
 )
-CPSIG.batch_sig_combine_backprop_double.restype = c_int
+CPSIG.batch_sig_combine_backprop_d.restype = c_int
 
 ######################################################
 # signature
 ######################################################
 
-CPSIG.signature_float.argtypes = (
+CPSIG.signature_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     c_uint64,
@@ -417,9 +417,9 @@ CPSIG.signature_float.argtypes = (
     c_float,
     c_bool
 )
-CPSIG.signature_float.restype = c_int
+CPSIG.signature_f.restype = c_int
 
-CPSIG.signature_double.argtypes = (
+CPSIG.signature_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     c_uint64,
@@ -430,13 +430,13 @@ CPSIG.signature_double.argtypes = (
     c_double,
     c_bool
 )
-CPSIG.signature_double.restype = c_int
+CPSIG.signature_d.restype = c_int
 
 ######################################################
 # sig_backprop
 ######################################################
 
-CPSIG.sig_backprop_float.argtypes = (
+CPSIG.sig_backprop_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     POINTER(c_float),
@@ -448,9 +448,9 @@ CPSIG.sig_backprop_float.argtypes = (
     c_bool,
     c_float
 )
-CPSIG.sig_backprop_float.restype = c_int
+CPSIG.sig_backprop_f.restype = c_int
 
-CPSIG.sig_backprop_double.argtypes = (
+CPSIG.sig_backprop_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     POINTER(c_double),
@@ -462,13 +462,13 @@ CPSIG.sig_backprop_double.argtypes = (
     c_bool,
     c_double
 )
-CPSIG.sig_backprop_double.restype = c_int
+CPSIG.sig_backprop_d.restype = c_int
 
 ######################################################
 # batch_signature
 ######################################################
 
-CPSIG.batch_signature_float.argtypes = (
+CPSIG.batch_signature_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     c_uint64,
@@ -481,9 +481,9 @@ CPSIG.batch_signature_float.argtypes = (
     c_bool,
     c_int
 )
-CPSIG.batch_signature_float.restype = c_int
+CPSIG.batch_signature_f.restype = c_int
 
-CPSIG.batch_signature_double.argtypes = (
+CPSIG.batch_signature_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     c_uint64,
@@ -496,13 +496,13 @@ CPSIG.batch_signature_double.argtypes = (
     c_bool,
     c_int
 )
-CPSIG.batch_signature_double.restype = c_int
+CPSIG.batch_signature_d.restype = c_int
 
 ######################################################
 # batch_sig_backprop
 ######################################################
 
-CPSIG.batch_sig_backprop_float.argtypes = (
+CPSIG.batch_sig_backprop_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     POINTER(c_float),
@@ -516,9 +516,9 @@ CPSIG.batch_sig_backprop_float.argtypes = (
     c_float,
     c_int
 )
-CPSIG.batch_sig_backprop_float.restype = c_int
+CPSIG.batch_sig_backprop_f.restype = c_int
 
-CPSIG.batch_sig_backprop_double.argtypes = (
+CPSIG.batch_sig_backprop_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     POINTER(c_double),
@@ -532,13 +532,13 @@ CPSIG.batch_sig_backprop_double.argtypes = (
     c_double,
     c_int
 )
-CPSIG.batch_sig_backprop_double.restype = c_int
+CPSIG.batch_sig_backprop_d.restype = c_int
 
 ######################################################
 # batch_sig_kernel
 ######################################################
 
-CPSIG.batch_sig_kernel_float.argtypes = (
+CPSIG.batch_sig_kernel_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     c_uint64,
@@ -550,9 +550,9 @@ CPSIG.batch_sig_kernel_float.argtypes = (
     c_int,
     c_bool
 )
-CPSIG.batch_sig_kernel_float.restype = c_int
+CPSIG.batch_sig_kernel_f.restype = c_int
 
-CPSIG.batch_sig_kernel_double.argtypes = (
+CPSIG.batch_sig_kernel_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     c_uint64,
@@ -564,10 +564,10 @@ CPSIG.batch_sig_kernel_double.argtypes = (
     c_int,
     c_bool
 )
-CPSIG.batch_sig_kernel_double.restype = c_int
+CPSIG.batch_sig_kernel_d.restype = c_int
 
 if BUILT_WITH_CUDA:
-    CUSIG.batch_sig_kernel_cuda_float.argtypes = (
+    CUSIG.batch_sig_kernel_cuda_f.argtypes = (
         POINTER(c_float),
         POINTER(c_float),
         c_uint64,
@@ -578,9 +578,9 @@ if BUILT_WITH_CUDA:
         c_uint64,
         c_bool
     )
-    CUSIG.batch_sig_kernel_cuda_float.restype = c_int
+    CUSIG.batch_sig_kernel_cuda_f.restype = c_int
 
-    CUSIG.batch_sig_kernel_cuda_double.argtypes = (
+    CUSIG.batch_sig_kernel_cuda_d.argtypes = (
         POINTER(c_double),
         POINTER(c_double),
         c_uint64,
@@ -591,13 +591,13 @@ if BUILT_WITH_CUDA:
         c_uint64,
         c_bool
     )
-    CUSIG.batch_sig_kernel_cuda_double.restype = c_int
+    CUSIG.batch_sig_kernel_cuda_d.restype = c_int
 
 ######################################################
 # batch_sig_kernel_backprop
 ######################################################
 
-CPSIG.batch_sig_kernel_backprop_float.argtypes = (
+CPSIG.batch_sig_kernel_backprop_f.argtypes = (
     POINTER(c_float),
     POINTER(c_float),
     POINTER(c_float),
@@ -610,9 +610,9 @@ CPSIG.batch_sig_kernel_backprop_float.argtypes = (
     c_uint64,
     c_int
 )
-CPSIG.batch_sig_kernel_backprop_float.restype = c_int
+CPSIG.batch_sig_kernel_backprop_f.restype = c_int
 
-CPSIG.batch_sig_kernel_backprop_double.argtypes = (
+CPSIG.batch_sig_kernel_backprop_d.argtypes = (
     POINTER(c_double),
     POINTER(c_double),
     POINTER(c_double),
@@ -625,10 +625,10 @@ CPSIG.batch_sig_kernel_backprop_double.argtypes = (
     c_uint64,
     c_int
 )
-CPSIG.batch_sig_kernel_backprop_double.restype = c_int
+CPSIG.batch_sig_kernel_backprop_d.restype = c_int
 
 if BUILT_WITH_CUDA:
-    CUSIG.batch_sig_kernel_backprop_cuda_float.argtypes = (
+    CUSIG.batch_sig_kernel_backprop_cuda_f.argtypes = (
         POINTER(c_float),
         POINTER(c_float),
         POINTER(c_float),
@@ -640,9 +640,9 @@ if BUILT_WITH_CUDA:
         c_uint64,
         c_uint64
     )
-    CUSIG.batch_sig_kernel_backprop_cuda_float.restype = c_int
+    CUSIG.batch_sig_kernel_backprop_cuda_f.restype = c_int
 
-    CUSIG.batch_sig_kernel_backprop_cuda_double.argtypes = (
+    CUSIG.batch_sig_kernel_backprop_cuda_d.argtypes = (
         POINTER(c_double),
         POINTER(c_double),
         POINTER(c_double),
@@ -654,4 +654,4 @@ if BUILT_WITH_CUDA:
         c_uint64,
         c_uint64
     )
-    CUSIG.batch_sig_kernel_backprop_cuda_double.restype = c_int
+    CUSIG.batch_sig_kernel_backprop_cuda_d.restype = c_int

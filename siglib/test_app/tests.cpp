@@ -16,7 +16,7 @@
 #include "dll_funcs.h"
 #include "utils.h"
 
-void example_signature_float(
+void example_signature_f(
     uint64_t dimension,
     uint64_t length,
     uint64_t degree,
@@ -32,12 +32,12 @@ void example_signature_float(
     uint64_t out_size = sig_length(dimension, degree);
     std::vector<float> out(out_size, 0.);
 
-    time_function(num_runs, signature_float, path.data(), out.data(), dimension, length, degree, time_aug, lead_lag, 1., horner);
+    time_function(num_runs, signature_f, path.data(), out.data(), dimension, length, degree, time_aug, lead_lag, 1., horner);
 
     std::cout << "done\n";
 }
 
-void example_signature_double(
+void example_signature_d(
     uint64_t dimension,
     uint64_t length,
     uint64_t degree,
@@ -53,12 +53,12 @@ void example_signature_double(
     uint64_t out_size = sig_length(dimension, degree);
     std::vector<double> out(out_size, 0.);
 
-    time_function(num_runs, signature_double, path.data(), out.data(), dimension, length, degree, time_aug, lead_lag, 1., horner);
+    time_function(num_runs, signature_d, path.data(), out.data(), dimension, length, degree, time_aug, lead_lag, 1., horner);
 
     std::cout << "done\n";
 }
 
-void example_batch_signature_double(
+void example_batch_signature_d(
     uint64_t batch_size,
     uint64_t dimension,
     uint64_t length,
@@ -76,12 +76,12 @@ void example_batch_signature_double(
     uint64_t out_size = sig_length(dimension, degree) * batch_size;
     std::vector<double> out(out_size, 0.);
 
-    time_function(num_runs, batch_signature_double, path.data(), out.data(), batch_size, dimension, length, degree, time_aug, lead_lag, 1., horner, n_jobs);
+    time_function(num_runs, batch_signature_d, path.data(), out.data(), batch_size, dimension, length, degree, time_aug, lead_lag, 1., horner, n_jobs);
 
     std::cout << "done\n";
 }
 
-void example_batch_signature_kernel_float(
+void example_batch_signature_kernel_f(
     uint64_t batch_size,
     uint64_t dimension,
     uint64_t length1,
@@ -96,12 +96,12 @@ void example_batch_signature_kernel_float(
     std::vector<float> out(batch_size, 0.);
     std::vector<float> gram = test_data<float>(length1 * length2 * batch_size);
 
-    time_function(num_runs, batch_sig_kernel_float, gram.data(), out.data(), batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, n_jobs, false);
+    time_function(num_runs, batch_sig_kernel_f, gram.data(), out.data(), batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, n_jobs, false);
 
     std::cout << "done\n";
 }
 
-void example_batch_signature_kernel_double(
+void example_batch_signature_kernel_d(
     uint64_t batch_size,
     uint64_t dimension,
     uint64_t length1,
@@ -116,7 +116,7 @@ void example_batch_signature_kernel_double(
     std::vector<double> out(batch_size, 0.);
     std::vector<double> gram = test_data<double>(length1 * length2 * batch_size);
 
-    time_function(num_runs, batch_sig_kernel_double, gram.data(), out.data(), batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, n_jobs, false);
+    time_function(num_runs, batch_sig_kernel_d, gram.data(), out.data(), batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, n_jobs, false);
 
     std::cout << "done\n";
 }
@@ -143,7 +143,7 @@ void example_batch_signature_kernel_cuda(
     // Copy data from the host to the device (CPU -> GPU)
     cudaMemcpy(d_gram, gram.data(), sizeof(double) * gram_size, cudaMemcpyHostToDevice);
 
-    time_function(num_runs, batch_sig_kernel_cuda_double, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, false);
+    time_function(num_runs, batch_sig_kernel_cuda_d, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, false);
 
     cudaFree(d_gram);
     cudaFree(d_out);
@@ -174,13 +174,13 @@ void example_batch_signature_kernel_cuda_full_grid(
     // Copy data from the host to the device (CPU -> GPU)
     cudaMemcpy(d_gram, gram.data(), sizeof(double) * gram_size, cudaMemcpyHostToDevice);
 
-    time_function(num_runs, batch_sig_kernel_cuda_double, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, true);
+    time_function(num_runs, batch_sig_kernel_cuda_d, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, true);
 
     cudaFree(d_gram);
     cudaFree(d_out);
 }
 
-void example_sig_backprop_double(
+void example_sig_backprop_d(
     uint64_t dimension,
     uint64_t length,
     uint64_t degree,
@@ -198,7 +198,7 @@ void example_sig_backprop_double(
     uint64_t out_size = dimension * length;
     std::vector<double> out(out_size, 0.);
 
-    time_function(num_runs, sig_backprop_double, path.data(), out.data(), sig_derivs.data(), sig.data(), dimension, length, degree, time_aug, lead_lag, 1.);
+    time_function(num_runs, sig_backprop_d, path.data(), out.data(), sig_derivs.data(), sig.data(), dimension, length, degree, time_aug, lead_lag, 1.);
 
     std::cout << "done\n";
 }
@@ -221,7 +221,7 @@ void example_batch_sig_kernel_backprop(
     std::vector<double> out(batch_size * (length1 - 1) * (length2 - 1));
     std::vector<double> k_grid = test_data<double>(batch_size * length1 * length2);
 
-    time_function(num_runs, batch_sig_kernel_backprop_double, gram.data(), out.data(), deriv.data(), k_grid.data(), batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, n_jobs);
+    time_function(num_runs, batch_sig_kernel_backprop_d, gram.data(), out.data(), deriv.data(), k_grid.data(), batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, n_jobs);
 
     std::cout << "done\n";
 }
@@ -259,7 +259,7 @@ void example_batch_sig_kernel_backprop_cuda(
     cudaMemcpy(d_deriv, deriv.data(), sizeof(double) * batch_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_k_grid, k_grid.data(), sizeof(double) * batch_size * grid_size, cudaMemcpyHostToDevice);
 
-    time_function(num_runs, batch_sig_kernel_backprop_cuda_double, d_gram, d_out, d_deriv, d_k_grid, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2);
+    time_function(num_runs, batch_sig_kernel_backprop_cuda_d, d_gram, d_out, d_deriv, d_k_grid, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2);
 
     cudaFree(d_gram);
     cudaFree(d_deriv);
