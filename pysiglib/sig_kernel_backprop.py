@@ -25,7 +25,7 @@ from .sig_kernel import sig_kernel
 from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
-from .dtypes import CPSIG_SIG_KERNEL_BACKPROP, CPSIG_BATCH_SIG_KERNEL_BACKPROP, DTYPES
+from .dtypes import CPSIG_SIG_KERNEL_BACKPROP, CPSIG_BATCH_SIG_KERNEL_BACKPROP, DTYPES, CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA
 from .data_handlers import DoublePathInputHandler, ScalarInputHandler, GridOutputHandler, PathInputHandler
 from .static_kernels import StaticKernel, LinearKernel, Context
 
@@ -49,7 +49,7 @@ def sig_kernel_backprop_(data, derivs_data, result, gram, k_grid_data, dyadic_or
         raise Exception("Error in pysiglib.sig_kernel_backprop: " + err_msg(err_code))#
 
 def sig_kernel_backprop_cuda_(data, derivs_data, result, gram, k_grid_data, dyadic_order_1, dyadic_order_2):
-    err_code = CUSIG.batch_sig_kernel_backprop_cuda(
+    err_code = CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA[data.dtype](
         cast(gram.data_ptr(), POINTER(DTYPES[str(gram.dtype)[6:]])),
         result.data_ptr,
         derivs_data.data_ptr,

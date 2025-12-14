@@ -162,14 +162,14 @@ batch_sig_kernel_double_fn batch_sig_kernel_double = nullptr;
 batch_sig_combine_double_fn batch_sig_combine_double = nullptr;
 sig_backprop_double_fn sig_backprop_double = nullptr;
 
-sig_kernel_cuda_fn sig_kernel_cuda = nullptr;
-batch_sig_kernel_cuda_fn batch_sig_kernel_cuda = nullptr;
+sig_kernel_cuda_double_fn sig_kernel_cuda_double = nullptr;
+batch_sig_kernel_cuda_double_fn batch_sig_kernel_cuda_double = nullptr;
 
 sig_kernel_backprop_double_fn sig_kernel_backprop_double = nullptr;
 batch_sig_kernel_backprop_double_fn batch_sig_kernel_backprop_double = nullptr;
 
-sig_kernel_backprop_cuda_fn sig_kernel_backprop_cuda = nullptr;
-batch_sig_kernel_backprop_cuda_fn batch_sig_kernel_backprop_cuda = nullptr;
+sig_kernel_backprop_cuda_double_fn sig_kernel_backprop_cuda_double = nullptr;
+batch_sig_kernel_backprop_cuda_double_fn batch_sig_kernel_backprop_cuda_double = nullptr;
 
 
 void get_cpsig_fn_ptrs()
@@ -191,7 +191,7 @@ void get_cpsig_fn_ptrs()
 
 void get_cusig_fn_ptrs()
 {
-    GET_FN(sig_kernel_cuda, cusig);
-    GET_FN(batch_sig_kernel_cuda, cusig);
-    GET_FN(batch_sig_kernel_backprop_cuda, cusig);
+    GET_FN(sig_kernel_cuda_double, cusig);
+    GET_FN(batch_sig_kernel_cuda_double, cusig);
+    GET_FN(batch_sig_kernel_backprop_cuda_double, cusig);
 }

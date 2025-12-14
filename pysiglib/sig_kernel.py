@@ -22,7 +22,7 @@ from .transform_path import transform_path
 from .load_siglib import CPSIG, CUSIG, BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
-from .dtypes import CPSIG_SIG_KERNEL, CPSIG_BATCH_SIG_KERNEL, DTYPES
+from .dtypes import CPSIG_SIG_KERNEL, CPSIG_BATCH_SIG_KERNEL, DTYPES, CUSIG_BATCH_SIG_KERNEL_CUDA
 from .data_handlers import DoublePathInputHandler, ScalarOutputHandler, GridOutputHandler
 from .static_kernels import StaticKernel, LinearKernel, Context
 
@@ -44,7 +44,7 @@ def sig_kernel_(data, result, gram, dyadic_order_1, dyadic_order_2, n_jobs, retu
         raise Exception("Error in pysiglib.sig_kernel: " + err_msg(err_code))
 
 def sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2, return_grid):
-    err_code = CUSIG.batch_sig_kernel_cuda(
+    err_code = CUSIG_BATCH_SIG_KERNEL_CUDA[data.dtype](
         cast(gram.data_ptr(), POINTER(DTYPES[str(gram.dtype)[6:]])),
         result.data_ptr, data.batch_size,
         data.dimension,

@@ -89,7 +89,7 @@ def test_sig_backprop_random(deg, dtype):
 @pytest.mark.parametrize("deg", range(1, 6))
 def test_sig_backprop_random_cuda(deg):
     X = torch.rand(size=(100, 5), device = "cuda")
-    sig_derivs = torch.rand(size = (pysiglib.sig_length(5, deg),), device = "cuda", dtype = torch.float64)
+    sig_derivs = torch.rand(size = (pysiglib.sig_length(5, deg),), device = "cuda")
 
     sig = pysiglib.signature(X, deg)
 

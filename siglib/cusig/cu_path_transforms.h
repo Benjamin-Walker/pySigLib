@@ -16,19 +16,3 @@
 #pragma once
 #include "cupch.h"
 
-__global__ void transform_path_backprop_internal_(
-	const double* derivs,
-	double* data_out
-);
-
-void transform_path_backprop_(
-	const double* derivs,
-	double* data_out,
-	uint64_t batch_size_,
-	uint64_t dimension_,
-	uint64_t length_,
-	bool time_aug_,
-	bool lead_lag_,
-	double end_time_
-);
-

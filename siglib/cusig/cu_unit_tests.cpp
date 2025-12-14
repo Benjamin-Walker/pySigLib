@@ -178,7 +178,7 @@ namespace MyTest
 public:
 
     TEST_METHOD(Trivial) {
-        auto f = sig_kernel_cuda;
+        auto f = sig_kernel_cuda_double;
         uint64_t dimension = 1, length = 1, batch_size = 1;
         std::vector<double> path = { 0. };
         std::vector<double> true_sig = { 1. };
@@ -187,7 +187,7 @@ public:
     }
 
     TEST_METHOD(TrivialBatch) {
-        auto f = batch_sig_kernel_cuda;
+        auto f = batch_sig_kernel_cuda_double;
         uint64_t dimension = 1, length = 1, batch_size = 5;
         std::vector<double> path = { 0. };
         std::vector<double> true_sig = { 1., 1., 1., 1., 1. };
@@ -195,7 +195,7 @@ public:
         check_result(f, gram, true_sig, batch_size, dimension, length, length, 0, 0, false);
     }
     TEST_METHOD(LinearPathTest) {
-        auto f = sig_kernel_cuda;
+        auto f = sig_kernel_cuda_double;
         uint64_t dimension = 2, length = 3;
         std::vector<double> path = { 0., 0., 0.5, 0.5, 1.,1. };
         std::vector<double> true_sig = { 4.256702149748847 };
@@ -205,7 +205,7 @@ public:
     }
 
     TEST_METHOD(ManualTest) {
-        auto f = sig_kernel_cuda;
+        auto f = sig_kernel_cuda_double;
         uint64_t dimension = 3, length = 4;
         std::vector<double> path = { .9, .5, .8, .5, .3, .0, .0, .2, .6, .4, .0, .2 };
         std::vector<double> true_sig = { 2.1529809076880486 };
@@ -215,7 +215,7 @@ public:
     }
 
     TEST_METHOD(NonSquare1) {
-        auto f = sig_kernel_cuda;
+        auto f = sig_kernel_cuda_double;
         uint64_t dimension = 1, length1 = 3, length2 = 2;
         std::vector<double> path1 = { 0., 1., 2. };
         std::vector<double> path2 = { 0., 2. };
@@ -226,7 +226,7 @@ public:
     }
 
     TEST_METHOD(NonSquare2) {
-        auto f = sig_kernel_cuda;
+        auto f = sig_kernel_cuda_double;
         uint64_t dimension = 1, length1 = 2, length2 = 3;
         std::vector<double> path2 = { 0., 1., 2. };
         std::vector<double> path1 = { 0., 2. };
@@ -237,7 +237,7 @@ public:
     }
 
     TEST_METHOD(FullGrid) {
-        auto f = sig_kernel_cuda;
+        auto f = sig_kernel_cuda_double;
         uint64_t dimension = 1, length1 = 3, length2 = 2;
         std::vector<double> path1 = { 0., 1., 2. };
         std::vector<double> path2 = { 0., 2. };
@@ -250,7 +250,7 @@ public:
     }
 
     TEST_METHOD(FullGrid2) {
-        auto f = batch_sig_kernel_cuda;
+        auto f = batch_sig_kernel_cuda_double;
         uint64_t dimension = 1, length1 = 3, length2 = 2, batch_size = 2;
         std::vector<double> path1 = { 0., 1., 2., 0., 1., 2.};
         std::vector<double> path2 = { 0., 2., 0., 2. };
@@ -266,7 +266,7 @@ public:
     }
 
     TEST_METHOD(FullGridLarge) {
-        auto f = batch_sig_kernel_cuda;
+        auto f = batch_sig_kernel_cuda_double;
         uint64_t dimension = 1, length1 = 410, length2 = 410, batch_size = 32;
         double* d_gram, * d_out;
         cudaMalloc(&d_gram, sizeof(double) * (length1 - 1) * (length2 - 2) * batch_size);
@@ -286,7 +286,7 @@ public:
     TEST_CLASS(sigKernelBackpropTest) {
 public:
     TEST_METHOD(ManualTest1) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 1, dimension = 1, length1 = 2, length2 = 3;
         std::vector<double> path1 = { 0., 2. };
         std::vector<double> path2 = { 0., 1., 2. };
@@ -299,7 +299,7 @@ public:
     }
 
     TEST_METHOD(ManualTest1Extended) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 1, dimension = 1, length1 = 34, length2 = 35;
         std::vector<double> path1(length1, 0.);
         path1[length1 - 1] = 2.;
@@ -328,7 +328,7 @@ public:
     }
 
     TEST_METHOD(ManualTest1Rev) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 1, dimension = 1, length2 = 2, length1 = 3;
         std::vector<double> path2 = { 0., 2. };
         std::vector<double> path1 = { 0., 1., 2. };
@@ -341,7 +341,7 @@ public:
     }
 
     TEST_METHOD(ManualTest2) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 1, dimension = 1, length1 = 3, length2 = 3;
         std::vector<double> path1 = { 0., 2., 3. };
         std::vector<double> path2 = { 0., 1., 2. };
@@ -354,7 +354,7 @@ public:
     }
 
     TEST_METHOD(ManualTest2Rev) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 1, dimension = 1, length2 = 3, length1 = 3;
         std::vector<double> path2 = { 0., 2., 3. };
         std::vector<double> path1 = { 0., 1., 2. };
@@ -367,7 +367,7 @@ public:
     }
 
     TEST_METHOD(ManualTest3) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 1, dimension = 1, length1 = 2, length2 = 3;
         std::vector<double> path1 = { 0., 2. };
         std::vector<double> path2 = { 0., 1., 2. };
@@ -396,7 +396,7 @@ public:
     }
 
     TEST_METHOD(ManualTest3Rev) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 1, dimension = 1, length2 = 2, length1 = 3;
         std::vector<double> path2 = { 0., 2. };
         std::vector<double> path1 = { 0., 1., 2. };
@@ -425,7 +425,7 @@ public:
     }
 
     TEST_METHOD(ManualTest4) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 1, dimension = 2, length1 = 3, length2 = 3;
         std::vector<double> path1 = { 0., 1., 2., 4., 5., 5. };
         std::vector<double> path2 = { 0., 2., 1., 3., 2., 1. };
@@ -448,7 +448,7 @@ public:
     }
 
     TEST_METHOD(ManualTest4Rev) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 1, dimension = 2, length2 = 3, length1 = 3;
         std::vector<double> path2 = { 0., 1., 2., 4., 5., 5. };
         std::vector<double> path1 = { 0., 2., 1., 3., 2., 1. };
@@ -471,7 +471,7 @@ public:
     }
 
     /*TEST_METHOD(ManualTest5) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 1, dimension = 1, length1 = 10, length2 = 40;
         std::vector<double> path1(length1);
         for (int i = 0; i < length1; ++i)
@@ -484,12 +484,12 @@ public:
         std::vector<double> gram((length1 - 1) * (length2 - 1));
         std::vector<double> k_grid(length1 * length2);
         gram_(path1.data(), path2.data(), gram.data(), 1, dimension, length1, length2);
-        sig_kernel_cuda(gram.data(), k_grid.data(), dimension, length1, length2, 0, 0, true);
+        sig_kernel_cuda_double(gram.data(), k_grid.data(), dimension, length1, length2, 0, 0, true);
         check_result_4(f, gram, true_, deriv, k_grid, batch_size, dimension, length1, length2, 0, 0);
     }*/
 
     TEST_METHOD(BatchManualTest1) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 2, dimension = 1, length1 = 2, length2 = 3;
         std::vector<double> path1 = { 0., 2., 0., 2. };
         std::vector<double> path2 = { 0., 1., 2., 0., 1., 2. };
@@ -503,7 +503,7 @@ public:
     }
 
     TEST_METHOD(BatchManualTest2) {
-        auto f = batch_sig_kernel_backprop_cuda;
+        auto f = batch_sig_kernel_backprop_cuda_double;
         uint64_t batch_size = 2, dimension = 1, length1 = 3, length2 = 3;
         std::vector<double> path1 = { 0., 2., 3., 0., 2., 3. };
         std::vector<double> path2 = { 0., 1., 2., 0., 1., 2. };
@@ -521,14 +521,14 @@ public:
     public:
 
         TEST_METHOD(TimeAugTest) {
-            auto f = transform_path_backprop_cuda;
+            auto f = transform_path_backprop_cuda_double;
             uint64_t dimension = 2, length = 3;
             std::vector<double> derivs((dimension + 1) * length, 1.);
             std::vector<double> true_ = { 1., 1., 1., 1., 1., 1. };
             check_result(f, derivs, true_, dimension, length, true, false, 1.);
         }
         TEST_METHOD(LeadLagTest) {
-            auto f = transform_path_backprop_cuda;
+            auto f = transform_path_backprop_cuda_double;
             uint64_t dimension = 2, length = 3;
             std::vector<double> derivs(2 * dimension * (2 * length - 1));
             for (int i = 0; i < derivs.size(); ++i)
@@ -538,7 +538,7 @@ public:
         }
 
         TEST_METHOD(LeadLagTest2) {
-            auto f = transform_path_backprop_cuda;
+            auto f = transform_path_backprop_cuda_double;
             uint64_t dimension = 5, length = 100;
             std::vector<double> derivs(2 * dimension * (2 * length - 1));
             for (int i = 0; i < derivs.size(); ++i)
@@ -554,7 +554,7 @@ public:
         }
 
         TEST_METHOD(TimeAugLeadLagTest) {
-            auto f = transform_path_backprop_cuda;
+            auto f = transform_path_backprop_cuda_double;
             uint64_t dimension = 2, length = 3;
             std::vector<double> derivs((2 * dimension + 1) * (2 * length - 1), 1.);
             std::vector<double> true_ = { 3., 3., 4., 4., 3., 3. };

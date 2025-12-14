@@ -271,8 +271,8 @@ def test_sig_kernel_full_grid_time_aug_lead_lag():
 def test_sig_kernel_dtypes_cuda(dtype):
     batch, len1, len2, dim = 32, 10, 10, 5
     # arr * 3 - 1.5 below gives us non-zero values for int dtypes
-    X = (torch.rand(size=(batch, len1, dim), device="cuda") * 3 - 1.5).to(dtype=dtype)
-    Y = (torch.rand(size=(batch, len2, dim), device="cuda") * 3 - 1.5).to(dtype=dtype)
+    X = (torch.rand(size=(batch, len1, dim), device="cuda") * 3 - 1.5).to(dtype=dtype) / 100
+    Y = (torch.rand(size=(batch, len2, dim), device="cuda") * 3 - 1.5).to(dtype=dtype) / 100
 
     static_kernel = sigkernel.LinearKernel()
     signature_kernel = sigkernel.SigKernel(static_kernel, 0)

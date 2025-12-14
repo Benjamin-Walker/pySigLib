@@ -45,7 +45,7 @@ extern "C" {
 	* @param end_time End time for time augmentation (default = 1.0).
 	* @return Status code (0 = success).
 	*/
-	CUSIG_API int transform_path_cuda_float(const float* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
+	CUSIG_API int transform_path_cuda_float(const float* data_in, float* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, float end_time = 1.) noexcept;
 	/** @brief */
 	CUSIG_API int transform_path_cuda_double(const double* data_in, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
 	/** @} */
@@ -69,11 +69,14 @@ extern "C" {
 	* @param end_time End time for time augmentation (default = 1.0).
 	* @return Status code (0 = success).
 	*/
-	CUSIG_API int batch_transform_path_cuda_float(const float* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
+	CUSIG_API int batch_transform_path_cuda_float(const float* data_in, float* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, float end_time = 1.) noexcept;
 	/** @brief */
 	CUSIG_API int batch_transform_path_cuda_double(const double* data_in, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
 	/** @} */
 	
+	/** @defgroup transform_path_backprop_cuda_functions Transform path backprop CUDA functions
+	* @{
+	*/
 
 	/**
 	* @brief Backpropagation through the transform_path_cuda function
@@ -89,8 +92,15 @@ extern "C" {
 	* @param end_time End time for time augmentation (default = 1.0).
 	* @return Status code (0 = success).
 	*/
-	CUSIG_API int transform_path_backprop_cuda(const double* derivs, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
-	
+	CUSIG_API int transform_path_backprop_cuda_float(const float* derivs, float* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, float end_time = 1.) noexcept;
+	/** @brief */
+	CUSIG_API int transform_path_backprop_cuda_double(const double* derivs, double* data_out, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
+	/** @} */
+
+	/** @defgroup batch_transform_path_backprop_cuda_functions Batch transform path backprop CUDA functions
+	* @{
+	*/
+
 	/**
 	* @brief Backpropagation through the batch_transform_path_cuda function
 	*
@@ -106,7 +116,14 @@ extern "C" {
 	* @param end_time End time for time augmentation (default = 1.0).
 	* @return Status code (0 = success).
 	*/
-	CUSIG_API int batch_transform_path_backprop_cuda(const double* derivs, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
+	CUSIG_API int batch_transform_path_backprop_cuda_float(const float* derivs, float* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, float end_time = 1.) noexcept;
+	/** @brief */
+	CUSIG_API int batch_transform_path_backprop_cuda_double(const double* derivs, double* data_out, uint64_t batch_size, uint64_t dimension, uint64_t length, bool time_aug, bool lead_lag, double end_time = 1.) noexcept;
+	/** @} */
+
+	/** @defgroup sig_kernel_cuda_functions Sig kernel CUDA functions
+	* @{
+	*/
 
 	/**
 	* @brief Computes the signature kernel of two paths from their gram matrix.
@@ -121,8 +138,15 @@ extern "C" {
 	* @param return_grid Whether to return the entire PDE grid (default = false).
 	* @return Status code (0 = success).
 	*/
-	CUSIG_API int sig_kernel_cuda(const double* gram, double* out, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, bool return_grid = false) noexcept;
-	
+	CUSIG_API int sig_kernel_cuda_float(const float* gram, float* out, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, bool return_grid = false) noexcept;
+	/** @brief */
+	CUSIG_API int sig_kernel_cuda_double(const double* gram, double* out, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, bool return_grid = false) noexcept;
+	/** @} */
+
+	/** @defgroup batch_sig_kernel_cuda_functions Batch sig kernel CUDA functions
+	* @{
+	*/
+
 	/**
 	* @brief Computes signature kernels of a batch of paths from their gram matrices.
 	*
@@ -137,8 +161,15 @@ extern "C" {
 	* @param return_grid Whether to return the entire PDE grid (default = false).
 	* @return Status code (0 = success).
 	*/
-	CUSIG_API int batch_sig_kernel_cuda(const double* gram, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, bool return_grid = false) noexcept;
-	
+	CUSIG_API int batch_sig_kernel_cuda_float(const float* gram, float* out, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, bool return_grid = false) noexcept;
+	/** @brief */
+	CUSIG_API int batch_sig_kernel_cuda_double(const double* gram, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2, bool return_grid = false) noexcept;
+	/** @} */
+
+	/** @defgroup sig_kernel_backprop_cuda_functions Sig kernel backprop CUDA functions
+	* @{
+	*/
+
 	/**
 	* @brief Backpropagation through sig_kernel.
 	*
@@ -153,8 +184,15 @@ extern "C" {
 	* @param dyadic_order_2 Dyadic refinement for the second path.
 	* @return Status code (0 = success).
 	*/
-	CUSIG_API int sig_kernel_backprop_cuda(const double* gram, double* out, double derivs, const double* k_grid, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2) noexcept;
-	
+	CUSIG_API int sig_kernel_backprop_cuda_float(const float* gram, float* out, float derivs, const float* k_grid, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2) noexcept;
+	/** @brief */
+	CUSIG_API int sig_kernel_backprop_cuda_double(const double* gram, double* out, double derivs, const double* k_grid, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2) noexcept;
+	/** @} */
+
+	/** @defgroup batch_sig_kernel_backprop_cuda_functions Batch sig kernel backprop CUDA functions
+	* @{
+	*/
+
 	/**
 	* @brief Backpropagation through batch_sig_kernel.
 	*
@@ -170,5 +208,8 @@ extern "C" {
 	* @param dyadic_order_2 Dyadic refinement for the second paths.
 	* @return Status code (0 = success).
 	*/
-	CUSIG_API int batch_sig_kernel_backprop_cuda(const double* gram, double* out, const double* derivs, const double* k_grid, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2) noexcept;
+	CUSIG_API int batch_sig_kernel_backprop_cuda_float(const float* gram, float* out, const float* derivs, const float* k_grid, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2) noexcept;
+	/** @brief */
+	CUSIG_API int batch_sig_kernel_backprop_cuda_double(const double* gram, double* out, const double* derivs, const double* k_grid, uint64_t batch_size, uint64_t dimension, uint64_t length1, uint64_t length2, uint64_t dyadic_order_1, uint64_t dyadic_order_2) noexcept;
+	/** @} */
 }

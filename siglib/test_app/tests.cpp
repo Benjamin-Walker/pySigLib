@@ -143,7 +143,7 @@ void example_batch_signature_kernel_cuda(
     // Copy data from the host to the device (CPU -> GPU)
     cudaMemcpy(d_gram, gram.data(), sizeof(double) * gram_size, cudaMemcpyHostToDevice);
 
-    time_function(num_runs, batch_sig_kernel_cuda, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, false);
+    time_function(num_runs, batch_sig_kernel_cuda_double, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, false);
 
     cudaFree(d_gram);
     cudaFree(d_out);
@@ -174,7 +174,7 @@ void example_batch_signature_kernel_cuda_full_grid(
     // Copy data from the host to the device (CPU -> GPU)
     cudaMemcpy(d_gram, gram.data(), sizeof(double) * gram_size, cudaMemcpyHostToDevice);
 
-    time_function(num_runs, batch_sig_kernel_cuda, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, true);
+    time_function(num_runs, batch_sig_kernel_cuda_double, d_gram, d_out, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2, true);
 
     cudaFree(d_gram);
     cudaFree(d_out);
@@ -259,7 +259,7 @@ void example_batch_sig_kernel_backprop_cuda(
     cudaMemcpy(d_deriv, deriv.data(), sizeof(double) * batch_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_k_grid, k_grid.data(), sizeof(double) * batch_size * grid_size, cudaMemcpyHostToDevice);
 
-    time_function(num_runs, batch_sig_kernel_backprop_cuda, d_gram, d_out, d_deriv, d_k_grid, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2);
+    time_function(num_runs, batch_sig_kernel_backprop_cuda_double, d_gram, d_out, d_deriv, d_k_grid, batch_size, dimension, length1, length2, dyadic_order_1, dyadic_order_2);
 
     cudaFree(d_gram);
     cudaFree(d_deriv);

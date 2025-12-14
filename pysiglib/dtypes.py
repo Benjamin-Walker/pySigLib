@@ -58,6 +58,10 @@ CPSIG_BATCH_TRANSFORM_PATH_BACKPROP = {
 
 CUSIG_TRANSFORM_PATH_CUDA = None
 CUSIG_BATCH_TRANSFORM_PATH_CUDA = None
+CUSIG_TRANSFORM_PATH_BACKPROP_CUDA = None
+CUSIG_BATCH_TRANSFORM_PATH_BACKPROP_CUDA = None
+CUSIG_BATCH_SIG_KERNEL_CUDA = None
+CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA = None
 
 if BUILT_WITH_CUDA:
     CUSIG_TRANSFORM_PATH_CUDA = {
@@ -68,6 +72,26 @@ if BUILT_WITH_CUDA:
     CUSIG_BATCH_TRANSFORM_PATH_CUDA = {
         "float32": CUSIG.batch_transform_path_cuda_float,
         "float64": CUSIG.batch_transform_path_cuda_double
+    }
+
+    CUSIG_TRANSFORM_PATH_BACKPROP_CUDA = {
+        "float32": CUSIG.transform_path_backprop_cuda_float,
+        "float64": CUSIG.transform_path_backprop_cuda_double
+    }
+
+    CUSIG_BATCH_TRANSFORM_PATH_BACKPROP_CUDA = {
+        "float32": CUSIG.batch_transform_path_backprop_cuda_float,
+        "float64": CUSIG.batch_transform_path_backprop_cuda_double
+    }
+
+    CUSIG_BATCH_SIG_KERNEL_CUDA = {
+        "float32": CUSIG.batch_sig_kernel_cuda_float,
+        "float64": CUSIG.batch_sig_kernel_cuda_double
+    }
+
+    CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA = {
+        "float32": CUSIG.batch_sig_kernel_backprop_cuda_float,
+        "float64": CUSIG.batch_sig_kernel_backprop_cuda_double
     }
 
 CPSIG_SIGNATURE = {

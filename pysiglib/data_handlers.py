@@ -146,7 +146,7 @@ class TripleSigInputHandler:
         self.sig2_ptr = self.data2.data_ptr
         self.sig3_ptr = self.data3.data_ptr
 
-        if self.type_ == "torch" and (sig1.device.type != "cpu" or sig2.device.type != "cpu" or sig3.device.type != "cpu"):
+        if self.type_ == "torch" and (self.sig1.device.type != "cpu" or self.sig2.device.type != "cpu" or self.sig3.device.type != "cpu"):
             raise ValueError(sig1_name + ", " + sig2_name + ", " + sig3_name + " must be located on the cpu")
 
 class SigOutputHandler:
