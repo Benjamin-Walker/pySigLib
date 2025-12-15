@@ -48,6 +48,9 @@
     <ClInclude Include="cp_log_signature.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="words.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cppch.cpp">
@@ -69,6 +72,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cp_log_signatures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="words.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

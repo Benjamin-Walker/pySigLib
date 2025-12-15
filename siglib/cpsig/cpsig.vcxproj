@@ -111,6 +111,7 @@
     <ClInclude Include="cp_vector_funcs.h" />
     <ClInclude Include="macros.h" />
     <ClInclude Include="multithreading.h" />
+    <ClInclude Include="words.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cp_log_signatures.cpp" />
@@ -123,6 +124,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="cp_tensor_poly.cpp" />
+    <ClCompile Include="words.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

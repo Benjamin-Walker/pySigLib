@@ -19,6 +19,7 @@
 #include "cp_path.h"
 #include "cp_signature.h"
 #include "cp_sig_kernel.h"
+#include "words.h"
 #include <algorithm>
 #include <random>
 #include <iostream>
@@ -115,6 +116,16 @@ void check_result_2(FN f, std::vector<T>& path1, std::vector<T>& path2, std::vec
         Assert::IsTrue(abs(true_[i] - out[i]) < EPSILON);
 
     Assert::IsTrue(abs(-1. - out[true_.size()]) < EPSILON);
+}
+
+void check_result_words(std::vector<word> a, std::vector<word> b) {
+    Assert::AreEqual(a.size(), b.size());
+    for (uint64_t i = 0; i < a.size(); ++i) {
+        Assert::AreEqual(a[i].size(), b[i].size());
+        for (uint64_t j = 0; j < a[i].size(); ++j) {
+            Assert::AreEqual(a[i][j], b[i][j]);
+        }
+    }
 }
 
 namespace cpSigTests
@@ -834,6 +845,49 @@ namespace cpSigTests
 
             check_result(func, derivs, true_, sig1.data(), sig2.data(), batch_size, dimension, degree, 1);
             check_result(func, derivs, true_, sig1.data(), sig2.data(), batch_size, dimension, degree, -1);
+        }
+    };
+
+    TEST_CLASS(lyndonWordsTest) {
+    public:
+        TEST_METHOD(AllLyndonWordsTest1) {
+            auto f = all_lyndon_words;
+            uint64_t dimension = 2, degree = 3;
+            std::vector<word> result = f(dimension, degree);
+            std::vector<word> true_ = {
+                {}, {0}, {1},
+                {0,1},
+                {0,0,1}, {0,1,1}
+            };
+            check_result_words(result, true_);
+        }
+
+        TEST_METHOD(AllLyndonWordsTest2) {
+            auto f = all_lyndon_words;
+            uint64_t dimension = 5, degree = 2;
+            std::vector<word> result = f(dimension, degree);
+            std::vector<word> true_ = {
+                {}, {0}, {1}, {2}, {3}, {4},
+                {0,1}, {0,2}, {0,3}, {0,4},
+                {1,2}, {1,3}, {1,4},
+                {2,3}, {2,4}, {3,4}
+            };
+            check_result_words(result, true_);
+        }
+
+        TEST_METHOD(AllLyndonWordsTest3) {
+            auto f = all_lyndon_words;
+            uint64_t dimension = 3, degree = 4;
+            std::vector<word> result = f(dimension, degree);
+            std::vector<word> true_ = { 
+                {}, { 0 }, {1}, {2},
+                {0, 1}, {0, 2}, {1, 2}, 
+                {0, 0, 1}, {0, 0, 2}, {0, 1, 1}, {0, 1, 2}, {0, 2, 1}, {0, 2, 2}, {1, 1, 2}, {1, 2, 2},
+                {0, 0, 0, 1}, {0, 0, 0, 2}, {0, 0, 1, 1}, {0, 0, 1, 2}, {0, 0, 2, 1}, {0, 0, 2, 2},
+                {0, 1, 0, 2}, {0, 1, 1, 1}, {0, 1, 1, 2}, {0, 1, 2, 1}, {0, 1, 2, 2}, {0, 2, 1, 1},
+                {0, 2, 1, 2}, {0, 2, 2, 1}, {0, 2, 2, 2}, {1, 1, 1, 2}, {1, 1, 2, 2}, {1, 2, 2, 2}
+            };
+            check_result_words(result, true_);
         }
     };
 
