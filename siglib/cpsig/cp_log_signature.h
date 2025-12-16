@@ -19,6 +19,7 @@
 #include "multithreading.h"
 #include "cp_tensor_poly.h"
 #include "cp_signature.h"
+#include "words.h"
 
 #include "cp_path.h"
 #include "macros.h"
@@ -96,6 +97,73 @@ void log_sig_from_sig_(
 	}
 }
 
+template<typename T>
+void log_sig_expanded(
+	const T* path,
+	T* out,
+	uint64_t dimension,
+	uint64_t length,
+	uint64_t degree,
+	bool time_aug = false,
+	bool lead_lag = false,
+	T end_time = 1.
+) {
+	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
+	call_signature_horner_(path_obj, out, degree);
+	log_sig_from_sig_<T>(out, path_obj.dimension(), degree);
+}
+
+template<typename T>
+void log_sig_lyndon_words(
+	const T* path,
+	T* out,
+	uint64_t dimension,
+	uint64_t length,
+	uint64_t degree,
+	bool time_aug = false,
+	bool lead_lag = false,
+	T end_time = 1.
+) {
+	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
+	uint64_t aug_dimension = path_obj.dimension();
+
+	auto log_sig_uptr = std::make_unique<T[]>(::sig_length(aug_dimension, degree));
+	T* log_sig = log_sig_uptr.get();
+
+	call_signature_horner_(path_obj, log_sig, degree);
+	log_sig_from_sig_<T>(log_sig, aug_dimension, degree);
+
+	std::vector<uint64_t> lyndon = all_lyndon_idx(aug_dimension, degree);
+
+	uint64_t m = lyndon.size();
+	for (uint64_t i = 0; i < m; ++i) {
+		out[i] = log_sig[lyndon[i]];
+	}
+}
+
+template<std::floating_point T>
+void get_log_sig_(
+	const T* path,
+	T* out,
+	uint64_t dimension,
+	uint64_t length,
+	uint64_t degree,
+	bool time_aug = false,
+	bool lead_lag = false,
+	T end_time = 1.,
+	int method = 0
+)
+{
+	switch (method) {
+	case 0:
+		log_sig_expanded<T>(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
+		break;
+	case 1:
+		log_sig_lyndon_words<T>(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
+		break;
+	}
+}
+
 template<std::floating_point T>
 void log_signature_(
 	const T* path,
@@ -115,13 +183,12 @@ void log_signature_(
 	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time); //Work with path_obj to capture time_aug, lead_lag transformations
 
 	if (path_obj.length() <= 1) {
-		uint64_t result_length = ::log_sig_length(path_obj.dimension(), degree);
+		uint64_t result_length = method ? ::log_sig_length(path_obj.dimension(), degree) : ::sig_length(path_obj.dimension(), degree);
 		std::fill(out, out + result_length, static_cast<T>(0.));
 		return;
 	}
 
-	signature_<T>(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
-	log_sig_from_sig_<T>(out, path_obj.dimension(), degree);
+	get_log_sig_<T>(path, out, dimension, length, degree, time_aug, lead_lag, end_time, method);
 }
 
 template<std::floating_point T>
@@ -160,9 +227,7 @@ void batch_log_signature_(
 	std::function<void(const T*, T*)> log_sig_func;
 
 	log_sig_func = [&](const T* path_ptr, T* out_ptr) {
-		Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
-		signature_<T>(path_ptr, out_ptr, dimension, length, degree, time_aug, lead_lag, end_time);
-		log_sig_from_sig_<T>(out_ptr, path_obj.dimension(), degree);
+		get_log_sig_<T>(path_ptr, out_ptr, dimension, length, degree, time_aug, lead_lag, end_time, method);
 		};
 
 	const T* path_ptr;

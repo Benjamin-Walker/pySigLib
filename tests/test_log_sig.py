@@ -18,6 +18,11 @@ import numpy as np
 import torch
 import iisignature
 
+try:
+    import signatory
+except:
+    signatory = None
+
 import pysiglib
 
 np.random.seed(42)
@@ -34,22 +39,40 @@ def check_close(a, b):
 
 @pytest.mark.parametrize("deg", range(1, 6))
 @pytest.mark.parametrize("dtype", [np.float64, np.float32])
-@pytest.mark.parametrize("method", ["x"])
-def test_log_signature_random(deg, dtype, method):
+def test_log_signature_expanded_random(deg, dtype):
     X = np.random.uniform(size=(100, 5)).astype(dtype)
 
-    s = iisignature.prepare(5, deg, method)
-    iisig = iisignature.logsig(X, s, method).astype(dtype)
-    sig = pysiglib.log_sig(X, deg, method=method).astype(dtype)
+    s = iisignature.prepare(5, deg, "x")
+    iisig = iisignature.logsig(X, s, "x").astype(dtype)
+    sig = pysiglib.log_sig(X, deg, method=0)
     check_close(iisig, sig[1:])
 
 @pytest.mark.parametrize("deg", range(1, 6))
 @pytest.mark.parametrize("dtype", [np.float64, np.float32])
-@pytest.mark.parametrize("method", ["x"])
-def test_batch_log_signature_x_random(deg, dtype, method):
+def test_batch_log_signature_expanded_random(deg, dtype):
     X = np.random.uniform(size=(32, 100, 5)).astype(dtype)
 
-    s = iisignature.prepare(5, deg, method)
-    iisig = iisignature.logsig(X, s, method).astype(dtype)
-    sig = pysiglib.log_sig(X, deg, method=method).astype(dtype)
+    s = iisignature.prepare(5, deg, "x")
+    iisig = iisignature.logsig(X, s, "x").astype(dtype)
+    sig = pysiglib.log_sig(X, deg, method=0)
     check_close(iisig, sig[:, 1:])
+
+@pytest.mark.skipif(signatory is None, reason="signatory not available")
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
+def test_log_signature_lyndon_words_random(deg, dtype):
+    X = torch.rand(size=(1, 100, 5), dtype=dtype)
+
+    ls = signatory.logsignature(X, deg, mode="words")[0]
+    sig = pysiglib.log_sig(X[0], deg, method=1)
+    check_close(ls, sig)
+
+@pytest.mark.skipif(signatory is None, reason="signatory not available")
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
+def test_batch_log_signature_lyndon_words_random(deg, dtype):
+    X = torch.rand(size=(32, 100, 5), dtype=dtype)
+
+    ls = signatory.logsignature(X, deg, mode="words")
+    sig = pysiglib.log_sig(X, deg, method=1)
+    check_close(ls, sig)

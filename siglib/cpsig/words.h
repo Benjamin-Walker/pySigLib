@@ -15,8 +15,10 @@
 
 #pragma once
 #include "cppch.h"
+#include "cp_tensor_poly.h"
 
 typedef std::vector<uint64_t> word;
 
 bool is_lyndon(word w);
 std::vector<word> all_lyndon_words(uint64_t dimension, uint64_t degree);
+std::vector<uint64_t> all_lyndon_idx(uint64_t dimension, uint64_t degree);

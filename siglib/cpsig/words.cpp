@@ -20,7 +20,9 @@
 
 bool is_lyndon(word w) {
 	const uint64_t n = w.size();
-	if (n <= 1)
+	if (n == 0)
+		return false;
+	if (n == 1)
 		return true;
 	for (uint64_t i = 1; i < n; ++i) {
 		if (!std::lexicographical_compare(
@@ -58,3 +60,24 @@ std::vector<word> all_lyndon_words(uint64_t dimension, uint64_t degree) {
 	);
 	return res;
 }
+
+uint64_t word_to_idx(word w, uint64_t dimension) {
+	if (!w.size())
+		return 0;
+
+	uint64_t idx = 0;
+	for (uint64_t i : w) {
+		idx = idx * dimension + (i + 1);
+	}
+	return idx;
+}
+
+std::vector<uint64_t> all_lyndon_idx(uint64_t dimension, uint64_t degree) {
+	std::vector<word> words = all_lyndon_words(dimension, degree);
+	std::vector<uint64_t> res;
+	for (word w : words) {
+		res.push_back(word_to_idx(w, dimension));
+	}
+	return res;
+}
+

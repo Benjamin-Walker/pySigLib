@@ -71,14 +71,14 @@ def log_sig(
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
-        method : str = "s",
+        method : str = 0,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     """#TODO
     """
     check_type(degree, "degree", int)
-    check_type(method, "method", str)
-    method = log_sig_method_parser(method)
+    check_type(method, "method", int)
+    #method = log_sig_method_parser(method)
 
     # If path is on GPU, move to CPU
     device_handler = DeviceToHost([path], ["path"])

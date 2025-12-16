@@ -851,11 +851,10 @@ namespace cpSigTests
     TEST_CLASS(lyndonWordsTest) {
     public:
         TEST_METHOD(AllLyndonWordsTest1) {
-            auto f = all_lyndon_words;
             uint64_t dimension = 2, degree = 3;
-            std::vector<word> result = f(dimension, degree);
+            std::vector<word> result = all_lyndon_words(dimension, degree);
             std::vector<word> true_ = {
-                {}, {0}, {1},
+                {0}, {1},
                 {0,1},
                 {0,0,1}, {0,1,1}
             };
@@ -863,11 +862,10 @@ namespace cpSigTests
         }
 
         TEST_METHOD(AllLyndonWordsTest2) {
-            auto f = all_lyndon_words;
             uint64_t dimension = 5, degree = 2;
-            std::vector<word> result = f(dimension, degree);
+            std::vector<word> result = all_lyndon_words(dimension, degree);
             std::vector<word> true_ = {
-                {}, {0}, {1}, {2}, {3}, {4},
+                {0}, {1}, {2}, {3}, {4},
                 {0,1}, {0,2}, {0,3}, {0,4},
                 {1,2}, {1,3}, {1,4},
                 {2,3}, {2,4}, {3,4}
@@ -876,11 +874,10 @@ namespace cpSigTests
         }
 
         TEST_METHOD(AllLyndonWordsTest3) {
-            auto f = all_lyndon_words;
             uint64_t dimension = 3, degree = 4;
-            std::vector<word> result = f(dimension, degree);
+            std::vector<word> result = all_lyndon_words(dimension, degree);
             std::vector<word> true_ = { 
-                {}, { 0 }, {1}, {2},
+                { 0 }, {1}, {2},
                 {0, 1}, {0, 2}, {1, 2}, 
                 {0, 0, 1}, {0, 0, 2}, {0, 1, 1}, {0, 1, 2}, {0, 2, 1}, {0, 2, 2}, {1, 1, 2}, {1, 2, 2},
                 {0, 0, 0, 1}, {0, 0, 0, 2}, {0, 0, 1, 1}, {0, 0, 1, 2}, {0, 0, 2, 1}, {0, 0, 2, 2},
@@ -891,7 +888,7 @@ namespace cpSigTests
         }
     };
 
-    TEST_CLASS(logSignatureDoubleTest) {
+    TEST_CLASS(logSignatureExpandedTest) {
     public:
 
         TEST_METHOD(LinearPathTest) {
@@ -910,7 +907,7 @@ namespace cpSigTests
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 0);
         }
 
-        TEST_METHOD(ManualSigTest) {
+        TEST_METHOD(ManualLogSigTest) {
             auto f = log_signature_d;
             uint64_t dimension = 2, length = 4, degree = 2;
             std::vector<double> path = { 0., 0., 1., 0.5, 4., 0., 0., 1. };
@@ -918,7 +915,7 @@ namespace cpSigTests
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 0);
         }
 
-        TEST_METHOD(ManualSigTest2) {
+        TEST_METHOD(ManualLogSigTest2) {
             auto f = log_signature_f;
             uint64_t dimension = 3, length = 4, degree = 3;
             std::vector<float> path = { 9., 5., 8., 5., 3., 0., 0., 2., 6., 4., 0., 2. };
@@ -928,10 +925,10 @@ namespace cpSigTests
             -27., -10., -24. - 1./3, 5., 0., -9., 20. + 2./3,
             18., -4. - 2./3, 11., -24. - 1./3, 36., 3. + 2./3, -9.,
             9. + 1./3, -18., -4.-2./3, 0.};
-            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., true);
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 0);
         }
 
-        TEST_METHOD(BatchSigTest) {
+        TEST_METHOD(BatchLogSigTest) {
             auto f = batch_log_signature_d;
             uint64_t dimension = 2, length = 4, degree = 2;
             std::vector<double> path = { 0., 0., 0.25, 0.25, 0.5, 0.5, 1., 1.,
@@ -972,6 +969,85 @@ namespace cpSigTests
             std::vector<double> out;
             out.resize(batch * sig_length(dimension * 2, degree));
             f(path.data(), out.data(), batch, dimension, length, degree, false, true, 1., 0, 1);
+        }
+    };
+
+    TEST_CLASS(logSignatureLyndonWordsTest) {
+    public:
+
+        TEST_METHOD(LinearPathTest) {
+            auto f = log_signature_d;
+            uint64_t dimension = 2, length = 3, degree = 3;
+            std::vector<double> path = { 0., 0., 0.5, 0.5, 1.,1. };
+            std::vector<double> true_sig = { 1., 1., 0., 0., 0. };
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 1);
+        }
+
+        TEST_METHOD(LinearPathTest2) {
+            auto f = log_signature_d;
+            uint64_t dimension = 2, length = 4, degree = 3;
+            std::vector<double> path = { 0.,0., 0.25, 0.25, 0.75, 0.75, 1.,1. };
+            std::vector<double> true_sig = { 1., 1., 0., 0., 0. };
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 1);
+        }
+
+        TEST_METHOD(ManualLogSigTest) {
+            auto f = log_signature_d;
+            uint64_t dimension = 2, length = 4, degree = 2;
+            std::vector<double> path = { 0., 0., 1., 0.5, 4., 0., 0., 1. };
+            std::vector<double> true_sig = { 0., 1., 1. };
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 1);
+        }
+
+        TEST_METHOD(ManualLogSigTest2) {
+            auto f = log_signature_f;
+            uint64_t dimension = 3, length = 4, degree = 3;
+            std::vector<float> path = { 9., 5., 8., 5., 3., 0., 0., 2., 6., 4., 0., 2. };
+            std::vector<float> true_sig = { -5., -5., -6., 12., -10., -6., -27.,
+            11., 5., 3. + 2./3, 20. + 2./3, -18., -9., -4. - 2./3};
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 1);
+        }
+
+        TEST_METHOD(BatchLogSigTest) {
+            auto f = batch_log_signature_d;
+            uint64_t dimension = 2, length = 4, degree = 2;
+            std::vector<double> path = { 0., 0., 0.25, 0.25, 0.5, 0.5, 1., 1.,
+                0., 0., 0.4, 0.4, 0.6, 0.6, 1., 1.,
+                0., 0., 1., 0.5, 4., 0., 0., 1. };
+
+            std::vector<double> true_sig = { 1., 1., 0.,
+                1., 1., 0.,
+                0., 1., 1. };
+
+            check_result(f, path, true_sig, 3, dimension, length, degree, false, false, 1., 1, 1);
+            check_result(f, path, true_sig, 3, dimension, length, degree, false, false, 1., 1, -1);
+        }
+
+        TEST_METHOD(ManualTimeAugTest) {
+            auto f = log_signature_f;
+            uint64_t dimension = 1, length = 5, degree = 3;
+            std::vector<float> path = { 0., 5., 2., 4., 9. };
+            std::vector<float> true_sig = { 9., 4., -2.5, -5.25, 5.5 };
+            double end_time = length - 1.;
+            check_result(f, path, true_sig, dimension, length, degree, true, false, end_time, 1);
+        }
+
+        TEST_METHOD(ManualLeadLagTest) {
+            auto f = log_signature_f;
+            uint64_t dimension = 1, length = 5, degree = 3;
+            std::vector<float> path = { 0., 5., 2., 4., 9. };
+            std::vector<float> true_sig = { 9., 9., -31.5, 26.75, 11.75 };
+            check_result(f, path, true_sig, dimension, length, degree, false, true, 1., 1);
+        }
+
+        TEST_METHOD(BigLeadLagTest) {
+            auto f = batch_log_signature_d;
+            uint64_t dimension = 2, length = 10, degree = 2, batch = 1;
+            std::vector<double> path;
+            path.resize(batch * length * dimension);
+            std::vector<double> out;
+            out.resize(batch * sig_length(dimension * 2, degree));
+            f(path.data(), out.data(), batch, dimension, length, degree, false, true, 1., 1, 1);
         }
     };
 
