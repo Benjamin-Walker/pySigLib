@@ -23,11 +23,36 @@ from .error_codes import err_msg
 from .dtypes import CPSIG_LOG_SIGNATURE, CPSIG_BATCH_LOG_SIGNATURE
 from .sig_length import sig_length, log_sig_length
 from .data_handlers import PathInputHandler, DoubleSigInputHandler, SigOutputHandler, DeviceToHost
+from .load_siglib import CPSIG
 
 
 ######################################################
 # Python wrappers
 ######################################################
+
+def prepare_log_sig(
+        dimension : int,
+        degree : int,
+        time_aug : bool = False,
+        lead_lag : bool = False
+
+) -> Union[np.ndarray, torch.tensor]:
+    """#TODO
+    """
+    check_type(dimension, "dimension", int)
+    check_type(degree, "degree", int)
+    check_type(time_aug, "time_aug", bool)
+    check_type(lead_lag, "lead_lag", bool)
+
+    aug_dimension = (2 * dimension if lead_lag else dimension) + (1 if time_aug else 0)
+
+    err_code = CPSIG.prepare_log_sig(
+        aug_dimension,
+        degree
+    )
+
+    if err_code:
+        raise Exception("Error in pysiglib.prepare_log_sig: " + err_msg(err_code))
 
 def log_signature_(data, result, degree, method):
     err_code = CPSIG_LOG_SIGNATURE[data.dtype](
@@ -43,7 +68,7 @@ def log_signature_(data, result, degree, method):
     )
 
     if err_code:
-        raise Exception("Error in pysiglib.log_signature: " + err_msg(err_code))
+        raise Exception("Error in pysiglib.log_sig: " + err_msg(err_code))
     return result.data
 
 def batch_log_signature_(data, result, degree, method, n_jobs = 1):
@@ -62,7 +87,7 @@ def batch_log_signature_(data, result, degree, method, n_jobs = 1):
     )
 
     if err_code:
-        raise Exception("Error in pysiglib.log_signature: " + err_msg(err_code))
+        raise Exception("Error in pysiglib.log_sig: " + err_msg(err_code))
     return result.data
 
 def log_sig(

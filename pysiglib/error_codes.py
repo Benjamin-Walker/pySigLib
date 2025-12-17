@@ -17,8 +17,9 @@ CPP_ERR_MSG = {
     1 : "Failed to allocate memory",
     2: "Invalid argument",
     3: "Out of range",
-    4: "Runtime error",
-    5: "Unknown exception"
+    4: "Could not find log_sig cache. Please make sure you have run pysiglib.prepare_log_sig with the correct parameters.",
+    5: "Runtime error",
+    6: "Unknown exception"
 }
 
 def err_msg(err_code):

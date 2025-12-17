@@ -36,6 +36,7 @@
 #include <functional>
 #include <concepts>
 #include <set>
+#include <tuple>
 
 #ifdef VEC
 #ifndef __APPLE__

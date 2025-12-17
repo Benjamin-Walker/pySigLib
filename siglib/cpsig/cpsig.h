@@ -353,6 +353,16 @@ extern "C" {
 	*/
 	CPSIG_API uint64_t log_sig_length(uint64_t dimension, uint64_t degree) noexcept;
 
+	/**
+	* @brief Prepares for log signature calculations.
+	*
+	*
+	* @param dimension Dimension of the underlying path.
+	* @param degree Truncation degree of the log signature.
+	* @return Status code (0 = success).
+	*/
+	CPSIG_API int prepare_log_sig(uint64_t dimension, uint64_t degree) noexcept;
+
 	/** @defgroup log_signature_functions Log signature functions
 	* @{
 	*/

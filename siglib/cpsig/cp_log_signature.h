@@ -127,17 +127,17 @@ void log_sig_lyndon_words(
 	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
 	uint64_t aug_dimension = path_obj.dimension();
 
+	const BasisCache& basis_cache = get_basis_cache(aug_dimension, degree);
+
 	auto log_sig_uptr = std::make_unique<T[]>(::sig_length(aug_dimension, degree));
 	T* log_sig = log_sig_uptr.get();
 
 	call_signature_horner_(path_obj, log_sig, degree);
 	log_sig_from_sig_<T>(log_sig, aug_dimension, degree);
 
-	std::vector<uint64_t> lyndon = all_lyndon_idx(aug_dimension, degree);
-
-	uint64_t m = lyndon.size();
+	uint64_t m = basis_cache.lyndon_idx.size();
 	for (uint64_t i = 0; i < m; ++i) {
-		out[i] = log_sig[lyndon[i]];
+		out[i] = log_sig[basis_cache.lyndon_idx[i]];
 	}
 }
 
@@ -152,10 +152,11 @@ void log_sig_lyndon_basis(
 	bool lead_lag = false,
 	T end_time = 1.
 ) {
+	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
+	uint64_t aug_dimension = path_obj.dimension();
 	log_sig_lyndon_words(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
-	SparseMatrix<T> p = lyndon_proj_matrix<T>(dimension, degree);
-	p = p.inverse();
-	p.mul_vec_inplace(out);
+	const BasisCache& basis_cache = get_basis_cache(aug_dimension, degree);
+	basis_cache.inv_proj_mat.mul_vec_inplace(out);
 }
 
 template<std::floating_point T>

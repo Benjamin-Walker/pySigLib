@@ -17,6 +17,7 @@
 #include "cppch.h"
 #include "words.h"
 
+std::unordered_map<std::pair<uint64_t, uint64_t>, std::unique_ptr<BasisCache>, PairHash> basis_cache;
 
 bool is_lyndon(word w) {
 	const uint64_t n = w.size();
@@ -37,7 +38,7 @@ bool is_lyndon(word w) {
 void all_lyndon_words_of_length_n(std::vector<word>& res, uint64_t n, uint64_t dimension) {
 	word w;
 	w.push_back(0);
-  
+
 	while (!w.empty())
 	{
 		uint64_t m = w.size();
@@ -82,7 +83,7 @@ std::vector<uint64_t> all_lyndon_idx(uint64_t dimension, uint64_t degree) {
 	return res;
 }
 
-word longest_lyndon_suffix_(word w, std::vector<word>& lyndon_words) {
+word longest_lyndon_suffix_(word w, const std::vector<word>& lyndon_words) {
 	uint64_t n = w.size();
 	std::set<word> lyndon_set(lyndon_words.begin(), lyndon_words.end());
 	for (uint64_t i = 1; i < n; ++i) {
@@ -111,3 +112,113 @@ uint64_t concatenate_idx(uint64_t i, uint64_t j, uint64_t len_j, uint64_t dimens
 
 }
 
+SparseIntMatrix lyndon_proj_matrix(
+	const std::vector<word>& lyndon_words,
+	std::vector<uint64_t> lyndon_idx, // copy here is intentional
+	uint64_t dimension,
+	uint64_t degree
+) {
+	uint64_t n = sig_length(dimension, degree);
+	uint64_t m = lyndon_words.size();
+
+	SparseIntMatrix out(n, m);
+
+	std::unordered_map<word, uint64_t, WordHash> col_idx;
+
+	for (uint64_t i = 0; i < m; ++i) {
+		col_idx[lyndon_words[i]] = i;
+	}
+
+	for (uint64_t i = 0; i < m; ++i) {
+		word w = lyndon_words[i];
+
+		if (w.size() == 1) {
+			out.insert_entry(w[0] + 1, i, 1);
+		}
+		else {
+			word v = longest_lyndon_suffix_(w, lyndon_words);
+			word u(w.begin(), w.end() - v.size());
+
+			uint64_t jw = col_idx[w];
+			uint64_t jv = col_idx[v];
+			uint64_t ju = col_idx[u];
+
+			// First term in Lie bracket
+			for (uint64_t j = 0; j < n; ++j) {
+				int val1 = out.get(j, ju);
+				if (val1) {
+					for (uint64_t k = 0; k < n; ++k) {
+						int val2 = out.get(k, jv);
+						if (val2) {
+							uint64_t ic = concatenate_idx(j, k, v.size(), dimension);
+							out.add_to_entry(ic, jw, val1 * val2);
+						}
+					}
+				}
+			}
+
+			// Second term in Lie bracket
+			for (uint64_t j = 0; j < n; ++j) {
+				int val1 = out.get(j, jv);
+				if (val1) {
+					for (uint64_t k = 0; k < n; ++k) {
+						int val2 = out.get(k, ju);
+						if (val2) {
+							uint64_t ic = concatenate_idx(j, k, u.size(), dimension);
+							out.add_to_entry(ic, jw, -val1 * val2);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for (uint64_t i = n - 1; i > 0; --i) {
+		if (lyndon_idx.back() != i) {
+			out.drop_row(i);
+		}
+		else {
+			lyndon_idx.pop_back();
+		}
+	}
+    out.drop_row(0);
+	return out;
+}
+
+void set_basis_cache(uint64_t dimension, uint64_t degree) {
+	std::pair<uint64_t, uint64_t> key(dimension, degree);
+
+	auto it = basis_cache.find(key);
+	if (it == basis_cache.end()) {
+
+		std::vector<word> lyndon_words = all_lyndon_words(dimension, degree);
+		std::vector<uint64_t> lyndon_idx = all_lyndon_idx(dimension, degree);
+		SparseIntMatrix p = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
+
+		auto basis_obj = std::make_unique<BasisCache>(
+			std::move(lyndon_words),
+			std::move(lyndon_idx),
+			std::move(p),
+			std::move(p.inverse())
+		);
+		basis_cache.emplace(key, std::move(basis_obj));
+	}
+}
+
+const BasisCache& get_basis_cache(uint64_t dimension, uint64_t degree) {
+	std::pair<uint64_t, uint64_t> key(dimension, degree);
+
+	auto it = basis_cache.find(key);
+	if (it == basis_cache.end()) {
+		throw std::runtime_error("Could not find basis cache");
+	}
+	return *(it->second);
+}
+
+extern "C" {
+
+	CPSIG_API int prepare_log_sig(uint64_t dimension, uint64_t degree) noexcept {
+		SAFE_CALL(set_basis_cache(dimension, degree));
+	}
+
+}

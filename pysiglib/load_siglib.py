@@ -545,6 +545,16 @@ CPSIG.log_sig_length.argtypes = (
 CPSIG.log_sig_length.restype = c_uint64
 
 ######################################################
+# prepare_log_sig
+######################################################
+
+CPSIG.prepare_log_sig.argtypes = (
+    c_uint64,
+    c_uint64
+)
+CPSIG.prepare_log_sig.restype = c_int
+
+######################################################
 # log_signature
 ######################################################
 

@@ -16,57 +16,71 @@
 #pragma once
 #include "cppch.h"
 
-template<std::floating_point T>
 struct Entry {
     uint64_t col;
-    T val;
+    int val;
 };
 
-template<std::floating_point T>
-class SparseMatrix {
+class SparseIntMatrix {
 public:
     uint64_t n;
     uint64_t m;
-    std::vector<std::vector<Entry<T>>> rows;
+    std::vector<std::vector<Entry>> rows;
 
-    SparseMatrix(uint64_t n_)
+    SparseIntMatrix()
+        : n(0), m(0), rows(0) {
+    }
+
+    SparseIntMatrix(uint64_t n_)
         : n(n_), m(n_), rows(n_) {
     }
 
-    SparseMatrix(uint64_t n_, uint64_t m_)
+    SparseIntMatrix(uint64_t n_, uint64_t m_)
         : n(n_), m(m_), rows(n_) {
+    }
+
+    SparseIntMatrix(SparseIntMatrix&& other) noexcept {
+        n = other.n;
+        m = other.m;
+        rows.swap(other.rows);
+    }
+
+    void resize(uint64_t n_, uint64_t m_) {
+        n = n_;
+        m = m_;
+        rows.resize(n);
     }
 
     void populate_diagonal() {
 #ifdef _DEBUG
         if (n != m) {
-            throw std::runtime_error("n != m in SparseMatrix.populate_diagonal");
+            throw std::runtime_error("n != m in SparseIntMatrix.populate_diagonal");
         }
 #endif
 
         for (uint64_t i = 0; i < n; ++i) {
-            this->insert_entry(i, i, 1.);
+            this->insert_entry(i, i, 1);
         }
     }
 
     bool is_nonzero(uint64_t i, uint64_t j) const {
 #ifdef _DEBUG
         if (i > n || j > m) {
-            throw std::out_of_range("i,j out of range in SparseMatrix.is_nonzero");
+            throw std::out_of_range("i,j out of range in SparseIntMatrix.is_nonzero");
         }
 #endif
 
         for (const auto& e : rows[i]) {
             if (e.col == j)
-                return e.val != static_cast<T>(0.);
+                return e.val != 0;
         }
         return false;
     }
 
-    T get(uint64_t i, uint64_t j) const {
+    int get(uint64_t i, uint64_t j) const {
 #ifdef _DEBUG
         if (i > n || j > m) {
-            throw std::out_of_range("i,j out of range in SparseMatrix.is_nonzero");
+            throw std::out_of_range("i,j out of range in SparseIntMatrix.is_nonzero");
         }
 #endif
 
@@ -74,14 +88,14 @@ public:
             if (e.col == j)
                 return e.val;
         }
-        return static_cast<T>(0.);
+        return 0;
     }
 
 
-    void insert_entry(uint64_t i, uint64_t j, T v) {
+    void insert_entry(uint64_t i, uint64_t j, int v) {
 #ifdef _DEBUG
         if (i > n || j > m) {
-            throw std::out_of_range("i,j out of range in SparseMatrix.insert_entry");
+            throw std::out_of_range("i,j out of range in SparseIntMatrix.insert_entry");
         }
 #endif
         rows[i].push_back({ j, v });
@@ -90,31 +104,31 @@ public:
     void drop_row(uint64_t i) {
 #ifdef _DEBUG
         if (i > n) {
-            throw std::out_of_range("i out of range in SparseMatrix.drop_row");
+            throw std::out_of_range("i out of range in SparseIntMatrix.drop_row");
         }
 #endif
         rows.erase(rows.begin() + i);
         --n;
     }
 
-    SparseMatrix<T> inverse() const {
+    SparseIntMatrix inverse() const {
         // This assumes matrix is lower triangular with ones on the diagonal
 #ifdef _DEBUG
         if (n != m) {
-            throw std::runtime_error("n != m in SparseMatrix.inverse");
+            throw std::runtime_error("n != m in SparseIntMatrix.inverse");
         }
 #endif
 
-        SparseMatrix<T> inv(n);
+        SparseIntMatrix inv(n);
 
         for (uint64_t i = 0; i < n; ++i) {
-            inv.insert_entry(i, i, static_cast<T>(1));
+            inv.insert_entry(i, i, 1);
         }
 
         for (uint64_t i = 0; i < n; ++i) {
             for (const auto& e : rows[i]) {
                 uint64_t k = e.col;
-                T Lik = e.val;
+                int Lik = e.val;
 
                 if (k >= i) continue;
 
@@ -131,7 +145,8 @@ public:
         return inv;
     }
 
-    void mul_vec_inplace(T* arr) {
+    template<std::floating_point T>
+    void mul_vec_inplace(T* arr) const {
         // This assumes matrix is lower triangular with ones on the diagonal
         for (uint64_t i_ = 0; i_ < n; ++i_) {
             uint64_t i = n - i_ - 1;
@@ -144,13 +159,11 @@ public:
         }
     }
 
-    bool operator==(const SparseMatrix<T>& other) const {
+    bool operator==(const SparseIntMatrix& other) const {
         if (n != other.n) return false;
 
-        constexpr T tol = 1e-10;
-
         for (uint64_t i = 0; i < n; ++i) {
-            std::unordered_map<uint64_t, T> row;
+            std::unordered_map<uint64_t, int> row;
 
             for (const auto& e : rows[i])
                 row[e.col] += e.val;
@@ -159,7 +172,7 @@ public:
                 row[e.col] -= e.val;
 
             for (const auto& [j, v] : row) {
-                if (v > tol || v < -tol)
+                if (v)
                     return false;
             }
         }
@@ -167,10 +180,10 @@ public:
         return true;
     }
 
-    void add_to_entry(uint64_t i, uint64_t j, T v) {
+    void add_to_entry(uint64_t i, uint64_t j, int v) {
 #ifdef _DEBUG
         if (i > n || j > m) {
-            throw std::out_of_range("i,j out of range in SparseMatrix.insert_entry");
+            throw std::out_of_range("i,j out of range in SparseIntMatrix.insert_entry");
         }
 #endif
         for (auto& e : rows[i]) {

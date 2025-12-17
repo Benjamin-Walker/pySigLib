@@ -27,24 +27,34 @@
     #define FORCE_INLINE inline __attribute__((always_inline))
 #endif
 
-#define SAFE_CALL(function_call)                 \
-    try {                                        \
-        function_call;                           \
-    }                                            \
-    catch (std::bad_alloc&) {					 \
-		std::cerr << "Failed to allocate memory";\
-        return 1;                                \
-    }                                            \
-    catch (std::invalid_argument& e) {           \
-		std::cerr << e.what();					 \
-        return 2;                                \
-    }                                            \
-	catch (std::out_of_range& e) {			     \
-		std::cerr << e.what();					 \
-		return 3;                                \
-	}  											 \
-    catch (...) {                                \
-		std::cerr << "Unknown exception";		 \
-        return 4;                                \
-    }                                            \
+#define SAFE_CALL(function_call)                                    \
+    try {                                                           \
+        function_call;                                              \
+    }                                                               \
+    catch (std::bad_alloc&) {					                    \
+		std::cerr << "Failed to allocate memory";                   \
+        return 1;                                                   \
+    }                                                               \
+    catch (std::invalid_argument& e) {                              \
+		std::cerr << e.what();					                    \
+        return 2;                                                   \
+    }                                                               \
+	catch (std::out_of_range& e) {			                        \
+		std::cerr << e.what();					                    \
+		return 3;                                                   \
+	}  											                    \
+    catch (std::runtime_error& e) {                                 \
+        if (std::string(e.what()) == "Could not find basis cache") {\
+            std::cerr << e.what();                                  \
+            return 4;                                               \
+        }                                                           \
+        else {                                                      \
+            std::cerr << e.what();                                  \
+            return 5;                                               \
+        }                                                           \
+    }                                                               \
+    catch (...) {                                                   \
+		std::cerr << "Unknown exception";		                    \
+        return 6;                                                   \
+    }                                                               \
     return 0;

@@ -44,6 +44,7 @@ def test_log_signature_expanded_random(deg, dtype):
 
     s = iisignature.prepare(5, deg, "x")
     iisig = iisignature.logsig(X, s, "x").astype(dtype)
+    pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X, deg, method=0)
     check_close(iisig, sig[1:])
 
@@ -54,6 +55,7 @@ def test_batch_log_signature_expanded_random(deg, dtype):
 
     s = iisignature.prepare(5, deg, "x")
     iisig = iisignature.logsig(X, s, "x").astype(dtype)
+    pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X, deg, method=0)
     check_close(iisig, sig[:, 1:])
 
@@ -64,6 +66,7 @@ def test_log_signature_lyndon_words_random(deg, dtype):
     X = torch.rand(size=(1, 100, 5), dtype=dtype)
 
     ls = signatory.logsignature(X, deg, mode="words")[0]
+    pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X[0], deg, method=1)
     check_close(ls, sig)
 
@@ -74,6 +77,7 @@ def test_batch_log_signature_lyndon_words_random(deg, dtype):
     X = torch.rand(size=(32, 100, 5), dtype=dtype)
 
     ls = signatory.logsignature(X, deg, mode="words")
+    pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X, deg, method=1)
     check_close(ls, sig)
 
@@ -84,6 +88,7 @@ def test_log_signature_lyndon_basis_random(deg, dtype):
 
     s = iisignature.prepare(5, deg, "s")
     iisig = iisignature.logsig(X, s, "s").astype(dtype)
+    pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X, deg, method=2)
     check_close(iisig, sig)
 
@@ -94,5 +99,6 @@ def test_batch_log_signature_lyndon_basis_random(deg, dtype):
 
     s = iisignature.prepare(5, deg, "s")
     iisig = iisignature.logsig(X, s, "s").astype(dtype)
+    pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X, deg, method=2)
     check_close(iisig, sig)

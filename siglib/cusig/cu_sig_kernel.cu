@@ -717,7 +717,7 @@ void sig_kernel_backprop_cuda_(
 		std::string msg = e.what();							\
 		std::regex pattern(R"(CUDA Error \((\d+)\):)");		\
 		std::smatch match;									\
-		int ret_code = 4;									\
+		int ret_code = 5;									\
 		if (std::regex_search(msg, match, pattern)) {		\
 			ret_code = 100000 + std::stoi(match[1]);		\
 		}													\
@@ -726,7 +726,7 @@ void sig_kernel_backprop_cuda_(
 	}														\
     catch (...) {                                           \
 		std::cerr << "Unknown exception";		            \
-        return 5;                                           \
+        return 6;                                           \
     }                                                       \
     return 0;
 
