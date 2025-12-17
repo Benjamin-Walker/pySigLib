@@ -34,30 +34,32 @@ bool is_lyndon(word w) {
 	return true;
 }
 
-void build_words_(uint64_t dimension, uint64_t degree, word& w, std::vector<word>& res) {
-	if (w.size() > degree) {
-		return;
+std::vector<word> all_lyndon_words_of_length_n(std::vector<word>& res, uint64_t n, uint64_t dimension) {
+	word w;
+	w.push_back(0);
+  
+	while (!w.empty())
+	{
+		uint64_t m = w.size();
+		if (m == n)
+			res.push_back(w);
+
+		while (w.size() < n)
+			w.push_back(w[w.size() - m]);
+
+		while (!w.empty() && w.back() == dimension - 1)
+			w.pop_back();
+
+		if (!w.empty())
+			++w.back();
 	}
-	if (is_lyndon(w))
-		res.push_back(w);
-	for (uint64_t j = 0; j < dimension; ++j) {
-		w.push_back(j);
-		build_words_(dimension, degree, w, res);
-		w.pop_back();
-	}
+	return res;
 }
 
 std::vector<word> all_lyndon_words(uint64_t dimension, uint64_t degree) {
 	std::vector<word> res;
-	word w;
-	build_words_(dimension, degree, w, res);
-	std::sort(res.begin(), res.end(),
-		[](const word& a, const word& b) {
-			if (a.size() != b.size())
-				return a.size() < b.size(); // length first
-			return a < b;                   // lexicographic
-		}
-	);
+	for (uint64_t n = 1; n <= degree; ++n)
+		all_lyndon_words_of_length_n(res, n, dimension);
 	return res;
 }
 
