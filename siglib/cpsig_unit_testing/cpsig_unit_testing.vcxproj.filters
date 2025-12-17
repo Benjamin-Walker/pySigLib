@@ -48,6 +48,9 @@
     <ClInclude Include="..\cpsig\words.h">
       <Filter>Header Files\cpsig</Filter>
     </ClInclude>
+    <ClInclude Include="..\cpsig\sparse.h">
+      <Filter>Header Files\cpsig</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\cpsig\cppch.cpp">

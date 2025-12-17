@@ -111,6 +111,7 @@
     <ClInclude Include="cp_vector_funcs.h" />
     <ClInclude Include="macros.h" />
     <ClInclude Include="multithreading.h" />
+    <ClInclude Include="sparse.h" />
     <ClInclude Include="words.h" />
   </ItemGroup>
   <ItemGroup>

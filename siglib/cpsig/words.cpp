@@ -83,3 +83,32 @@ std::vector<uint64_t> all_lyndon_idx(uint64_t dimension, uint64_t degree) {
 	return res;
 }
 
+word longest_lyndon_suffix_(word w, std::vector<word>& lyndon_words) {
+	uint64_t n = w.size();
+	std::set<word> lyndon_set(lyndon_words.begin(), lyndon_words.end());
+	for (uint64_t i = 1; i < n; ++i) {
+		word suffix(w.begin() + i, w.end());
+		if (lyndon_set.find(suffix) != lyndon_set.end()) {
+			return suffix;
+		}
+	}
+	throw std::runtime_error("Error looking for lyndon suffix");
+}
+
+word concatenate_words(word& a, word& b) {
+	word c(a);
+	c.insert(c.end(), b.begin(), b.end());
+	return c;
+}
+
+uint64_t concatenate_idx(uint64_t i, uint64_t j, uint64_t len_j, uint64_t dimension) {
+	// If i and j correspond to word_to_idx(a) and word_to_idx(b),
+	// then this function outputs word_to_idx(c) where c is the
+	// concatenation of a and b.
+	uint64_t idx = i;
+	idx *= ::power(dimension, len_j);
+	idx += j;
+	return idx;
+
+}
+

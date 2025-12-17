@@ -97,7 +97,7 @@ void log_sig_from_sig_(
 	}
 }
 
-template<typename T>
+template<std::floating_point T>
 void log_sig_expanded(
 	const T* path,
 	T* out,
@@ -113,7 +113,7 @@ void log_sig_expanded(
 	log_sig_from_sig_<T>(out, path_obj.dimension(), degree);
 }
 
-template<typename T>
+template<std::floating_point T>
 void log_sig_lyndon_words(
 	const T* path,
 	T* out,

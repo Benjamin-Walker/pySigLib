@@ -19,6 +19,7 @@
 #include "cp_path.h"
 #include "cp_signature.h"
 #include "cp_sig_kernel.h"
+#include "sparse.h"
 #include "words.h"
 #include <algorithm>
 #include <random>
@@ -130,6 +131,49 @@ void check_result_words(std::vector<word> a, std::vector<word> b) {
 
 namespace cpSigTests
 {
+    TEST_CLASS(SparseMatrixTest) {
+public:
+    TEST_METHOD(BasicTest1)
+    {
+        SparseMatrix<double> mat(4);
+        mat.populate_diagonal();
+        mat.insert_entry(2, 0, 0.5);
+        mat.insert_entry(3, 2, 2.0);
+
+        SparseMatrix<double> true_inv(4);
+        true_inv.populate_diagonal();
+        true_inv.insert_entry(2, 0, -0.5);
+        true_inv.insert_entry(3, 2, -2.0);
+        true_inv.insert_entry(3, 0, 1.);
+
+        SparseMatrix<double> inv = mat.inverse();
+
+        Assert::IsTrue(true_inv == inv);
+    }
+
+    TEST_METHOD(BasicTest2)
+    {
+        SparseMatrix<double> mat(5);
+        mat.populate_diagonal();
+        mat.insert_entry(1, 0, 3.);
+        mat.insert_entry(2, 1, 0.1);
+        mat.insert_entry(4, 0, 5.);
+        mat.insert_entry(4, 3, -2.);
+
+        SparseMatrix<double> true_inv(5);
+        true_inv.populate_diagonal();
+        true_inv.insert_entry(1, 0, -3.);
+        true_inv.insert_entry(2, 0, 0.3);
+        true_inv.insert_entry(2, 1, -0.1);
+        true_inv.insert_entry(4, 0, -5.);
+        true_inv.insert_entry(4, 3, 2.);
+
+        SparseMatrix<double> inv = mat.inverse();
+
+        Assert::IsTrue(true_inv == inv);
+    }
+    };
+
     TEST_CLASS(PolyTest)
     {
     public:
@@ -885,6 +929,37 @@ namespace cpSigTests
                 {0, 2, 1, 2}, {0, 2, 2, 1}, {0, 2, 2, 2}, {1, 1, 1, 2}, {1, 1, 2, 2}, {1, 2, 2, 2}
             };
             check_result_words(result, true_);
+        }
+    };
+
+    TEST_CLASS(lyndonMatrixTest) {
+    public:
+        TEST_METHOD(lyndonMatrixTest1) {
+            uint64_t dimension = 2, degree = 2;
+            SparseMatrix<double> out = lyndon_proj_matrix<double>(dimension, degree);
+
+            SparseMatrix<double> true_(out.n);
+            true_.populate_diagonal();
+
+            Assert::IsTrue(true_ == out);
+        }
+        TEST_METHOD(lyndonMatrixTest2) {
+            uint64_t dimension = 3, degree = 4;
+            SparseMatrix<double> out = lyndon_proj_matrix<double>(dimension, degree);
+
+            SparseMatrix<double> true_(out.n);
+            true_.populate_diagonal();
+            true_.insert_entry(10, 9, -1.);
+            true_.insert_entry(18, 17, -1.);
+            true_.insert_entry(20, 18, -1.);
+            true_.insert_entry(23, 22, -2.);
+            true_.insert_entry(25, 22, 1.);
+            true_.insert_entry(25, 23, -1.);
+            true_.insert_entry(26, 24, -2.);
+            true_.insert_entry(27, 24, 1.);
+            true_.insert_entry(27, 26, -1.);
+
+            Assert::IsTrue(true_ == out);
         }
     };
 

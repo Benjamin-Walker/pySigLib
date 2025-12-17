@@ -19,6 +19,7 @@
     <ClInclude Include="..\cpsig\cp_signature.h" />
     <ClInclude Include="..\cpsig\cp_sig_kernel.h" />
     <ClInclude Include="..\cpsig\cp_tensor_poly.h" />
+    <ClInclude Include="..\cpsig\sparse.h" />
     <ClInclude Include="..\cpsig\words.h" />
   </ItemGroup>
   <ItemGroup>
