@@ -142,6 +142,23 @@ void log_sig_lyndon_words(
 }
 
 template<std::floating_point T>
+void log_sig_lyndon_basis(
+	const T* path,
+	T* out,
+	uint64_t dimension,
+	uint64_t length,
+	uint64_t degree,
+	bool time_aug = false,
+	bool lead_lag = false,
+	T end_time = 1.
+) {
+	log_sig_lyndon_words(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
+	SparseMatrix<T> p = lyndon_proj_matrix<T>(dimension, degree);
+	p = p.inverse();
+	p.mul_vec_inplace(out);
+}
+
+template<std::floating_point T>
 void get_log_sig_(
 	const T* path,
 	T* out,
@@ -161,6 +178,8 @@ void get_log_sig_(
 	case 1:
 		log_sig_lyndon_words<T>(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
 		break;
+	case 2:
+		log_sig_lyndon_basis<T>(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
 	}
 }
 

@@ -34,7 +34,7 @@ bool is_lyndon(word w) {
 	return true;
 }
 
-std::vector<word> all_lyndon_words_of_length_n(std::vector<word>& res, uint64_t n, uint64_t dimension) {
+void all_lyndon_words_of_length_n(std::vector<word>& res, uint64_t n, uint64_t dimension) {
 	word w;
 	w.push_back(0);
   
@@ -53,7 +53,6 @@ std::vector<word> all_lyndon_words_of_length_n(std::vector<word>& res, uint64_t 
 		if (!w.empty())
 			++w.back();
 	}
-	return res;
 }
 
 std::vector<word> all_lyndon_words(uint64_t dimension, uint64_t degree) {

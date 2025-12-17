@@ -961,6 +961,18 @@ public:
 
             Assert::IsTrue(true_ == out);
         }
+
+        TEST_METHOD(lyndonMatrixTest3) {
+            uint64_t dimension = 2, degree = 5;
+            SparseMatrix<double> out = lyndon_proj_matrix<double>(dimension, degree);
+
+            SparseMatrix<double> true_(out.n);
+            true_.populate_diagonal();
+            true_.insert_entry(10, 9, -2.);
+            true_.insert_entry(12, 11, -3.);
+
+            Assert::IsTrue(true_ == out);
+        }
     };
 
     TEST_CLASS(logSignatureExpandedTest) {
@@ -1123,6 +1135,27 @@ public:
             std::vector<double> out;
             out.resize(batch * sig_length(dimension * 2, degree));
             f(path.data(), out.data(), batch, dimension, length, degree, false, true, 1., 1, 1);
+        }
+    };
+
+    TEST_CLASS(logSignatureLyndonBasisTest) {
+    public:
+
+        TEST_METHOD(LinearPathTest) {
+            auto f = log_signature_d;
+            uint64_t dimension = 2, length = 3, degree = 3;
+            std::vector<double> path = { 0., 0., 0.5, 0.5, 1.,1. };
+            std::vector<double> true_sig = { 1., 1., 0., 0., 0. };
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 2);
+        }
+
+        TEST_METHOD(ManualLogSigTest2) {
+            auto f = log_signature_f;
+            uint64_t dimension = 3, length = 4, degree = 3;
+            std::vector<float> path = { 9., 5., 8., 5., 3., 0., 0., 2., 6., 4., 0., 2. };
+            std::vector<float> true_sig = { -5., -5., -6., 12., -10., -6., -27.,
+            11., 5., 3. + 2. / 3, 24. + 1. / 3, -18., -9., -4. - 2. / 3 };
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 2);
         }
     };
 

@@ -76,3 +76,23 @@ def test_batch_log_signature_lyndon_words_random(deg, dtype):
     ls = signatory.logsignature(X, deg, mode="words")
     sig = pysiglib.log_sig(X, deg, method=1)
     check_close(ls, sig)
+
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [np.float64, np.float32])
+def test_log_signature_lyndon_basis_random(deg, dtype):
+    X = np.random.uniform(size=(100, 5)).astype(dtype)
+
+    s = iisignature.prepare(5, deg, "s")
+    iisig = iisignature.logsig(X, s, "s").astype(dtype)
+    sig = pysiglib.log_sig(X, deg, method=2)
+    check_close(iisig, sig)
+
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [np.float64, np.float32])
+def test_batch_log_signature_lyndon_basis_random(deg, dtype):
+    X = np.random.uniform(size=(32, 100, 5)).astype(dtype)
+
+    s = iisignature.prepare(5, deg, "s")
+    iisig = iisignature.logsig(X, s, "s").astype(dtype)
+    sig = pysiglib.log_sig(X, deg, method=2)
+    check_close(iisig, sig)
