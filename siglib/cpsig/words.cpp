@@ -83,7 +83,7 @@ std::vector<uint64_t> all_lyndon_idx(uint64_t dimension, uint64_t degree) {
 	return res;
 }
 
-word longest_lyndon_suffix_(word w, const std::set<word>& lyndon_set) {
+word longest_lyndon_suffix_(word w, const std::unordered_set<word, WordHash>& lyndon_set) {
 	uint64_t n = w.size();
 	for (uint64_t i = 1; i < n; ++i) {
 		word suffix(w.begin() + i, w.end());
@@ -117,7 +117,7 @@ SparseIntMatrix lyndon_proj_matrix(
 	uint64_t dimension,
 	uint64_t degree
 ) {
-	std::set<word> lyndon_set(lyndon_words.begin(), lyndon_words.end());
+	std::unordered_set<word, WordHash> lyndon_set(lyndon_words.begin(), lyndon_words.end());
 	uint64_t n = sig_length(dimension, degree);
 	uint64_t m = lyndon_words.size();
 
@@ -128,7 +128,7 @@ SparseIntMatrix lyndon_proj_matrix(
 	for (uint64_t i = 1; i <= degree + 1; i++)
 		level_index[i] = level_index[i - 1] * dimension + 1;
 
-	SparseIntMatrix full_mat(n, m);
+	SparseIntMatrix full_mat_transpose(m, n);
 
 	std::unordered_map<word, uint64_t, WordHash> col_idx;
 
@@ -140,7 +140,7 @@ SparseIntMatrix lyndon_proj_matrix(
 		word w = lyndon_words[i];
 
 		if (w.size() == 1) {
-			full_mat.insert_entry(w[0] + 1, i, 1);
+			full_mat_transpose.insert_entry(i, w[0] + 1, 1);
 		}
 		else {
 			word v = longest_lyndon_suffix_(w, lyndon_set);
@@ -156,16 +156,15 @@ SparseIntMatrix lyndon_proj_matrix(
 			uint64_t u_start = level_index[u.size()];
 			uint64_t u_end = level_index[u.size() + 1];
 
-			for (uint64_t j = u_start; j < u_end; ++j) {
-				int val1 = full_mat.get(j, ju);
-				if (val1) {
-					for (uint64_t k = v_start; k < v_end; ++k) {
-						int val2 = full_mat.get(k, jv);
-						if (val2) {
-							uint64_t ic = concatenate_idx(j, k, v.size(), dimension);
-							full_mat.add_to_entry(ic, jw, val1 * val2);
-							ic = concatenate_idx(k, j, u.size(), dimension);
-							full_mat.add_to_entry(ic, jw, -val1 * val2);
+			for (const auto& eu : full_mat_transpose.rows[ju]) {
+				if (eu.val) {
+					for (const auto& ev : full_mat_transpose.rows[jv]) {
+						if (ev.val) {
+							uint64_t ic = concatenate_idx(eu.col, ev.col, v.size(), dimension);
+							int val = eu.val * ev.val;
+							full_mat_transpose.add_to_entry(jw, ic, val);
+							ic = concatenate_idx(ev.col, eu.col, u.size(), dimension);
+							full_mat_transpose.add_to_entry(jw, ic, -val);
 						}
 					}
 				}
@@ -173,6 +172,7 @@ SparseIntMatrix lyndon_proj_matrix(
 		}
 	}
 
+	SparseIntMatrix full_mat = full_mat_transpose.transpose();
 	SparseIntMatrix lyndon_mat(full_mat.m);
 
 	for (uint64_t i = 0; i < m; ++i) {

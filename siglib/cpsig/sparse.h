@@ -145,6 +145,18 @@ public:
         return inv;
     }
 
+    SparseIntMatrix transpose() const {
+        SparseIntMatrix tr(m, n);
+
+        for (uint64_t i = 0; i < n; ++i) {
+            for (const auto& e : rows[i]) {
+                tr.rows[e.col].push_back({ i, e.val });
+            }
+        }
+
+        return tr;
+    }
+
     template<std::floating_point T>
     void mul_vec_inplace(T* arr) const {
         // This assumes matrix is lower triangular with ones on the diagonal

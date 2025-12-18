@@ -20,6 +20,19 @@
 
 typedef std::vector<uint64_t> word;
 
+struct WordHash {
+	std::size_t operator()(const word& w) const noexcept {
+		std::size_t h = 0;
+		for (uint64_t x : w) {
+			h ^= std::hash<uint64_t>{}(x)
+				+0x9e3779b97f4a7c15ULL
+				+ (h << 6)
+				+ (h >> 2);
+		}
+		return h;
+	}
+};
+
 struct PairHash {
 	std::size_t operator()(const std::pair<uint64_t, uint64_t>& p) const noexcept {
 		std::size_t h1 = std::hash<uint64_t>{}(p.first);
@@ -52,23 +65,9 @@ bool is_lyndon(word w);
 std::vector<word> all_lyndon_words(uint64_t dimension, uint64_t degree);
 std::vector<uint64_t> all_lyndon_idx(uint64_t dimension, uint64_t degree);
 uint64_t word_to_idx(word w, uint64_t dimension);
-word longest_lyndon_suffix_(word w, const std::vector<word>& lyndon_words);
+word longest_lyndon_suffix_(word w, const std::unordered_set<word, WordHash>& lyndon_words);
 word concatenate_words(word& a, word& b);
 uint64_t concatenate_idx(uint64_t i, uint64_t j, uint64_t len_j, uint64_t dimension);
-
-
-struct WordHash {
-	std::size_t operator()(const word& w) const noexcept {
-		std::size_t h = 0;
-		for (uint64_t x : w) {
-			h ^= std::hash<uint64_t>{}(x)
-				+0x9e3779b97f4a7c15ULL
-				+ (h << 6)
-				+ (h >> 2);
-		}
-		return h;
-	}
-};
 
 SparseIntMatrix lyndon_proj_matrix(
 	const std::vector<word>& lyndon_words,

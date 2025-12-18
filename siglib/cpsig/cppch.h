@@ -36,7 +36,8 @@
 #include <functional>
 #include <concepts>
 #include <set>
-#include <tuple>
+#include <map>
+#include <unordered_set>
 
 #ifdef VEC
 #ifndef __APPLE__
