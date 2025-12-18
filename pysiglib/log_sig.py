@@ -33,6 +33,7 @@ from .load_siglib import CPSIG
 def prepare_log_sig(
         dimension : int,
         degree : int,
+        method : int,
         time_aug : bool = False,
         lead_lag : bool = False
 
@@ -41,14 +42,19 @@ def prepare_log_sig(
     """
     check_type(dimension, "dimension", int)
     check_type(degree, "degree", int)
+    check_type(method, "method", int)
     check_type(time_aug, "time_aug", bool)
     check_type(lead_lag, "lead_lag", bool)
+
+    if method == 0:
+        return
 
     aug_dimension = (2 * dimension if lead_lag else dimension) + (1 if time_aug else 0)
 
     err_code = CPSIG.prepare_log_sig(
         aug_dimension,
-        degree
+        degree,
+        method
     )
 
     if err_code:

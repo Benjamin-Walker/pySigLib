@@ -51,6 +51,18 @@ public:
         rows.resize(n);
     }
 
+    void swap(SparseIntMatrix& other) noexcept {
+        using std::swap;
+        swap(n, other.n);
+        swap(m, other.m);
+        swap(rows, other.rows);
+    }
+
+    SparseIntMatrix& operator=(SparseIntMatrix other) {
+        swap(other);
+        return *this;
+    }
+
     void populate_diagonal() {
 #ifdef _DEBUG
         if (n != m) {

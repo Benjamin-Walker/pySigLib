@@ -181,7 +181,10 @@ SparseIntMatrix lyndon_proj_matrix(
 	return lyndon_mat;
 }
 
-void set_basis_cache(uint64_t dimension, uint64_t degree) {
+void set_basis_cache(uint64_t dimension, uint64_t degree, int method) {
+	if (method < 1)
+		return;
+
 	std::pair<uint64_t, uint64_t> key(dimension, degree);
 
 	auto it = basis_cache.find(key);
@@ -189,23 +192,28 @@ void set_basis_cache(uint64_t dimension, uint64_t degree) {
 
 		std::vector<word> lyndon_words = all_lyndon_words(dimension, degree);
 		std::vector<uint64_t> lyndon_idx = all_lyndon_idx(dimension, degree);
-		SparseIntMatrix p = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
+		SparseIntMatrix p, p_inv;
+		if (method == 2) {
+			p = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
+			p_inv = p.inverse();
+		}
 
 		auto basis_obj = std::make_unique<BasisCache>(
+			method,
 			std::move(lyndon_words),
 			std::move(lyndon_idx),
 			std::move(p),
-			std::move(p.inverse())
+			std::move(p_inv)
 		);
 		basis_cache.emplace(key, std::move(basis_obj));
 	}
 }
 
-const BasisCache& get_basis_cache(uint64_t dimension, uint64_t degree) {
+const BasisCache& get_basis_cache(uint64_t dimension, uint64_t degree, int method) {
 	std::pair<uint64_t, uint64_t> key(dimension, degree);
 
 	auto it = basis_cache.find(key);
-	if (it == basis_cache.end()) {
+	if (it == basis_cache.end() || it->second->method < method) {
 		throw std::runtime_error("Could not find basis cache");
 	}
 	return *(it->second);
@@ -213,8 +221,8 @@ const BasisCache& get_basis_cache(uint64_t dimension, uint64_t degree) {
 
 extern "C" {
 
-	CPSIG_API int prepare_log_sig(uint64_t dimension, uint64_t degree) noexcept {
-		SAFE_CALL(set_basis_cache(dimension, degree));
+	CPSIG_API int prepare_log_sig(uint64_t dimension, uint64_t degree, int method) noexcept {
+		SAFE_CALL(set_basis_cache(dimension, degree, method));
 	}
 
 	CPSIG_API void reset_log_sig() noexcept {

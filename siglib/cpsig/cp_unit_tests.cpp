@@ -989,7 +989,6 @@ public:
             uint64_t dimension = 2, length = 3, degree = 3;
             std::vector<double> path = { 0., 0., 0.5, 0.5, 1.,1. };
             std::vector<double> true_sig = { 0., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0. };
-            prepare_log_sig(dimension, degree);
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 0);
         }
 
@@ -998,7 +997,6 @@ public:
             uint64_t dimension = 2, length = 4, degree = 3;
             std::vector<double> path = { 0.,0., 0.25, 0.25, 0.75, 0.75, 1.,1. };
             std::vector<double> true_sig = { 0., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0. };
-            prepare_log_sig(dimension, degree);
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 0);
         }
 
@@ -1007,7 +1005,6 @@ public:
             uint64_t dimension = 2, length = 4, degree = 2;
             std::vector<double> path = { 0., 0., 1., 0.5, 4., 0., 0., 1. };
             std::vector<double> true_sig = { 0., 0., 1., 0., 1., -1., 0. };
-            prepare_log_sig(dimension, degree);
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 0);
         }
 
@@ -1021,7 +1018,6 @@ public:
             -27., -10., -24. - 1./3, 5., 0., -9., 20. + 2./3,
             18., -4. - 2./3, 11., -24. - 1./3, 36., 3. + 2./3, -9.,
             9. + 1./3, -18., -4.-2./3, 0.};
-            prepare_log_sig(dimension, degree);
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 0);
         }
 
@@ -1036,7 +1032,6 @@ public:
                 0., 1., 1., 0., 0., 0., 0.,
                 0., 0., 1., 0., 1., -1., 0.};
 
-            prepare_log_sig(dimension, degree);
             check_result(f, path, true_sig, 3, dimension, length, degree, false, false, 1., 0, 1);
             check_result(f, path, true_sig, 3, dimension, length, degree, false, false, 1., 0, -1);
         }
@@ -1048,7 +1043,6 @@ public:
             std::vector<float> true_sig = { 0., 9., 4., 0., -2.5, 2.5, 0., 0., -5.25,
             10.5, 5.5, -5.25, -11., 5.5, 0.};
             double end_time = length - 1.;
-            prepare_log_sig(dimension, degree);
             check_result(f, path, true_sig, dimension, length, degree, true, false, end_time, 0);
         }
 
@@ -1057,7 +1051,6 @@ public:
             uint64_t dimension = 1, length = 5, degree = 3;
             std::vector<float> path = { 0., 5., 2., 4., 9. };
             std::vector<float> true_sig = { 0., 9., 9., 0., -31.5, 31.5, 0., 0., 26.75, -53.5, 11.75, 26.75, -23.5, 11.75, 0. };
-            prepare_log_sig(dimension, degree);
             check_result(f, path, true_sig, dimension, length, degree, false, true, 1., 0);
         }
 
@@ -1068,7 +1061,6 @@ public:
             path.resize(batch * length * dimension);
             std::vector<double> out;
             out.resize(batch * sig_length(dimension * 2, degree));
-            prepare_log_sig(dimension, degree);
             f(path.data(), out.data(), batch, dimension, length, degree, false, true, 1., 0, 1);
         }
     };
@@ -1081,7 +1073,7 @@ public:
             uint64_t dimension = 2, length = 3, degree = 3;
             std::vector<double> path = { 0., 0., 0.5, 0.5, 1.,1. };
             std::vector<double> true_sig = { 1., 1., 0., 0., 0. };
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, 1);
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 1);
         }
 
@@ -1090,7 +1082,7 @@ public:
             uint64_t dimension = 2, length = 4, degree = 3;
             std::vector<double> path = { 0.,0., 0.25, 0.25, 0.75, 0.75, 1.,1. };
             std::vector<double> true_sig = { 1., 1., 0., 0., 0. };
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, 1);
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 1);
         }
 
@@ -1099,7 +1091,7 @@ public:
             uint64_t dimension = 2, length = 4, degree = 2;
             std::vector<double> path = { 0., 0., 1., 0.5, 4., 0., 0., 1. };
             std::vector<double> true_sig = { 0., 1., 1. };
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, 1);
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 1);
         }
 
@@ -1109,7 +1101,7 @@ public:
             std::vector<float> path = { 9., 5., 8., 5., 3., 0., 0., 2., 6., 4., 0., 2. };
             std::vector<float> true_sig = { -5., -5., -6., 12., -10., -6., -27.,
             11., 5., 3. + 2./3, 20. + 2./3, -18., -9., -4. - 2./3};
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, 1);
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 1);
         }
 
@@ -1124,7 +1116,7 @@ public:
                 1., 1., 0.,
                 0., 1., 1. };
 
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, 1);
             check_result(f, path, true_sig, 3, dimension, length, degree, false, false, 1., 1, 1);
             check_result(f, path, true_sig, 3, dimension, length, degree, false, false, 1., 1, -1);
         }
@@ -1135,7 +1127,7 @@ public:
             std::vector<float> path = { 0., 5., 2., 4., 9. };
             std::vector<float> true_sig = { 9., 4., -2.5, -5.25, 5.5 };
             double end_time = length - 1.;
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, 1);
             check_result(f, path, true_sig, dimension, length, degree, true, false, end_time, 1);
         }
 
@@ -1144,7 +1136,7 @@ public:
             uint64_t dimension = 1, length = 5, degree = 3;
             std::vector<float> path = { 0., 5., 2., 4., 9. };
             std::vector<float> true_sig = { 9., 9., -31.5, 26.75, 11.75 };
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, 1);
             check_result(f, path, true_sig, dimension, length, degree, false, true, 1., 1);
         }
 
@@ -1155,7 +1147,7 @@ public:
             path.resize(batch * length * dimension);
             std::vector<double> out;
             out.resize(batch * sig_length(dimension * 2, degree));
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, 1);
             f(path.data(), out.data(), batch, dimension, length, degree, false, true, 1., 1, 1);
         }
     };
@@ -1168,7 +1160,7 @@ public:
             uint64_t dimension = 2, length = 3, degree = 3;
             std::vector<double> path = { 0., 0., 0.5, 0.5, 1.,1. };
             std::vector<double> true_sig = { 1., 1., 0., 0., 0. };
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, 2);
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 2);
         }
 
@@ -1178,7 +1170,7 @@ public:
             std::vector<float> path = { 9., 5., 8., 5., 3., 0., 0., 2., 6., 4., 0., 2. };
             std::vector<float> true_sig = { -5., -5., -6., 12., -10., -6., -27.,
             11., 5., 3. + 2. / 3, 24. + 1. / 3, -18., -9., -4. - 2. / 3 };
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, 2);
             check_result(f, path, true_sig, dimension, length, degree, false, false, 1., 2);
         }
     };

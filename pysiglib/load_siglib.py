@@ -550,7 +550,8 @@ CPSIG.log_sig_length.restype = c_uint64
 
 CPSIG.prepare_log_sig.argtypes = (
     c_uint64,
-    c_uint64
+    c_uint64,
+    c_int
 )
 CPSIG.prepare_log_sig.restype = c_int
 
