@@ -128,7 +128,7 @@ SparseIntMatrix lyndon_proj_matrix(
 	for (uint64_t i = 1; i <= degree + 1; i++)
 		level_index[i] = level_index[i - 1] * dimension + 1;
 
-	SparseIntMatrix out(n, m);
+	SparseIntMatrix full_mat(n, m);
 
 	std::unordered_map<word, uint64_t, WordHash> col_idx;
 
@@ -140,7 +140,7 @@ SparseIntMatrix lyndon_proj_matrix(
 		word w = lyndon_words[i];
 
 		if (w.size() == 1) {
-			out.insert_entry(w[0] + 1, i, 1);
+			full_mat.insert_entry(w[0] + 1, i, 1);
 		}
 		else {
 			word v = longest_lyndon_suffix_(w, lyndon_set);
@@ -156,29 +156,16 @@ SparseIntMatrix lyndon_proj_matrix(
 			uint64_t u_start = level_index[u.size()];
 			uint64_t u_end = level_index[u.size() + 1];
 
-			// First term in Lie bracket
 			for (uint64_t j = u_start; j < u_end; ++j) {
-				int val1 = out.get(j, ju);
+				int val1 = full_mat.get(j, ju);
 				if (val1) {
 					for (uint64_t k = v_start; k < v_end; ++k) {
-						int val2 = out.get(k, jv);
+						int val2 = full_mat.get(k, jv);
 						if (val2) {
 							uint64_t ic = concatenate_idx(j, k, v.size(), dimension);
-							out.add_to_entry(ic, jw, val1 * val2);
-						}
-					}
-				}
-			}
-
-			// Second term in Lie bracket
-			for (uint64_t j = v_start; j < v_end; ++j) {
-				int val1 = out.get(j, jv);
-				if (val1) {
-					for (uint64_t k = u_start; k < u_end; ++k) {
-						int val2 = out.get(k, ju);
-						if (val2) {
-							uint64_t ic = concatenate_idx(j, k, u.size(), dimension);
-							out.add_to_entry(ic, jw, -val1 * val2);
+							full_mat.add_to_entry(ic, jw, val1 * val2);
+							ic = concatenate_idx(k, j, u.size(), dimension);
+							full_mat.add_to_entry(ic, jw, -val1 * val2);
 						}
 					}
 				}
@@ -186,16 +173,12 @@ SparseIntMatrix lyndon_proj_matrix(
 		}
 	}
 
-	for (uint64_t i = n - 1; i > 0; --i) {
-		if (lyndon_idx.back() != i) {
-			out.drop_row(i);
-		}
-		else {
-			lyndon_idx.pop_back();
-		}
+	SparseIntMatrix lyndon_mat(full_mat.m);
+
+	for (uint64_t i = 0; i < m; ++i) {
+		lyndon_mat.rows[i] = full_mat.rows[lyndon_idx[i]];
 	}
-    out.drop_row(0);
-	return out;
+	return lyndon_mat;
 }
 
 void set_basis_cache(uint64_t dimension, uint64_t degree) {
