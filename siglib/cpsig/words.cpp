@@ -221,4 +221,8 @@ extern "C" {
 		SAFE_CALL(set_basis_cache(dimension, degree));
 	}
 
+	CPSIG_API void reset_log_sig() noexcept {
+		basis_cache.clear();
+	}
+
 }

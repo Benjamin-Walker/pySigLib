@@ -555,6 +555,13 @@ CPSIG.prepare_log_sig.argtypes = (
 CPSIG.prepare_log_sig.restype = c_int
 
 ######################################################
+# reset_log_sig
+######################################################
+
+CPSIG.reset_log_sig.argtypes = ()
+CPSIG.reset_log_sig.restype = None
+
+######################################################
 # log_signature
 ######################################################
 

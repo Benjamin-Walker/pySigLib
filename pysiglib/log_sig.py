@@ -54,6 +54,11 @@ def prepare_log_sig(
     if err_code:
         raise Exception("Error in pysiglib.prepare_log_sig: " + err_msg(err_code))
 
+def reset_log_sig() -> Union[np.ndarray, torch.tensor]:
+    """#TODO
+    """
+    err_code = CPSIG.reset_log_sig()
+
 def log_signature_(data, result, degree, method):
     err_code = CPSIG_LOG_SIGNATURE[data.dtype](
         data.data_ptr,

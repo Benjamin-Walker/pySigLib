@@ -47,6 +47,7 @@ def test_log_signature_expanded_random(deg, dtype):
     pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X, deg, method=0)
     check_close(iisig, sig[1:])
+    pysiglib.reset_log_sig()
 
 @pytest.mark.parametrize("deg", range(1, 6))
 @pytest.mark.parametrize("dtype", [np.float64, np.float32])
@@ -58,6 +59,7 @@ def test_batch_log_signature_expanded_random(deg, dtype):
     pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X, deg, method=0)
     check_close(iisig, sig[:, 1:])
+    pysiglib.reset_log_sig()
 
 @pytest.mark.skipif(signatory is None, reason="signatory not available")
 @pytest.mark.parametrize("deg", range(1, 6))
@@ -69,6 +71,7 @@ def test_log_signature_lyndon_words_random(deg, dtype):
     pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X[0], deg, method=1)
     check_close(ls, sig)
+    pysiglib.reset_log_sig()
 
 @pytest.mark.skipif(signatory is None, reason="signatory not available")
 @pytest.mark.parametrize("deg", range(1, 6))
@@ -80,6 +83,7 @@ def test_batch_log_signature_lyndon_words_random(deg, dtype):
     pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X, deg, method=1)
     check_close(ls, sig)
+    pysiglib.reset_log_sig()
 
 @pytest.mark.parametrize("deg", range(1, 6))
 @pytest.mark.parametrize("dtype", [np.float64, np.float32])
@@ -91,6 +95,7 @@ def test_log_signature_lyndon_basis_random(deg, dtype):
     pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X, deg, method=2)
     check_close(iisig, sig)
+    pysiglib.reset_log_sig()
 
 @pytest.mark.parametrize("deg", range(1, 6))
 @pytest.mark.parametrize("dtype", [np.float64, np.float32])
@@ -102,3 +107,4 @@ def test_batch_log_signature_lyndon_basis_random(deg, dtype):
     pysiglib.prepare_log_sig(5, deg)
     sig = pysiglib.log_sig(X, deg, method=2)
     check_close(iisig, sig)
+    pysiglib.reset_log_sig()
