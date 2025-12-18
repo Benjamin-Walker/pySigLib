@@ -83,9 +83,8 @@ std::vector<uint64_t> all_lyndon_idx(uint64_t dimension, uint64_t degree) {
 	return res;
 }
 
-word longest_lyndon_suffix_(word w, const std::vector<word>& lyndon_words) {
+word longest_lyndon_suffix_(word w, const std::set<word>& lyndon_set) {
 	uint64_t n = w.size();
-	std::set<word> lyndon_set(lyndon_words.begin(), lyndon_words.end());
 	for (uint64_t i = 1; i < n; ++i) {
 		word suffix(w.begin() + i, w.end());
 		if (lyndon_set.find(suffix) != lyndon_set.end()) {
@@ -118,8 +117,16 @@ SparseIntMatrix lyndon_proj_matrix(
 	uint64_t dimension,
 	uint64_t degree
 ) {
+	std::set<word> lyndon_set(lyndon_words.begin(), lyndon_words.end());
 	uint64_t n = sig_length(dimension, degree);
 	uint64_t m = lyndon_words.size();
+
+	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
+	uint64_t* level_index = level_index_uptr.get();
+
+	level_index[0] = 0;
+	for (uint64_t i = 1; i <= degree + 1; i++)
+		level_index[i] = level_index[i - 1] * dimension + 1;
 
 	SparseIntMatrix out(n, m);
 
@@ -136,18 +143,24 @@ SparseIntMatrix lyndon_proj_matrix(
 			out.insert_entry(w[0] + 1, i, 1);
 		}
 		else {
-			word v = longest_lyndon_suffix_(w, lyndon_words);
+			word v = longest_lyndon_suffix_(w, lyndon_set);
 			word u(w.begin(), w.end() - v.size());
 
 			uint64_t jw = col_idx[w];
 			uint64_t jv = col_idx[v];
 			uint64_t ju = col_idx[u];
 
+			uint64_t v_start = level_index[v.size()];
+			uint64_t v_end = level_index[v.size() + 1];
+
+			uint64_t u_start = level_index[u.size()];
+			uint64_t u_end = level_index[u.size() + 1];
+
 			// First term in Lie bracket
-			for (uint64_t j = 0; j < n; ++j) {
+			for (uint64_t j = u_start; j < u_end; ++j) {
 				int val1 = out.get(j, ju);
 				if (val1) {
-					for (uint64_t k = 0; k < n; ++k) {
+					for (uint64_t k = v_start; k < v_end; ++k) {
 						int val2 = out.get(k, jv);
 						if (val2) {
 							uint64_t ic = concatenate_idx(j, k, v.size(), dimension);
@@ -158,10 +171,10 @@ SparseIntMatrix lyndon_proj_matrix(
 			}
 
 			// Second term in Lie bracket
-			for (uint64_t j = 0; j < n; ++j) {
+			for (uint64_t j = v_start; j < v_end; ++j) {
 				int val1 = out.get(j, jv);
 				if (val1) {
-					for (uint64_t k = 0; k < n; ++k) {
+					for (uint64_t k = u_start; k < u_end; ++k) {
 						int val2 = out.get(k, ju);
 						if (val2) {
 							uint64_t ic = concatenate_idx(j, k, u.size(), dimension);

@@ -118,3 +118,9 @@ void example_batch_sig_kernel_backprop_cuda(
 	uint64_t dyadic_order_2 = 0,
 	int num_runs = 1
 );
+
+void example_prepare_log_sig(
+	uint64_t dimension = 5,
+	uint64_t degree = 5,
+	int num_runs = 10
+);
