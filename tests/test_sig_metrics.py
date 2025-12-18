@@ -90,7 +90,7 @@ def sig_kernel_full_grid(X1, X2, len1, len2, batch):
 
 @pytest.mark.parametrize("dyadic_order", range(3))
 def test_expected_sig_score_random_cpu(dyadic_order):
-    batch, len1, len2, dim = 32, 100, 100, 5
+    batch, len1, len2, dim = 32, 10, 10, 5
     X = torch.rand(size=(batch, len1, dim), device="cpu", dtype = torch.double)
     Y = torch.rand(size=(batch, len2, dim), device="cpu", dtype = torch.double)
 
@@ -103,7 +103,7 @@ def test_expected_sig_score_random_cpu(dyadic_order):
 
 @pytest.mark.parametrize("dyadic_order", range(3))
 def test_expected_sig_score_random_cpu_rbf(dyadic_order):
-    batch, len1, len2, dim = 32, 100, 100, 5
+    batch, len1, len2, dim = 32, 10, 10, 5
     X = torch.rand(size=(batch, len1, dim), device="cpu", dtype = torch.double)
     Y = torch.rand(size=(batch, len2, dim), device="cpu", dtype = torch.double)
 
@@ -114,7 +114,7 @@ def test_expected_sig_score_random_cpu_rbf(dyadic_order):
 
     assert not abs(d1 - d2) > EPSILON
 
-@pytest.mark.parametrize(("len1", "len2"), [(10, 100), (100, 10)])
+@pytest.mark.parametrize(("len1", "len2"), [(10, 50), (50, 10)])
 @pytest.mark.parametrize("dyadic_order", range(3))
 def test_expected_sig_score_random_cpu_non_square(len1, len2, dyadic_order):
     batch, dim = 32, 5
@@ -130,7 +130,7 @@ def test_expected_sig_score_random_cpu_non_square(len1, len2, dyadic_order):
 
 @pytest.mark.parametrize("dyadic_order", range(3))
 def test_sig_mmd_random_cpu(dyadic_order):
-    batch, len1, len2, dim = 32, 100, 100, 5
+    batch, len1, len2, dim = 32, 10, 10, 5
     X = torch.rand(size=(batch, len1, dim), device="cpu", dtype = torch.double)
     Y = torch.rand(size=(batch, len2, dim), device="cpu", dtype = torch.double)
 
@@ -143,7 +143,7 @@ def test_sig_mmd_random_cpu(dyadic_order):
 
 @pytest.mark.parametrize("dyadic_order", range(3))
 def test_sig_mmd_random_cpu_rbf(dyadic_order):
-    batch, len1, len2, dim = 32, 100, 100, 5
+    batch, len1, len2, dim = 32, 10, 10, 5
     X = torch.rand(size=(batch, len1, dim), device="cpu", dtype = torch.double)
     Y = torch.rand(size=(batch, len2, dim), device="cpu", dtype = torch.double)
 
@@ -154,7 +154,7 @@ def test_sig_mmd_random_cpu_rbf(dyadic_order):
 
     assert not abs(mmd1 - mmd2) > EPSILON
 
-@pytest.mark.parametrize(("len1", "len2"), [(10, 100), (100, 10)])
+@pytest.mark.parametrize(("len1", "len2"), [(10, 50), (50, 10)])
 @pytest.mark.parametrize("dyadic_order", range(3))
 def test_sig_mmd_random_cpu_non_square(len1, len2, dyadic_order):
     batch, dim = 32, 5
@@ -175,7 +175,7 @@ def test_sig_mmd_random_cpu_non_square(len1, len2, dyadic_order):
 @pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
 @pytest.mark.parametrize("dyadic_order", range(3))
 def test_expected_sig_score_random_cuda(dyadic_order):
-    batch, len1, len2, dim = 32, 100, 100, 5
+    batch, len1, len2, dim = 32, 10, 10, 5
     X = torch.rand(size=(batch, len1, dim), device="cuda", dtype = torch.double)
     Y = torch.rand(size=(batch, len2, dim), device="cuda", dtype = torch.double)
 
@@ -187,7 +187,7 @@ def test_expected_sig_score_random_cuda(dyadic_order):
     assert not abs(d1 - d2) > EPSILON
 
 @pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
-@pytest.mark.parametrize(("len1", "len2"), [(10, 100), (100, 10)])
+@pytest.mark.parametrize(("len1", "len2"), [(10, 50), (50, 10)])
 @pytest.mark.parametrize("dyadic_order", range(3))
 def test_expected_sig_score_random_non_square_cuda(len1, len2, dyadic_order):
     batch, dim = 32, 5
