@@ -126,18 +126,28 @@ public:
         }
 
         for (uint64_t i = 0; i < n; ++i) {
+            std::unordered_map<uint64_t, int> row_i;
+
+            row_i[i] = 1;
+
             for (const auto& e : rows[i]) {
                 uint64_t k = e.col;
                 int Lik = e.val;
-
                 if (k >= i) continue;
-
-                inv.add_to_entry(i, k, -Lik);
 
                 for (const auto& ek : inv.rows[k]) {
                     uint64_t j = ek.col;
                     if (j >= k) continue;
-                    inv.add_to_entry(i, j, -Lik * ek.val);
+                    row_i[j] -= Lik * ek.val;
+                }
+
+                row_i[k] -= Lik;
+            }
+
+            inv.rows[i].clear();
+            for (const auto& [j, v] : row_i) {
+                if (v != 0) {
+                    inv.rows[i].push_back({ j, v });
                 }
             }
         }
