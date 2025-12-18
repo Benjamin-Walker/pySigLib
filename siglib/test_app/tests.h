@@ -121,6 +121,7 @@ void example_batch_sig_kernel_backprop_cuda(
 
 void example_prepare_log_sig(
 	uint64_t dimension = 5,
-	uint64_t degree = 5,
+	uint64_t degree = 8,
+	int method = 2,
 	int num_runs = 10
 );

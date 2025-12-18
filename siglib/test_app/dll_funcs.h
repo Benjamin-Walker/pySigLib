@@ -68,7 +68,7 @@ using batch_sig_kernel_backprop_d_fn = void(CDECL_*)(const double*, double*, con
 using sig_kernel_backprop_cuda_d_fn = void(CDECL_*)(const double*, double*, double, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
 using batch_sig_kernel_backprop_cuda_d_fn = void(CDECL_*)(const double*, double*, const double*, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
 
-using prepare_log_sig_fn = void(CDECL_*)(uint64_t, uint64_t);
+using prepare_log_sig_fn = void(CDECL_*)(uint64_t, uint64_t, int);
 using reset_log_sig_fn = void(CDECL_*)();
 
 extern HMODULE cpsig;

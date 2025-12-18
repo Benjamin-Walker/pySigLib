@@ -272,13 +272,14 @@ void example_batch_sig_kernel_backprop_cuda(
 void example_prepare_log_sig(
     uint64_t dimension,
     uint64_t degree,
+    int method,
     int num_runs
 ) {
     print_header("Prepare Log Sig");
 
     auto f = [&]()
     {
-            prepare_log_sig(dimension, degree);
+            prepare_log_sig(dimension, degree, method);
             reset_log_sig();
     };
 
