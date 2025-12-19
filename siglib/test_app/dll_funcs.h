@@ -44,6 +44,7 @@ void get_cpsig_fn_ptrs();
 void get_cusig_fn_ptrs();
 
 using sig_length_fn = uint64_t(CDECL_*)(uint64_t, uint64_t);
+using log_sig_length_fn = uint64_t(CDECL_*)(uint64_t, uint64_t);
 using signature_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, bool, bool, double, bool);
 using batch_signature_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, uint64_t, bool, bool, double, bool, int);
 
@@ -71,10 +72,13 @@ using batch_sig_kernel_backprop_cuda_d_fn = void(CDECL_*)(const double*, double*
 using prepare_log_sig_fn = void(CDECL_*)(uint64_t, uint64_t, int);
 using reset_log_sig_fn = void(CDECL_*)();
 
+using log_signature_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, bool, bool, double, int);
+
 extern HMODULE cpsig;
 extern HMODULE cusig;
 
 extern sig_length_fn sig_length;
+extern log_sig_length_fn log_sig_length;
 extern signature_d_fn signature_d;
 extern batch_signature_d_fn batch_signature_d;
 extern signature_f_fn signature_f;
@@ -97,6 +101,8 @@ extern batch_sig_kernel_backprop_cuda_d_fn batch_sig_kernel_backprop_cuda_d;
 
 extern prepare_log_sig_fn prepare_log_sig;
 extern reset_log_sig_fn reset_log_sig;
+
+extern log_signature_d_fn log_signature_d;
 
 #if defined(_WIN32)
 #define GET_FN_PTR ::GetProcAddress

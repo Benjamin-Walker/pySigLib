@@ -125,3 +125,13 @@ void example_prepare_log_sig(
 	int method = 2,
 	int num_runs = 10
 );
+
+void example_log_signature_d(
+	uint64_t dimension = 5,
+	uint64_t length = 10000,
+	uint64_t degree = 7,
+	bool time_aug = false,
+	bool lead_lag = false,
+	int method = 2,
+	int num_runs = 50
+);

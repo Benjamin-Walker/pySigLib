@@ -188,7 +188,7 @@ void set_basis_cache(uint64_t dimension, uint64_t degree, int method) {
 	std::pair<uint64_t, uint64_t> key(dimension, degree);
 
 	auto it = basis_cache.find(key);
-	if (it == basis_cache.end()) {
+	if (it == basis_cache.end() || it->second->method < method) {
 
 		std::vector<word> lyndon_words = all_lyndon_words(dimension, degree);
 		std::vector<uint64_t> lyndon_idx = all_lyndon_idx(dimension, degree);
@@ -205,6 +205,8 @@ void set_basis_cache(uint64_t dimension, uint64_t degree, int method) {
 			std::move(p),
 			std::move(p_inv)
 		);
+
+		basis_cache.erase(key); // In case cache already exists but with inferior method
 		basis_cache.emplace(key, std::move(basis_obj));
 	}
 }

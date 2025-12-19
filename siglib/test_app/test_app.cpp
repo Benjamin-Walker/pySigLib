@@ -48,7 +48,12 @@ int main(int argc, char* argv[])
     example_batch_signature_d();
     example_batch_signature_kernel();
     example_batch_signature_kernel_cuda();*/
-    example_sig_backprop_d();
+    //example_sig_backprop_d();
+
+    example_signature_d(6, 10, 8, false, false, true, 5);
+    example_log_signature_d(6, 10, 8, false, false, 0, 5);
+    example_log_signature_d(6, 10, 8, false, false, 1, 5);
+    example_log_signature_d(6, 10, 8, false, false, 2, 5);
 
     unload_cpsig();
     unload_cusig();

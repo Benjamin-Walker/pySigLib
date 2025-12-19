@@ -151,6 +151,7 @@ HMODULE cpsig = nullptr;
 HMODULE cusig = nullptr;
 
 sig_length_fn sig_length = nullptr;
+log_sig_length_fn log_sig_length = nullptr;
 signature_d_fn signature_d = nullptr;
 batch_signature_d_fn batch_signature_d = nullptr;
 signature_f_fn signature_f = nullptr;
@@ -174,10 +175,13 @@ batch_sig_kernel_backprop_cuda_d_fn batch_sig_kernel_backprop_cuda_d = nullptr;
 prepare_log_sig_fn prepare_log_sig = nullptr;
 reset_log_sig_fn reset_log_sig = nullptr;
 
+log_signature_d_fn log_signature_d = nullptr;
+
 
 void get_cpsig_fn_ptrs()
 {
     GET_FN(sig_length, cpsig);
+    GET_FN(log_sig_length, cpsig);
     GET_FN(signature_d, cpsig);
     GET_FN(batch_signature_d, cpsig);
     GET_FN(signature_f, cpsig);
@@ -192,6 +196,7 @@ void get_cpsig_fn_ptrs()
     GET_FN(batch_sig_kernel_backprop_d, cpsig);
     GET_FN(prepare_log_sig, cpsig);
     GET_FN(reset_log_sig, cpsig);
+    GET_FN(log_signature_d, cpsig);
 }
 
 void get_cusig_fn_ptrs()
