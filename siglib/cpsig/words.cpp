@@ -117,6 +117,8 @@ SparseIntMatrix lyndon_proj_matrix(
 	uint64_t dimension,
 	uint64_t degree
 ) {
+	// Note the final output here will drop the diagonal of 1s
+
 	std::unordered_set<word, WordHash> lyndon_set(lyndon_words.begin(), lyndon_words.end());
 	uint64_t n = sig_length(dimension, degree);
 	uint64_t m = lyndon_words.size();
@@ -150,12 +152,6 @@ SparseIntMatrix lyndon_proj_matrix(
 			uint64_t jv = col_idx[v];
 			uint64_t ju = col_idx[u];
 
-			uint64_t v_start = level_index[v.size()];
-			uint64_t v_end = level_index[v.size() + 1];
-
-			uint64_t u_start = level_index[u.size()];
-			uint64_t u_end = level_index[u.size() + 1];
-
 			for (const auto& eu : full_mat_transpose.rows[ju]) {
 				if (eu.val) {
 					for (const auto& ev : full_mat_transpose.rows[jv]) {
@@ -178,6 +174,8 @@ SparseIntMatrix lyndon_proj_matrix(
 	for (uint64_t i = 0; i < m; ++i) {
 		lyndon_mat.rows[i] = full_mat.rows[lyndon_idx[i]];
 	}
+
+	lyndon_mat.drop_diagonal();
 	return lyndon_mat;
 }
 

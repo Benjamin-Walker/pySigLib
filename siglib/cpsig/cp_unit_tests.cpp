@@ -135,13 +135,12 @@ namespace cpSigTests
 public:
     TEST_METHOD(BasicTest1)
     {
+        // Note the diagonal of 1s is assumed in both the matrix and the inverse
         SparseIntMatrix mat(4);
-        mat.populate_diagonal();
         mat.insert_entry(2, 0, 2);
         mat.insert_entry(3, 2, 3);
 
         SparseIntMatrix true_inv(4);
-        true_inv.populate_diagonal();
         true_inv.insert_entry(2, 0, -2);
         true_inv.insert_entry(3, 0, 6);
         true_inv.insert_entry(3, 2, -3);
@@ -153,15 +152,14 @@ public:
 
     TEST_METHOD(BasicTest2)
     {
+        // Note the diagonal of 1s is assumed in both the matrix and the inverse
         SparseIntMatrix mat(5);
-        mat.populate_diagonal();
         mat.insert_entry(1, 0, 3);
         mat.insert_entry(2, 1, 1);
         mat.insert_entry(4, 0, 5);
         mat.insert_entry(4, 3, -2);
 
         SparseIntMatrix true_inv(5);
-        true_inv.populate_diagonal();
         true_inv.insert_entry(1, 0, -3.);
         true_inv.insert_entry(2, 0, 3);
         true_inv.insert_entry(2, 1, -1);
@@ -941,7 +939,6 @@ public:
             SparseIntMatrix out = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
 
             SparseIntMatrix true_(out.n);
-            true_.populate_diagonal();
 
             Assert::IsTrue(true_ == out);
         }
@@ -952,7 +949,6 @@ public:
             SparseIntMatrix out = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
 
             SparseIntMatrix true_(out.n);
-            true_.populate_diagonal();
             true_.insert_entry(10, 9, -1.);
             true_.insert_entry(18, 17, -1.);
             true_.insert_entry(20, 18, -1.);
@@ -973,7 +969,6 @@ public:
             SparseIntMatrix out = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
 
             SparseIntMatrix true_(out.n);
-            true_.populate_diagonal();
             true_.insert_entry(10, 9, -2.);
             true_.insert_entry(12, 11, -3.);
 

@@ -75,6 +75,23 @@ public:
         }
     }
 
+    void drop_diagonal() {
+#ifdef _DEBUG
+        if (n != m) {
+            throw std::runtime_error("n != m in SparseIntMatrix.drop_diagonal");
+        }
+#endif
+        for (uint64_t i = 0; i < n; ++i) {
+            auto& row = rows[i];
+            for (auto it = row.begin(); it != row.end(); ++it) {
+                if (it->col == i) {
+                    row.erase(it);
+                    break;
+                }
+            }
+        }
+    }
+
     bool is_nonzero(uint64_t i, uint64_t j) const {
 #ifdef _DEBUG
         if (i > n || j > m) {
@@ -125,6 +142,7 @@ public:
 
     SparseIntMatrix inverse() const {
         // This assumes matrix is lower triangular with ones on the diagonal
+        // The output will omit the diagonal.
 #ifdef _DEBUG
         if (n != m) {
             throw std::runtime_error("n != m in SparseIntMatrix.inverse");
@@ -140,8 +158,6 @@ public:
         for (uint64_t i = 0; i < n; ++i) {
             std::unordered_map<uint64_t, int> row_i;
 
-            row_i[i] = 1;
-
             for (const auto& e : rows[i]) {
                 uint64_t k = e.col;
                 int Lik = e.val;
@@ -149,7 +165,6 @@ public:
 
                 for (const auto& ek : inv.rows[k]) {
                     uint64_t j = ek.col;
-                    if (j >= k) continue;
                     row_i[j] -= Lik * ek.val;
                 }
 
@@ -181,14 +196,12 @@ public:
 
     template<std::floating_point T>
     void mul_vec_inplace(T* arr) const {
-        // This assumes matrix is lower triangular with ones on the diagonal
+        // This assumes matrix is lower triangular with zeros on the diagonal
         for (uint64_t i_ = 0; i_ < n; ++i_) {
             uint64_t i = n - i_ - 1;
             for (const auto& e : rows[i]) {
                 uint64_t j = e.col;
-                if (j < i) {
-                    arr[i] += e.val * arr[j];
-                }
+                arr[i] += static_cast<T>(e.val) * arr[j];
             }
         }
     }

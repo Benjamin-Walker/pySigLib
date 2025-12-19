@@ -127,7 +127,7 @@ void log_sig_lyndon_words(
 	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
 	uint64_t aug_dimension = path_obj.dimension();
 
-	const BasisCache& basis_cache = get_basis_cache(aug_dimension, degree, 1);
+	const BasisCache& cache_ = get_basis_cache(aug_dimension, degree, 1);
 
 	auto log_sig_uptr = std::make_unique<T[]>(::sig_length(aug_dimension, degree));
 	T* log_sig = log_sig_uptr.get();
@@ -135,9 +135,9 @@ void log_sig_lyndon_words(
 	call_signature_horner_(path_obj, log_sig, degree);
 	log_sig_from_sig_<T>(log_sig, aug_dimension, degree);
 
-	uint64_t m = basis_cache.lyndon_idx.size();
+	uint64_t m = cache_.lyndon_idx.size();
 	for (uint64_t i = 0; i < m; ++i) {
-		out[i] = log_sig[basis_cache.lyndon_idx[i]];
+		out[i] = log_sig[cache_.lyndon_idx[i]];
 	}
 }
 
@@ -155,8 +155,8 @@ void log_sig_lyndon_basis(
 	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
 	uint64_t aug_dimension = path_obj.dimension();
 	log_sig_lyndon_words(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
-	const BasisCache& basis_cache = get_basis_cache(aug_dimension, degree, 2);
-	basis_cache.inv_proj_mat.mul_vec_inplace(out);
+	const BasisCache& cache_ = get_basis_cache(aug_dimension, degree, 2);
+	cache_.inv_proj_mat.mul_vec_inplace(out);
 }
 
 template<std::floating_point T>
