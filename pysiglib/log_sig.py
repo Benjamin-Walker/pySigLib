@@ -78,7 +78,7 @@ def sig_to_log_sig_(data, result, data_dimension, degree, time_aug, lead_lag, me
     )
 
     if err_code:
-        raise Exception("Error in pysiglib.log_sig: " + err_msg(err_code))
+        raise Exception("Error in pysiglib.sig_to_log_sig: " + err_msg(err_code))
     return result.data
 
 def batch_sig_to_log_sig_(data, result, data_dimension, degree, time_aug, lead_lag, method, n_jobs = 1):
@@ -95,7 +95,7 @@ def batch_sig_to_log_sig_(data, result, data_dimension, degree, time_aug, lead_l
     )
 
     if err_code:
-        raise Exception("Error in pysiglib.log_sig: " + err_msg(err_code))
+        raise Exception("Error in pysiglib.sig_to_log_sig: " + err_msg(err_code))
     return result.data
 
 def sig_to_log_sig(

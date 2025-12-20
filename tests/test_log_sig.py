@@ -23,7 +23,7 @@ try:
 except:
     signatory = None
 
-import pysiglib
+import pysiglib.torch_api as pysiglib
 
 np.random.seed(42)
 torch.manual_seed(42)

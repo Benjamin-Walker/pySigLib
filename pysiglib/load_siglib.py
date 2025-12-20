@@ -619,6 +619,66 @@ CPSIG.batch_sig_to_log_sig_d.argtypes = (
 CPSIG.batch_sig_to_log_sig_d.restype = c_int
 
 ######################################################
+# sig_to_log_sig_backprop
+######################################################
+
+CPSIG.sig_to_log_sig_backprop_f.argtypes = (
+    POINTER(c_float),
+    POINTER(c_float),
+    POINTER(c_float),
+    c_uint64,
+    c_uint64,
+    c_bool,
+    c_bool,
+    c_int
+)
+CPSIG.sig_to_log_sig_backprop_f.restype = c_int
+
+CPSIG.sig_to_log_sig_backprop_d.argtypes = (
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    c_uint64,
+    c_uint64,
+    c_bool,
+    c_bool,
+    c_int
+)
+CPSIG.sig_to_log_sig_backprop_d.restype = c_int
+
+######################################################
+# batch_sig_to_log_sig_backprop
+######################################################
+
+CPSIG.batch_sig_to_log_sig_backprop_f.argtypes = (
+    POINTER(c_float),
+    POINTER(c_float),
+    POINTER(c_float),
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_bool,
+    c_bool,
+    c_int,
+    c_int
+)
+CPSIG.batch_sig_to_log_sig_backprop_f.restype = c_int
+
+CPSIG.batch_sig_to_log_sig_backprop_d.argtypes = (
+    POINTER(c_double),
+    POINTER(c_double),
+    POINTER(c_double),
+    c_uint64,
+    c_uint64,
+    c_uint64,
+    c_bool,
+    c_bool,
+    c_int,
+    c_int
+)
+CPSIG.batch_sig_to_log_sig_backprop_d.restype = c_int
+
+######################################################
 # batch_sig_kernel
 ######################################################
 

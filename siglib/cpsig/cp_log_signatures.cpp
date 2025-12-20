@@ -44,4 +44,12 @@ extern "C" {
 		SAFE_CALL(sig_to_log_sig_backprop_<double>(sig, out, log_sig_derivs, dimension, degree, time_aug, lead_lag, method));
 	}
 
+	CPSIG_API int batch_sig_to_log_sig_backprop_f(const float* sig, float* out, const float* log_sig_derivs, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool time_aug, bool lead_lag, int method, int n_jobs) noexcept {
+		SAFE_CALL(batch_sig_to_log_sig_backprop_<float>(sig, out, log_sig_derivs, batch_size, dimension, degree, time_aug, lead_lag, method, n_jobs));
+	}
+
+	CPSIG_API int batch_sig_to_log_sig_backprop_d(const double* sig, double* out, const double* log_sig_derivs, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool time_aug, bool lead_lag, int method, int n_jobs) noexcept {
+		SAFE_CALL(batch_sig_to_log_sig_backprop_<double>(sig, out, log_sig_derivs, batch_size, dimension, degree, time_aug, lead_lag, method, n_jobs));
+	}
+
 }

@@ -19,6 +19,9 @@ import torch
 from ..sig import signature as sig_forward
 from ..sig import sig_combine as sig_combine_forward
 from ..sig_backprop import sig_backprop, sig_combine_backprop
+from ..log_sig import sig_to_log_sig as sig_to_log_sig_forward
+from ..log_sig import log_sig as log_sig_forward
+from ..log_sig_backprop import sig_to_log_sig_backprop
 from ..static_kernels import StaticKernel
 from ..sig_kernel import sig_kernel as sig_kernel_forward
 from ..sig_kernel_backprop import sig_kernel_backprop
@@ -52,15 +55,15 @@ class Signature(torch.autograd.Function):
     def backward(ctx, grad_output):
         path, sig = ctx.saved_tensors
         grad = sig_backprop(path, sig, grad_output, ctx.degree, ctx.time_aug, ctx.lead_lag, ctx.end_time, ctx.n_jobs)
-        return grad, None, None, None, None, None
+        return grad, None, None, None, None, None, None
 
 def signature(
         path : Union[np.ndarray, torch.tensor],
         degree : int,
         time_aug : bool = False,
         lead_lag : bool = False,
-        horner : bool = True,
         end_time : float = 1.,
+        horner: bool = True,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     return Signature.apply(path, degree, time_aug, lead_lag, end_time, horner, n_jobs)
@@ -125,6 +128,57 @@ def transform_path(
     return TransformPath.apply(path, time_aug, lead_lag, end_time, n_jobs)
 
 transform_path.__doc__ = transform_path_forward.__doc__
+
+class SigToLogSig(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, sig, dimension, degree, time_aug, lead_lag, method, n_jobs):
+        log_sig_ = sig_to_log_sig_forward(sig, dimension, degree, time_aug, lead_lag, method, n_jobs)
+
+        ctx.save_for_backward(sig)
+        ctx.dimension = dimension
+        ctx.degree = degree
+        ctx.time_aug = time_aug
+        ctx.lead_lag = lead_lag
+        ctx.method = method
+        ctx.n_jobs = n_jobs
+
+        return log_sig_
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        sig = ctx.saved_tensors[0]
+        grad = sig_to_log_sig_backprop(sig, grad_output, ctx.dimension, ctx.degree, ctx.time_aug, ctx.lead_lag, ctx.method, ctx.n_jobs)
+        return grad, None, None, None, None, None, None
+
+def sig_to_log_sig(
+        sig : Union[np.ndarray, torch.tensor],
+        dimension : int,
+        degree : int,
+        time_aug : bool = False,
+        lead_lag : bool = False,
+        method : str = 0,
+        n_jobs : int = 1
+) -> Union[np.ndarray, torch.tensor]:
+    return SigToLogSig.apply(sig, dimension, degree, time_aug, lead_lag, method, n_jobs)
+
+
+sig_to_log_sig.__doc__ = sig_to_log_sig_forward.__doc__
+
+def log_sig(
+        path : Union[np.ndarray, torch.tensor],
+        degree : int,
+        time_aug : bool = False,
+        lead_lag : bool = False,
+        end_time : float = 1.,
+        method : str = 0,
+        n_jobs : int = 1
+) -> Union[np.ndarray, torch.tensor]:
+    sig_ = signature(path, degree, time_aug, lead_lag, end_time, True, n_jobs)
+    dimension = path.shape[-1]
+    log_sig_ = sig_to_log_sig(sig_, dimension, degree, time_aug, lead_lag, method, n_jobs)
+    return log_sig_
+
+log_sig.__doc__ = log_sig_forward.__doc__
 
 class SigKernel(torch.autograd.Function):
     @staticmethod

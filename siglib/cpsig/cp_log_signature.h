@@ -50,16 +50,19 @@ void tensor_log_(
 		level_index[i] = level_index[i - 1] * dimension + 1;
 
 	uint64_t buff1_size = ::sig_length(dimension, degree - 1);
-	std::unique_ptr<T[]> buff1_uptr;
+	/*std::unique_ptr<T[]> buff1_uptr;
 	T* buff1;
 	if (partial_logs) {
-		buff1 = partial_logs;
+		buff1 = partial_logs + (degree - 2) * buff1_size;
 	}
 	else {
 		buff1_uptr = std::make_unique<T[]>(buff1_size);
 		buff1 = buff1_uptr.get();
 		std::fill(buff1, buff1 + buff1_size, static_cast<T>(0.));
-	}
+	}*/
+	std::unique_ptr<T[]> buff1_uptr = std::make_unique<T[]>(buff1_size);
+	T* buff1 = buff1_uptr.get();
+	std::fill(buff1, buff1 + buff1_size, static_cast<T>(0.));
 
 	uint64_t buff2_size = ::sig_length(dimension, degree);
 	auto buff2_uptr = std::make_unique<T[]>(buff2_size);
@@ -99,7 +102,9 @@ void tensor_log_(
 				}
 			}
 			if (partial_logs && k > 2 && k != degree) {
-				std::memcpy(partial_logs, buff1, buff1_size * sizeof(T));
+				/*std::memcpy(partial_logs, buff1, sizeof(T) * buff1_size);
+				partial_logs += buff1_size;*/
+				std::memcpy(partial_logs, buff1, sizeof(T) * buff1_size);
 				partial_logs += buff1_size;
 			}
 		}
@@ -114,6 +119,8 @@ void tensor_log_(
 			res_ptr[i] -= ptr[i];
 		}
 	}
+	if (partial_logs)
+		std::memcpy(partial_logs, buff1, sizeof(T) * buff1_size);
 }
 
 template<std::floating_point T>
@@ -336,4 +343,65 @@ void sig_to_log_sig_backprop_(
 	std::memcpy(log_sig_derivs_copy, log_sig_derivs, log_sig_len_ * sizeof(T));
 
 	tensor_log_backprop_<T>(out, log_sig_derivs_copy, sig, aug_dimension, degree);
+}
+
+template<std::floating_point T>
+void batch_sig_to_log_sig_backprop_(
+	const T* sig,
+	T* out,
+	const T* log_sig_derivs,
+	uint64_t batch_size,
+	uint64_t dimension,
+	uint64_t degree,
+	bool time_aug = false,
+	bool lead_lag = false,
+	int method = 0,
+	int n_jobs = 1
+) {
+	if (dimension == 0) { throw std::invalid_argument("sig_backprop received path of dimension 0"); }
+
+	uint64_t aug_dimension = (lead_lag ? 2 * dimension : dimension) + (time_aug ? 1 : 0);
+	
+	const uint64_t sig_len_ = ::sig_length(aug_dimension, degree);
+	const uint64_t log_sig_len_ = method ? ::log_sig_length(aug_dimension, degree) : ::sig_length(aug_dimension, degree);
+
+	//General case
+	const T* const data_end = sig + sig_len_ * batch_size;
+
+	auto log_sig_derivs_copy_uptr = std::make_unique<T[]>(log_sig_len_ * batch_size);
+	T* log_sig_derivs_copy = log_sig_derivs_copy_uptr.get();
+	std::memcpy(log_sig_derivs_copy, log_sig_derivs, log_sig_len_ * batch_size * sizeof(T));
+
+	std::function<void(const T*, T*, T*)> log_sig_backprop_func;
+
+	log_sig_backprop_func = [&](const T* sig_ptr, T* log_sig_derivs_ptr, T* out_ptr) {
+		tensor_log_backprop_<T>(out_ptr, log_sig_derivs_ptr, sig_ptr, aug_dimension, degree);
+		};
+
+	const T* sig_ptr;
+	T* log_sig_derivs_ptr;
+	T* out_ptr;
+
+	if (n_jobs != 1) {
+		multi_threaded_batch_2(
+			log_sig_backprop_func,
+			sig,
+			log_sig_derivs_copy,
+			out,
+			batch_size,
+			sig_len_,
+			log_sig_len_,
+			sig_len_,
+			n_jobs
+		);
+	}
+	else {
+		for (log_sig_derivs_ptr = log_sig_derivs_copy, sig_ptr = sig, out_ptr = out;
+			sig_ptr < data_end;
+			log_sig_derivs_ptr += sig_len_, sig_ptr += sig_len_, out_ptr += sig_len_) {
+
+			log_sig_backprop_func(sig_ptr, log_sig_derivs_ptr, out_ptr);
+		}
+	}
+	return;
 }
