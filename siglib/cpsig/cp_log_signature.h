@@ -50,16 +50,6 @@ void tensor_log_(
 		level_index[i] = level_index[i - 1] * dimension + 1;
 
 	uint64_t buff1_size = ::sig_length(dimension, degree - 1);
-	/*std::unique_ptr<T[]> buff1_uptr;
-	T* buff1;
-	if (partial_logs) {
-		buff1 = partial_logs + (degree - 2) * buff1_size;
-	}
-	else {
-		buff1_uptr = std::make_unique<T[]>(buff1_size);
-		buff1 = buff1_uptr.get();
-		std::fill(buff1, buff1 + buff1_size, static_cast<T>(0.));
-	}*/
 	std::unique_ptr<T[]> buff1_uptr = std::make_unique<T[]>(buff1_size);
 	T* buff1 = buff1_uptr.get();
 	std::fill(buff1, buff1 + buff1_size, static_cast<T>(0.));
@@ -71,7 +61,7 @@ void tensor_log_(
 
 	sig[0] = static_cast<T>(0.);
 
-	for (uint64_t k = degree; k > 0; --k) {
+	for (int64_t k = degree; k > 0; --k) {
 		T constant = static_cast<T>(1.) / k;
 
 		for (uint64_t target_level = 2; target_level <= 1 + degree - k; ++target_level) {
@@ -101,9 +91,7 @@ void tensor_log_(
 					res_ptr[i] = constant * ptr_1[i] - ptr_2[i];
 				}
 			}
-			if (partial_logs && k > 2 && k != degree) {
-				/*std::memcpy(partial_logs, buff1, sizeof(T) * buff1_size);
-				partial_logs += buff1_size;*/
+			if (partial_logs && k > 2 && k != static_cast<int64_t>(degree)) {
 				std::memcpy(partial_logs, buff1, sizeof(T) * buff1_size);
 				partial_logs += buff1_size;
 			}
@@ -298,13 +286,12 @@ void tensor_log_backprop_(
 	T factor = static_cast<T>(-1.);
 	for (uint64_t depth = 1; depth + 1 < degree; ++depth) {
 		T scalar = static_cast<T>(1.) / (1 + depth);
-		T* product_to_use = partial_logs + (degree - 2 - depth) * sig_len_2_;
-		uncombine_sig_deriv_zero(sig, product_to_use, derivs, other_derivs, dimension, degree + 1 - depth, level_index);
+		T* partial = partial_logs + (degree - 2 - depth) * sig_len_2_;
+		uncombine_sig_deriv_zero(sig, partial, derivs, other_derivs, dimension, degree + 1 - depth, level_index);
 		for (uint64_t lev = 1; lev <= degree - depth; ++lev) {
 			T* it = out + level_index[lev];
 			for (uint64_t i = level_index[lev]; i < level_index[lev + 1]; ++i) {
-				*it += factor * derivs[i];
-				*(it++) += factor * scalar * other_derivs[i];
+				*(it++) += factor * (derivs[i] + scalar * other_derivs[i]);
 			}
 		}
 		std::swap(other_derivs, derivs);
@@ -312,10 +299,13 @@ void tensor_log_backprop_(
 	}
 	// backprop level 2
 	T scalar = factor / degree;
+	T* out_ptr = out + level_index[1];
+	T* derivs_ptr = derivs + level_index[2];
+	const T* sig_ptr = sig + level_index[1];
 	for (uint64_t i = 0; i < dimension; ++i) {
 		for (uint64_t j = 0; j < dimension; ++j) {
-			(out + level_index[1])[i] += (derivs + level_index[2])[i + dimension * j] * (sig + level_index[1])[j] * scalar;
-			(out + level_index[1])[j] += (derivs + level_index[2])[i + dimension * j] * (sig + level_index[1])[i] * scalar;
+			out_ptr[i] += derivs_ptr[i + dimension * j] * sig_ptr[j] * scalar;
+			out_ptr[j] += derivs_ptr[i + dimension * j] * sig_ptr[i] * scalar;
 		}
 	}
 }
@@ -335,7 +325,6 @@ void sig_to_log_sig_backprop_(
 
 	uint64_t aug_dimension = (lead_lag ? 2 * dimension : dimension) + (time_aug ? 1 : 0);
 
-	const uint64_t sig_len_ = ::sig_length(aug_dimension, degree);
 	const uint64_t log_sig_len_ = method ? ::log_sig_length(aug_dimension, degree) : ::sig_length(aug_dimension, degree);
 
 	auto log_sig_derivs_copy_uptr = std::make_unique<T[]>(log_sig_len_);

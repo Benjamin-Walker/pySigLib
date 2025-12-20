@@ -32,7 +32,7 @@ void example_signature_f(
     uint64_t out_size = sig_length(dimension, degree);
     std::vector<float> out(out_size, 0.);
 
-    time_function(num_runs, signature_f, path.data(), out.data(), dimension, length, degree, time_aug, lead_lag, 1., horner);
+    time_function(num_runs, signature_f, path.data(), out.data(), dimension, length, degree, time_aug, lead_lag, 1.f, horner);
 
     std::cout << "done\n";
 }

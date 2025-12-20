@@ -160,7 +160,7 @@ public:
         mat.insert_entry(4, 3, -2);
 
         SparseIntMatrix true_inv(5);
-        true_inv.insert_entry(1, 0, -3.);
+        true_inv.insert_entry(1, 0, -3);
         true_inv.insert_entry(2, 0, 3);
         true_inv.insert_entry(2, 1, -1);
         true_inv.insert_entry(4, 0, -5);
@@ -518,7 +518,7 @@ public:
 
             Path<float> path(data.data(), dimension, length, true);
 
-            int index = length - 1;
+            uint64_t index = length - 1;
 
             for (Point<float> pt = --path.end(); pt != --path.begin(); --pt) {
                 for (int i = 0; i < dimension; i++) {
@@ -641,16 +641,21 @@ public:
         TEST_METHOD(ManualSigTest2) {
             auto f = signature_f;
             uint64_t dimension = 3, length = 4, degree = 3;
-            std::vector<float> path = { 9., 5., 8., 5., 3., 0., 0., 2., 6., 4., 0., 2. };
-            std::vector<float> true_sig = { 1., -5., - 5., - 6., 12.5, 24.5,
-                                                5., 0.5, 12.5, 9., 25.,
-                                               21., 18., - 20.5 - 1./3, - 77.5 - 1./3, 11.,
-                                               33. + 1./6, - 45.5 - 1./3, - 42. - 1./3, - 47., 5. + 2./3,
-                                              - 18., - 17.5 - 1./3, - 30.5 - 1./3, 11. + 2./3, 14. + 1./6,
-                                              - 20.5 - 1./3, - 19., - 14. - 1./3, - 7., - 16. - 2./3,
-                                              - 39., - 110. - 1./3, 6., - 1./3, - 49.,
-                                              - 20. - 2./3, - 78., - 52. - 2./3, - 36. };
-            check_result(f, path, true_sig, dimension, length, degree, false, false, 1., true);
+            std::vector<float> path = {
+                 9.f, 5.f, 8.f, 5.f, 3.f, 0.f, 0.f, 2.f, 6.f, 4.f, 0.f, 2.f
+            };
+
+            std::vector<float> true_sig = {
+                 1.f, -5.f, -5.f, -6.f, 12.5f, 24.5f,
+                 5.f, 0.5f, 12.5f, 9.f, 25.f,
+                 21.f, 18.f, -20.5f - 1.f / 3.f, -77.5f - 1.f / 3.f, 11.f,
+                 33.f + 1.f / 6.f, -45.5f - 1.f / 3.f, -42.f - 1.f / 3.f, -47.f, 5.f + 2.f / 3.f,
+                -18.f, -17.5f - 1.f / 3.f, -30.5f - 1.f / 3.f, 11.f + 2.f / 3.f, 14.f + 1.f / 6.f,
+                -20.5f - 1.f / 3.f, -19.f, -14.f - 1.f / 3.f, -7.f, -16.f - 2.f / 3.f,
+                -39.f, -110.f - 1.f / 3.f, 6.f, -1.f / 3.f, -49.f,
+                -20.f - 2.f / 3.f, -78.f, -52.f - 2.f / 3.f, -36.f
+            };
+            check_result(f, path, true_sig, dimension, length, degree, false, false, 1.f, true);
         }
 
         TEST_METHOD(BatchSigTest) {
@@ -686,19 +691,19 @@ public:
         TEST_METHOD(ManualTimeAugTest) {
             auto f = signature_f;
             uint64_t dimension = 1, length = 5, degree = 3;
-            std::vector<float> path = { 0., 5., 2., 4., 9. };
-            std::vector<float> true_sig = { 1., 9., 4., 40.5, 15.5, 20.5, 8., 121.5, 37.5,
-                                64.5, 24.5, 60., 13., 34.5, 10. + 2./3 };
-            double end_time = length - 1.;
+            std::vector<float> path = { 0.f, 5.f, 2.f, 4.f, 9.f };
+            std::vector<float> true_sig = { 1.f, 9.f, 4.f, 40.5f, 15.5f, 20.5f, 8.f, 121.5f, 37.5f,
+                                64.5f, 24.5f, 60.f, 13.f, 34.5f, 10.f + 2.f/3.f };
+            float end_time = length - 1.f;
             check_result(f, path, true_sig, dimension, length, degree, true, false, end_time, true);
         }
 
         TEST_METHOD(ManualLeadLagTest) {
             auto f = signature_f;
             uint64_t dimension = 1, length = 5, degree = 3;
-            std::vector<float> path = { 0., 5., 2., 4., 9. };
-            std::vector<float> true_sig = { 1., 9., 9., 40.5, 9., 72., 40.5, 121.5, 6.5, 68., -8.5, 290., 98., 275., 121.5 };
-            check_result(f, path, true_sig, dimension, length, degree, false, true, 1., true);
+            std::vector<float> path = { 0.f, 5.f, 2.f, 4.f, 9.f };
+            std::vector<float> true_sig = { 1.f, 9.f, 9.f, 40.5f, 9.f, 72.f, 40.5f, 121.5f, 6.5f, 68.f, -8.5f, 290.f, 98.f, 275.f, 121.5f };
+            check_result(f, path, true_sig, dimension, length, degree, false, true, 1.f, true);
         }
 
         TEST_METHOD(BigLeadLagTest) {
@@ -949,15 +954,15 @@ public:
             SparseIntMatrix out = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
 
             SparseIntMatrix true_(out.n);
-            true_.insert_entry(10, 9, -1.);
-            true_.insert_entry(18, 17, -1.);
-            true_.insert_entry(20, 18, -1.);
-            true_.insert_entry(23, 22, -2.);
-            true_.insert_entry(25, 22, 1.);
-            true_.insert_entry(25, 23, -1.);
-            true_.insert_entry(26, 24, -2.);
-            true_.insert_entry(27, 24, 1.);
-            true_.insert_entry(27, 26, -1.);
+            true_.insert_entry(10, 9, -1);
+            true_.insert_entry(18, 17, -1);
+            true_.insert_entry(20, 18, -1);
+            true_.insert_entry(23, 22, -2);
+            true_.insert_entry(25, 22, 1);
+            true_.insert_entry(25, 23, -1);
+            true_.insert_entry(26, 24, -2);
+            true_.insert_entry(27, 24, 1);
+            true_.insert_entry(27, 26, -1);
 
             Assert::IsTrue(true_ == out);
         }
@@ -969,8 +974,8 @@ public:
             SparseIntMatrix out = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
 
             SparseIntMatrix true_(out.n);
-            true_.insert_entry(10, 9, -2.);
-            true_.insert_entry(12, 11, -3.);
+            true_.insert_entry(10, 9, -2);
+            true_.insert_entry(12, 11, -3);
 
             Assert::IsTrue(true_ == out);
         }
@@ -1020,20 +1025,25 @@ public:
         TEST_METHOD(ManualLogSigTest2) {
             auto f = sig_to_log_sig_f;
             uint64_t dimension = 3, degree = 3;
-            std::vector<float> true_ = { 0., -5., -5., -6., 0., 12., -10., -12.,
-            0., -6., 10., 6., 0., 0., -27.,
-            11., 54., 5., 3. + 2./3, -22., 20. + 2./3, -18.,
-            -27., -10., -24. - 1./3, 5., 0., -9., 20. + 2./3,
-            18., -4. - 2./3, 11., -24. - 1./3, 36., 3. + 2./3, -9.,
-            9. + 1./3, -18., -4.-2./3, 0.};
-            std::vector<float> sig = { 1., -5., -5., -6., 12.5, 24.5,
-                                                5., 0.5, 12.5, 9., 25.,
-                                               21., 18., -20.5 - 1. / 3, -77.5 - 1. / 3, 11.,
-                                               33. + 1. / 6, -45.5 - 1. / 3, -42. - 1. / 3, -47., 5. + 2. / 3,
-                                              -18., -17.5 - 1. / 3, -30.5 - 1. / 3, 11. + 2. / 3, 14. + 1. / 6,
-                                              -20.5 - 1. / 3, -19., -14. - 1. / 3, -7., -16. - 2. / 3,
-                                              -39., -110. - 1. / 3, 6., -1. / 3, -49.,
-                                              -20. - 2. / 3, -78., -52. - 2. / 3, -36. };
+            std::vector<float> true_ = {
+                 0.f, -5.f, -5.f, -6.f, 0.f, 12.f, -10.f, -12.f,
+                 0.f, -6.f, 10.f, 6.f, 0.f, 0.f, -27.f,
+                 11.f, 54.f, 5.f, 3.f + 2.f / 3.f, -22.f, 20.f + 2.f / 3.f, -18.f,
+                -27.f, -10.f, -24.f - 1.f / 3.f, 5.f, 0.f, -9.f, 20.f + 2.f / 3.f,
+                 18.f, -4.f - 2.f / 3.f, 11.f, -24.f - 1.f / 3.f, 36.f, 3.f + 2.f / 3.f, -9.f,
+                 9.f + 1.f / 3.f, -18.f, -4.f - 2.f / 3.f, 0.f
+            };
+
+            std::vector<float> sig = {
+                 1.f, -5.f, -5.f, -6.f, 12.5f, 24.5f,
+                 5.f, 0.5f, 12.5f, 9.f, 25.f,
+                 21.f, 18.f, -20.5f - 1.f / 3.f, -77.5f - 1.f / 3.f, 11.f,
+                 33.f + 1.f / 6.f, -45.5f - 1.f / 3.f, -42.f - 1.f / 3.f, -47.f, 5.f + 2.f / 3.f,
+                -18.f, -17.5f - 1.f / 3.f, -30.5f - 1.f / 3.f, 11.f + 2.f / 3.f, 14.f + 1.f / 6.f,
+                -20.5f - 1.f / 3.f, -19.f, -14.f - 1.f / 3.f, -7.f, -16.f - 2.f / 3.f,
+                -39.f, -110.f - 1.f / 3.f, 6.f, -1.f / 3.f, -49.f,
+                -20.f - 2.f / 3.f, -78.f, -52.f - 2.f / 3.f, -36.f
+            };
             check_result(f, sig, true_, dimension, degree, false, false, 0);
         }
 
@@ -1056,10 +1066,10 @@ public:
         TEST_METHOD(ManualTimeAugTest) {
             auto f = sig_to_log_sig_f;
             uint64_t dimension = 1, degree = 3;
-            std::vector<float> true_ = { 0., 9., 4., 0., -2.5, 2.5, 0., 0., -5.25,
-            10.5, 5.5, -5.25, -11., 5.5, 0.};
-            std::vector<float> sig = { 1., 9., 4., 40.5, 15.5, 20.5, 8., 121.5, 37.5,
-                                64.5, 24.5, 60., 13., 34.5, 10. + 2. / 3 };
+            std::vector<float> true_ = { 0.f, 9.f, 4.f, 0.f, -2.5f, 2.5f, 0.f, 0.f, -5.25f,
+                                10.5f, 5.5f, -5.25f, -11.f, 5.5f, 0.f};
+            std::vector<float> sig = { 1.f, 9.f, 4.f, 40.5f, 15.5f, 20.5f, 8.f, 121.5f, 37.5f,
+                                64.5f, 24.5f, 60.f, 13.f, 34.5f, 10.f + 2.f / 3.f };
             check_result(f, sig, true_, dimension, degree, true, false, 0);
         }
 
@@ -1197,16 +1207,21 @@ public:
         TEST_METHOD(ManualLogSigTest2) {
             auto f = sig_to_log_sig_f;
             uint64_t dimension = 3, degree = 3;
-            std::vector<float> true_ = { -5., -5., -6., 12., -10., -6., -27.,
-            11., 5., 3. + 2./3, 20. + 2./3, -18., -9., -4. - 2./3};
-            std::vector<float> sig = { 1., -5., -5., -6., 12.5, 24.5,
-                                                5., 0.5, 12.5, 9., 25.,
-                                               21., 18., -20.5 - 1. / 3, -77.5 - 1. / 3, 11.,
-                                               33. + 1. / 6, -45.5 - 1. / 3, -42. - 1. / 3, -47., 5. + 2. / 3,
-                                              -18., -17.5 - 1. / 3, -30.5 - 1. / 3, 11. + 2. / 3, 14. + 1. / 6,
-                                              -20.5 - 1. / 3, -19., -14. - 1. / 3, -7., -16. - 2. / 3,
-                                              -39., -110. - 1. / 3, 6., -1. / 3, -49.,
-                                              -20. - 2. / 3, -78., -52. - 2. / 3, -36. };
+            std::vector<float> true_ = {
+                -5.f, -5.f, -6.f, 12.f, -10.f, -6.f, -27.f,
+                 11.f, 5.f, 3.f + 2.f / 3.f, 20.f + 2.f / 3.f, -18.f, -9.f, -4.f - 2.f / 3.f
+            };
+
+            std::vector<float> sig = {
+                 1.f, -5.f, -5.f, -6.f, 12.5f, 24.5f,
+                 5.f, 0.5f, 12.5f, 9.f, 25.f,
+                 21.f, 18.f, -20.5f - 1.f / 3.f, -77.5f - 1.f / 3.f, 11.f,
+                 33.f + 1.f / 6.f, -45.5f - 1.f / 3.f, -42.f - 1.f / 3.f, -47.f, 5.f + 2.f / 3.f,
+                -18.f, -17.5f - 1.f / 3.f, -30.5f - 1.f / 3.f, 11.f + 2.f / 3.f, 14.f + 1.f / 6.f,
+                -20.5f - 1.f / 3.f, -19.f, -14.f - 1.f / 3.f, -7.f, -16.f - 2.f / 3.f,
+                -39.f, -110.f - 1.f / 3.f, 6.f, -1.f / 3.f, -49.f,
+                -20.f - 2.f / 3.f, -78.f, -52.f - 2.f / 3.f, -36.f
+            };
             prepare_log_sig(dimension, degree, 1);
             check_result(f, sig, true_, dimension, degree, false, false, 1);
         }
@@ -1230,9 +1245,9 @@ public:
         TEST_METHOD(ManualTimeAugTest) {
             auto f = sig_to_log_sig_f;
             uint64_t dimension = 1, degree = 3;
-            std::vector<float> true_ = { 9., 4., -2.5, -5.25, 5.5 };
-            std::vector<float> sig = { 1., 9., 4., 40.5, 15.5, 20.5, 8., 121.5, 37.5,
-                                64.5, 24.5, 60., 13., 34.5, 10. + 2. / 3 };
+            std::vector<float> true_ = { 9.f, 4.f, -2.5f, -5.25f, 5.5f };
+            std::vector<float> sig = { 1.f, 9.f, 4.f, 40.5f, 15.5f, 20.5f, 8.f, 121.5f, 37.5f,
+                                64.5f, 24.5f, 60.f, 13.f, 34.5f, 10.f + 2.f / 3.f };
             prepare_log_sig(dimension, degree, 1);
             check_result(f, sig, true_, dimension, degree, true, false, 1);
         }
@@ -1240,8 +1255,8 @@ public:
         TEST_METHOD(ManualLeadLagTest) {
             auto f = sig_to_log_sig_f;
             uint64_t dimension = 1, degree = 3;
-            std::vector<float> true_ = { 9., 9., -31.5, 26.75, 11.75 };
-            std::vector<float> sig = { 1., 9., 9., 40.5, 9., 72., 40.5, 121.5, 6.5, 68., -8.5, 290., 98., 275., 121.5 };
+            std::vector<float> true_ = { 9.f, 9.f, -31.5f, 26.75f, 11.75f };
+            std::vector<float> sig = { 1.f, 9.f, 9.f, 40.5f, 9.f, 72.f, 40.5f, 121.5f, 6.5f, 68.f, -8.5f, 290.f, 98.f, 275.f, 121.5f };
             prepare_log_sig(dimension, degree, 1);
             check_result(f, sig, true_, dimension, degree, false, true, 1);
         }
@@ -1280,16 +1295,16 @@ public:
         TEST_METHOD(ManualLogSigTest2) {
             auto f = sig_to_log_sig_f;
             uint64_t dimension = 3, degree = 3;
-            std::vector<float> true_ = { -5., -5., -6., 12., -10., -6., -27.,
-            11., 5., 3. + 2. / 3, 24. + 1. / 3, -18., -9., -4. - 2. / 3 };
-            std::vector<float> sig = { 1., -5., -5., -6., 12.5, 24.5,
-                                                5., 0.5, 12.5, 9., 25.,
-                                               21., 18., -20.5 - 1. / 3, -77.5 - 1. / 3, 11.,
-                                               33. + 1. / 6, -45.5 - 1. / 3, -42. - 1. / 3, -47., 5. + 2. / 3,
-                                              -18., -17.5 - 1. / 3, -30.5 - 1. / 3, 11. + 2. / 3, 14. + 1. / 6,
-                                              -20.5 - 1. / 3, -19., -14. - 1. / 3, -7., -16. - 2. / 3,
-                                              -39., -110. - 1. / 3, 6., -1. / 3, -49.,
-                                              -20. - 2. / 3, -78., -52. - 2. / 3, -36. };
+            std::vector<float> true_ = { -5.f, -5.f, -6.f, 12.f, -10.f, -6.f, -27.f,
+            11.f, 5.f, 3.f + 2.f / 3.f, 24.f + 1.f / 3.f, -18.f, -9.f, -4.f - 2.f / 3.f };
+            std::vector<float> sig = { 1.f, -5.f, -5.f, -6.f, 12.5f, 24.5f,
+                                                5.f, 0.5f, 12.5f, 9.f, 25.f,
+                                               21.f, 18.f, -20.5f - 1.f / 3.f, -77.5f - 1.f / 3.f, 11.f,
+                                               33.f + 1.f / 6.f, -45.5f - 1.f / 3.f, -42.f - 1.f / 3.f, -47.f, 5.f + 2.f / 3.f,
+                                              -18.f, -17.5f - 1.f / 3.f, -30.5f - 1.f / 3.f, 11.f + 2.f / 3.f, 14.f + 1.f / 6.f,
+                                              -20.5f - 1.f / 3.f, -19.f, -14.f - 1.f / 3.f, -7.f, -16.f - 2.f / 3.f,
+                                              -39.f, -110.f - 1.f / 3.f, 6.f, -1.f / 3.f, -49.f,
+                                              -20.f - 2.f / 3.f, -78.f, -52.f - 2.f / 3.f, -36.f };
             prepare_log_sig(dimension, degree, 2);
             check_result(f, sig, true_, dimension, degree, false, false, 2);
         }
