@@ -117,9 +117,11 @@ def sig_to_log_sig(
     device_handler = DeviceToHost([sig], ["sig"])
     sig = device_handler.data[0]
 
-    sig_len = sig_length(dimension, degree)
+    aug_dimension = (2 * dimension if lead_lag else dimension) + (1 if time_aug else 0)
+
+    sig_len = sig_length(aug_dimension, degree)
     data = SigInputHandler(sig, sig_len, "sig")
-    log_sig_len = log_sig_length(dimension, degree) if method else sig_length(dimension, degree)
+    log_sig_len = log_sig_length(aug_dimension, degree) if method else sig_length(aug_dimension, degree)
     result = SigOutputHandler(data, log_sig_len)
     if data.is_batch:
         check_type(n_jobs, "n_jobs", int)

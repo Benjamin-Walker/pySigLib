@@ -74,6 +74,26 @@ def test_batch_log_signature_expanded_random(deg, dtype):
     sig = pysiglib.log_sig(X, deg, method=0)
     check_close(iisig, sig[:, 1:])
 
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [np.float64, np.float32])
+def test_batch_log_signature_expanded_time_aug_random(deg, dtype):
+    X = np.random.uniform(size=(32, 100, 5)).astype(dtype)
+
+    s = iisignature.prepare(6, deg, "x")
+    iisig = iisignature.logsig(pysiglib.transform_path(X, time_aug=True), s, "x").astype(dtype)
+    sig = pysiglib.log_sig(X, deg, time_aug=True, method=0)
+    check_close(iisig, sig[:, 1:])
+
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [np.float64, np.float32])
+def test_batch_log_signature_expanded_lead_lag_random(deg, dtype):
+    X = np.random.uniform(size=(32, 100, 5)).astype(dtype)
+
+    s = iisignature.prepare(10, deg, "x")
+    iisig = iisignature.logsig(pysiglib.transform_path(X, lead_lag=True), s, "x").astype(dtype)
+    sig = pysiglib.log_sig(X, deg, lead_lag=True, method=0)
+    check_close(iisig, sig[:, 1:])
+
 @pytest.mark.skipif(signatory is None, reason="signatory not available")
 @pytest.mark.parametrize("deg", range(1, 6))
 @pytest.mark.parametrize("dtype", [torch.float64, torch.float32])

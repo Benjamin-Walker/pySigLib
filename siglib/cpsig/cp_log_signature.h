@@ -39,6 +39,7 @@ void tensor_log_(
 	uint64_t degree,
 	T* partial_logs = nullptr
 ) {
+	sig[0] = static_cast<T>(0.);
 	if (degree == 1)
 		return;
 
@@ -58,8 +59,6 @@ void tensor_log_(
 	auto buff2_uptr = std::make_unique<T[]>(buff2_size);
 	T* buff2 = buff2_uptr.get();
 	std::fill(buff2, buff2 + buff2_size, static_cast<T>(0.));
-
-	sig[0] = static_cast<T>(0.);
 
 	for (int64_t k = degree; k > 0; --k) {
 		T constant = static_cast<T>(1.) / k;
@@ -223,7 +222,7 @@ void batch_sig_to_log_sig_(
 	std::function<void(const T*, T*)> log_sig_func;
 
 	log_sig_func = [&](const T* sig_ptr, T* out_ptr) {
-		get_log_sig_<T>(sig_ptr, out_ptr, dimension, degree, method);
+		get_log_sig_<T>(sig_ptr, out_ptr, aug_dimension, degree, method);
 		};
 
 	const T* sig_ptr;
