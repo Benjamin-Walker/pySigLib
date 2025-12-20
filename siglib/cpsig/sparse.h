@@ -195,10 +195,21 @@ public:
     }
 
     template<std::floating_point T>
-    void mul_vec_inplace(T* arr) const {
-        // This assumes matrix is lower triangular with zeros on the diagonal
+    void mul_vec_inplace_lower(T* arr) const {
+        // This assumes matrix is lower triangular with ones on the diagonal
         for (uint64_t i_ = 0; i_ < n; ++i_) {
             uint64_t i = n - i_ - 1;
+            for (const auto& e : rows[i]) {
+                uint64_t j = e.col;
+                arr[i] += static_cast<T>(e.val) * arr[j];
+            }
+        }
+    }
+
+    template<std::floating_point T>
+    void mul_vec_inplace_upper(T* arr) const {
+        // This assumes matrix is upper triangular with ones on the diagonal
+        for (uint64_t i = 0; i < n; ++i) {
             for (const auto& e : rows[i]) {
                 uint64_t j = e.col;
                 arr[i] += static_cast<T>(e.val) * arr[j];

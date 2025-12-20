@@ -190,18 +190,19 @@ void set_basis_cache(uint64_t dimension, uint64_t degree, int method) {
 
 		std::vector<word> lyndon_words = all_lyndon_words(dimension, degree);
 		std::vector<uint64_t> lyndon_idx = all_lyndon_idx(dimension, degree);
-		SparseIntMatrix p, p_inv;
+		SparseIntMatrix p, p_inv, p_inv_t;
 		if (method == 2) {
 			p = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
 			p_inv = p.inverse();
+			p_inv_t = p_inv.transpose();
 		}
 
 		auto basis_obj = std::make_unique<BasisCache>(
 			method,
 			std::move(lyndon_words),
 			std::move(lyndon_idx),
-			std::move(p),
-			std::move(p_inv)
+			std::move(p_inv),
+			std::move(p_inv_t)
 		);
 
 		basis_cache.erase(key); // In case cache already exists but with inferior method

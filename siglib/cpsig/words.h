@@ -45,20 +45,20 @@ struct BasisCache {
 	int method;
 	std::vector<word> lyndon_words;
 	std::vector<uint64_t> lyndon_idx;
-	SparseIntMatrix proj_mat;
 	SparseIntMatrix inv_proj_mat;
+	SparseIntMatrix inv_proj_mat_transpose;
 
 	BasisCache(
 		int method_,
 		std::vector<word>&& lyndon_words_,
 		std::vector<uint64_t>&& lyndon_idx_,
-		SparseIntMatrix&& proj_mat_,
-		SparseIntMatrix&& inv_proj_mat_
+		SparseIntMatrix&& inv_proj_mat_,
+		SparseIntMatrix&& inv_proj_mat_transpose_
 	) : method{ method_ },
 		lyndon_words{ std::move(lyndon_words_) },
 		lyndon_idx{ std::move(lyndon_idx_) },
-		proj_mat{ std::move(proj_mat_) },
-		inv_proj_mat{ std::move(inv_proj_mat_) } {
+		inv_proj_mat{ std::move(inv_proj_mat_) },
+		inv_proj_mat_transpose{ std::move(inv_proj_mat_transpose_) } {
 	}
 };
 

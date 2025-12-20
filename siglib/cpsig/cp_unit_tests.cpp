@@ -1273,6 +1273,71 @@ public:
         }
     };
 
+    TEST_CLASS(logSignatureLyndonWordsBackpropTest) {
+    public:
+
+        TEST_METHOD(LinearPathTest) {
+            auto f = sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 2;
+            std::vector<double> deriv = { 1., 1., 1. };
+            std::vector<double> true_ = { 0., .5, .5, 0., 1., 0., 0. };
+            std::vector<double> sig = { 1., 1., 1., 0.5, 0.5, 0.5, 0.5 };
+            prepare_log_sig(dimension, degree, 1);
+            check_result(f, sig, true_, deriv.data(), dimension, degree, false, false, 1);
+        }
+
+        TEST_METHOD(ManualTest) {
+            auto f = sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 2;
+            std::vector<double> deriv = { 1., 2., 3. };
+            std::vector<double> true_ = { 0., -0.5, 1.25, 0., 3., 0., 0. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5 };
+            prepare_log_sig(dimension, degree, 1);
+            check_result(f, sig, true_, deriv.data(), dimension, degree, false, false, 1);
+        }
+
+        TEST_METHOD(ManualTest2) {
+            auto f = sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 3;
+            std::vector<double> deriv = { 1., 2., 3., 4., 5. };
+            std::vector<double> true_ = { 0., 0.75, 2.375, -2., -0.5, 0., -1.25, 0., 4., 0., 5., 0., 0., 0., 0. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1. / 48, 1. / 24, 1. / 24, 1. / 12, 1. / 24, 1. / 12, 1. / 12, 1. / 6 };
+            prepare_log_sig(dimension, degree, 1);
+            check_result(f, sig, true_, deriv.data(), dimension, degree, false, false, 1);
+        }
+
+        TEST_METHOD(ManualTestAsBatch) {
+            auto f = batch_sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 2;
+            std::vector<double> deriv = { 1., 2., 3. };
+            std::vector<double> true_ = { 0., -0.5, 1.25, 0., 3., 0., 0. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5 };
+            prepare_log_sig(dimension, degree, 1);
+            check_result(f, sig, true_, deriv.data(), 1, dimension, degree, false, false, 1, 1);
+        }
+
+        TEST_METHOD(ManualTest2AsBatch) {
+            auto f = batch_sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 3;
+            std::vector<double> deriv = { 1., 2., 3., 4., 5., 6. };
+            std::vector<double> true_ = { 0., 0.75, 2.375, -2., -0.5, 0., -1.25, 0., 4., 0., 5., 0., 0., 0., 0. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1. / 48, 1. / 24, 1. / 24, 1. / 12, 1. / 24, 1. / 12, 1. / 12, 1. / 6 };
+            prepare_log_sig(dimension, degree, 1);
+            check_result(f, sig, true_, deriv.data(), 1, dimension, degree, false, false, 1, 1);
+        }
+
+        TEST_METHOD(ManualBatchTest) {
+            auto f = batch_sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 3, batch_size = 3;
+            std::vector<double> deriv = { 1., 2., 3., 4., 5., 1., -2., 3., -4., 5., 1., 1., 1., 1., 1. };
+            std::vector<double> true_ = { 0., 0.75, 2.375, -2., -.5, 0., -1.25, 0., 4., 0., 5., 0., 0., 0., 0., 0., -21., 8., 4., 8., 0., -12.5, 0., -4., 0., 5., 0., 0., 0., 0., 0., 1.375, 0.5625, 0.5, 1.25, 0., -0.25, 0., 1., 0., 1., 0., 0., 0., 0. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1. / 48, 1. / 24, 1. / 24, 1. / 12, 1. / 24, 1. / 12, 1. / 12, 1. / 6, 1., 5., 2., 12.5, 3., 7., 2., 20. + 5. / 6, 3., 9., 2., 13., 2., 6., 1. + 1. / 3, 1., 0.5, -1., 0.125, -0.25, -0.25, 0.5, 1. / 48, -1. / 24, -1. / 24,  1. / 12, -1. / 24, 1. / 48, 1. / 48, -1. / 6 };
+            prepare_log_sig(dimension, degree, 1);
+            check_result(f, sig, true_, deriv.data(), batch_size, dimension, degree, false, false, 1, 1);
+            check_result(f, sig, true_, deriv.data(), batch_size, dimension, degree, false, false, 1, -1);
+        }
+    };
+
     TEST_CLASS(logSignatureLyndonBasisTest) {
     public:
 
@@ -1307,6 +1372,71 @@ public:
                                               -20.f - 2.f / 3.f, -78.f, -52.f - 2.f / 3.f, -36.f };
             prepare_log_sig(dimension, degree, 2);
             check_result(f, sig, true_, dimension, degree, false, false, 2);
+        }
+    };
+
+    TEST_CLASS(logSignatureLyndonBasisBackpropTest) {
+    public:
+
+        TEST_METHOD(LinearPathTest) {
+            auto f = sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 2;
+            std::vector<double> deriv = { 1., 1., 1. };
+            std::vector<double> true_ = { 0., .5, .5, 0., 1., 0., 0. };
+            std::vector<double> sig = { 1., 1., 1., 0.5, 0.5, 0.5, 0.5 };
+            prepare_log_sig(dimension, degree, 2);
+            check_result(f, sig, true_, deriv.data(), dimension, degree, false, false, 2);
+        }
+
+        TEST_METHOD(ManualTest) {
+            auto f = sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 2;
+            std::vector<double> deriv = { 1., 2., 3. };
+            std::vector<double> true_ = { 0., -0.5, 1.25, 0., 3., 0., 0. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5 };
+            prepare_log_sig(dimension, degree, 2);
+            check_result(f, sig, true_, deriv.data(), dimension, degree, false, false, 2);
+        }
+
+        TEST_METHOD(ManualTest2) {
+            auto f = sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 3;
+            std::vector<double> deriv = { 1., 2., 3., 4., 5. };
+            std::vector<double> true_ = { 0., 0.75, 2.375, -2., -0.5, 0., -1.25, 0., 4., 0., 5., 0., 0., 0., 0. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1. / 48, 1. / 24, 1. / 24, 1. / 12, 1. / 24, 1. / 12, 1. / 12, 1. / 6 };
+            prepare_log_sig(dimension, degree, 2);
+            check_result(f, sig, true_, deriv.data(), dimension, degree, false, false, 2);
+        }
+
+        TEST_METHOD(ManualTestAsBatch) {
+            auto f = batch_sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 2;
+            std::vector<double> deriv = { 1., 2., 3. };
+            std::vector<double> true_ = { 0., -0.5, 1.25, 0., 3., 0., 0. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5 };
+            prepare_log_sig(dimension, degree, 2);
+            check_result(f, sig, true_, deriv.data(), 1, dimension, degree, false, false, 2, 1);
+        }
+
+        TEST_METHOD(ManualTest2AsBatch) {
+            auto f = batch_sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 3;
+            std::vector<double> deriv = { 1., 2., 3., 4., 5., 6. };
+            std::vector<double> true_ = { 0., 0.75, 2.375, -2., -0.5, 0., -1.25, 0., 4., 0., 5., 0., 0., 0., 0. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1. / 48, 1. / 24, 1. / 24, 1. / 12, 1. / 24, 1. / 12, 1. / 12, 1. / 6 };
+            prepare_log_sig(dimension, degree, 2);
+            check_result(f, sig, true_, deriv.data(), 1, dimension, degree, false, false, 2, 1);
+        }
+
+        TEST_METHOD(ManualBatchTest) {
+            auto f = batch_sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 3, batch_size = 3;
+            std::vector<double> deriv = { 1., 2., 3., 4., 5., 1., -2., 3., -4., 5., 1., 1., 1., 1., 1. };
+            std::vector<double> true_ = { 0., 0.75, 2.375, -2., -.5, 0., -1.25, 0., 4., 0., 5., 0., 0., 0., 0., 0., -21., 8., 4., 8., 0., -12.5, 0., -4., 0., 5., 0., 0., 0., 0., 0., 1.375, 0.5625, 0.5, 1.25, 0., -0.25, 0., 1., 0., 1., 0., 0., 0., 0. };
+            std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1. / 48, 1. / 24, 1. / 24, 1. / 12, 1. / 24, 1. / 12, 1. / 12, 1. / 6, 1., 5., 2., 12.5, 3., 7., 2., 20. + 5. / 6, 3., 9., 2., 13., 2., 6., 1. + 1. / 3, 1., 0.5, -1., 0.125, -0.25, -0.25, 0.5, 1. / 48, -1. / 24, -1. / 24,  1. / 12, -1. / 24, 1. / 48, 1. / 48, -1. / 6 };
+            prepare_log_sig(dimension, degree, 2);
+            check_result(f, sig, true_, deriv.data(), batch_size, dimension, degree, false, false, 2, 1);
+            check_result(f, sig, true_, deriv.data(), batch_size, dimension, degree, false, false, 2, -1);
         }
     };
 

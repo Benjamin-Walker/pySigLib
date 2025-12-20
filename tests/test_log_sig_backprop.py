@@ -104,50 +104,72 @@ def test_batch_log_signature_backprop_expanded_random(deg, dtype):
 
     check_close(d1, d2)
 
-# @pytest.mark.skipif(signatory is None, reason="signatory not available")
-# @pytest.mark.parametrize("deg", range(1, 6))
-# @pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
-# def test_log_signature_lyndon_words_random(deg, dtype):
-#     X = torch.rand(size=(1, 100, 5), dtype=dtype)
-#
-#     ls = signatory.logsignature(X, deg, mode="words")[0]
-#     pysiglib.prepare_log_sig(5, deg, 1)
-#     sig = pysiglib.log_sig(X[0], deg, method=1)
-#     check_close(ls, sig)
-#     pysiglib.reset_log_sig()
-#
-# @pytest.mark.skipif(signatory is None, reason="signatory not available")
-# @pytest.mark.parametrize("deg", range(1, 6))
-# @pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
-# def test_batch_log_signature_lyndon_words_random(deg, dtype):
-#     X = torch.rand(size=(32, 100, 5), dtype=dtype)
-#
-#     ls = signatory.logsignature(X, deg, mode="words")
-#     pysiglib.prepare_log_sig(5, deg, 1)
-#     sig = pysiglib.log_sig(X, deg, method=1)
-#     check_close(ls, sig)
-#     pysiglib.reset_log_sig()
-#
-# @pytest.mark.parametrize("deg", range(1, 6))
-# @pytest.mark.parametrize("dtype", [np.float64, np.float32])
-# def test_log_signature_lyndon_basis_random(deg, dtype):
-#     X = np.random.uniform(size=(100, 5)).astype(dtype)
-#
-#     s = iisignature.prepare(5, deg, "s")
-#     iisig = iisignature.logsig(X, s, "s").astype(dtype)
-#     pysiglib.prepare_log_sig(5, deg, 2)
-#     sig = pysiglib.log_sig(X, deg, method=2)
-#     check_close(iisig, sig)
-#     pysiglib.reset_log_sig()
-#
-# @pytest.mark.parametrize("deg", range(1, 6))
-# @pytest.mark.parametrize("dtype", [np.float64, np.float32])
-# def test_batch_log_signature_lyndon_basis_random(deg, dtype):
-#     X = np.random.uniform(size=(32, 100, 5)).astype(dtype)
-#
-#     s = iisignature.prepare(5, deg, "s")
-#     iisig = iisignature.logsig(X, s, "s").astype(dtype)
-#     pysiglib.prepare_log_sig(5, deg, 2)
-#     sig = pysiglib.log_sig(X, deg, method=2)
-#     check_close(iisig, sig)
-#     pysiglib.reset_log_sig()
+@pytest.mark.skipif(signatory is None, reason="signatory not available")
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
+def test_log_signature_lyndon_words_random(deg, dtype):
+    X = torch.rand(size=(1, 100, 5), dtype=dtype, requires_grad=True)
+    pysiglib.prepare_log_sig(5, deg, 1)
+    ls = pysiglib.log_sig(X[0], deg, method=1)
+    derivs = torch.rand(size=ls.shape)
+    ls.backward(derivs)
+    d2 = X.grad
+
+    X = torch.tensor(X.clone().detach(), requires_grad=True)
+    ls = signatory.logsignature(X, deg, mode="words")[0]
+    ls.backward(derivs)
+    d1 = X.grad
+
+    check_close(d1, d2)
+
+@pytest.mark.skipif(signatory is None, reason="signatory not available")
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
+def test_batch_log_signature_lyndon_words_random(deg, dtype):
+    X = torch.rand(size=(32, 100, 5), dtype=dtype, requires_grad=True)
+    pysiglib.prepare_log_sig(5, deg, 1)
+    ls = pysiglib.log_sig(X[0], deg, method=1)
+    derivs = torch.rand(size=ls.shape)
+    ls.backward(derivs)
+    d2 = X.grad
+
+    X = torch.tensor(X.clone().detach(), requires_grad=True)
+    ls = signatory.logsignature(X, deg, mode="words")[0]
+    ls.backward(derivs)
+    d1 = X.grad
+
+    check_close(d1, d2)
+
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
+def test_log_signature_backprop_lyndon_basis_random(deg, dtype):
+    X = torch.rand(size=(100, 5), requires_grad=True, dtype = dtype)
+    pysiglib.prepare_log_sig(5, deg, 2)
+    ls = pysiglib.log_sig(X, deg, method=2)
+    derivs = torch.rand(size=ls.shape, dtype = dtype)
+    ls.backward(derivs)
+    d1 = X.grad
+
+    X = np.array(X.detach())
+    derivs = np.array(derivs)
+    s = iisignature.prepare(5, deg, "s")
+    d2 = iisignature.logsigbackprop(derivs, X, s, "s")
+
+    check_close(d1, d2)
+
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
+def test_batch_log_signature_backprop_lyndon_basis_random(deg, dtype):
+    X = torch.rand(size=(32, 100, 5), requires_grad=True, dtype=dtype)
+    pysiglib.prepare_log_sig(5, deg, 2)
+    ls = pysiglib.log_sig(X, deg, method=2)
+    derivs = torch.rand(size=ls.shape, dtype=dtype)
+    ls.backward(derivs)
+    d1 = X.grad
+
+    X = np.array(X.detach())
+    derivs = np.array(derivs)
+    s = iisignature.prepare(5, deg, "s")
+    d2 = iisignature.logsigbackprop(derivs, X, s, "s")
+
+    check_close(d1, d2)

@@ -151,7 +151,7 @@ void log_sig_lyndon_basis(
 ) {
 	log_sig_lyndon_words(sig, out, dimension, degree);
 	const BasisCache& cache_ = get_basis_cache(dimension, degree, 2);
-	cache_.inv_proj_mat.mul_vec_inplace(out);
+	cache_.inv_proj_mat.mul_vec_inplace_lower(out);
 }
 
 template<std::floating_point T>
@@ -310,6 +310,76 @@ void tensor_log_backprop_(
 }
 
 template<std::floating_point T>
+void tensor_log_backprop_lyndon_words(
+	T* out,
+	T* log_sig_derivs,
+	const T* sig,
+	uint64_t dimension,
+	uint64_t degree
+) {
+	const BasisCache& cache_ = get_basis_cache(dimension, degree, 1);
+
+	uint64_t sig_len_ = ::sig_length(dimension, degree);
+	auto log_sig_derivs_copy_uptr = std::make_unique<T[]>(sig_len_);
+	T* log_sig_derivs_copy = log_sig_derivs_copy_uptr.get();
+	std::fill(log_sig_derivs_copy, log_sig_derivs_copy + sig_len_, static_cast<T>(0.));
+
+	uint64_t m = cache_.lyndon_idx.size();
+	for (uint64_t i = 0; i < m; ++i) {
+		log_sig_derivs_copy[cache_.lyndon_idx[i]] = log_sig_derivs[i];
+	}
+
+	tensor_log_backprop_<T>(out, log_sig_derivs_copy, sig, dimension, degree);
+}
+
+template<std::floating_point T>
+void tensor_log_backprop_lyndon_basis(
+	T* out,
+	T* log_sig_derivs,
+	const T* sig,
+	uint64_t dimension,
+	uint64_t degree
+) {
+	const BasisCache& cache_ = get_basis_cache(dimension, degree, 2);
+
+	cache_.inv_proj_mat_transpose.mul_vec_inplace_upper(log_sig_derivs);
+
+	uint64_t sig_len_ = ::sig_length(dimension, degree);
+	auto log_sig_derivs_copy_uptr = std::make_unique<T[]>(sig_len_);
+	T* log_sig_derivs_copy = log_sig_derivs_copy_uptr.get();
+	std::fill(log_sig_derivs_copy, log_sig_derivs_copy + sig_len_, static_cast<T>(0.));
+
+	uint64_t m = cache_.lyndon_idx.size();
+	for (uint64_t i = 0; i < m; ++i) {
+		log_sig_derivs_copy[cache_.lyndon_idx[i]] = log_sig_derivs[i];
+	}
+
+	tensor_log_backprop_<T>(out, log_sig_derivs_copy, sig, dimension, degree);
+}
+
+template<std::floating_point T>
+void get_sig_to_log_sig_backprop_(
+	const T* sig,
+	T* out,
+	T* log_sig_derivs,
+	uint64_t dimension,
+	uint64_t degree,
+	int method = 0
+) {
+	switch (method) {
+	case 0:
+		tensor_log_backprop_<T>(out, log_sig_derivs, sig, dimension, degree);
+		break;
+	case 1:
+		tensor_log_backprop_lyndon_words<T>(out, log_sig_derivs, sig, dimension, degree);
+		break;
+	case 2:
+		tensor_log_backprop_lyndon_basis<T>(out, log_sig_derivs, sig, dimension, degree);
+		break;
+	}
+}
+
+template<std::floating_point T>
 void sig_to_log_sig_backprop_(
 	const T* sig,
 	T* out,
@@ -330,7 +400,7 @@ void sig_to_log_sig_backprop_(
 	T* log_sig_derivs_copy = log_sig_derivs_copy_uptr.get();
 	std::memcpy(log_sig_derivs_copy, log_sig_derivs, log_sig_len_ * sizeof(T));
 
-	tensor_log_backprop_<T>(out, log_sig_derivs_copy, sig, aug_dimension, degree);
+	get_sig_to_log_sig_backprop_<T>(sig, out, log_sig_derivs_copy, aug_dimension, degree, method);
 }
 
 template<std::floating_point T>
@@ -363,7 +433,7 @@ void batch_sig_to_log_sig_backprop_(
 	std::function<void(const T*, T*, T*)> log_sig_backprop_func;
 
 	log_sig_backprop_func = [&](const T* sig_ptr, T* log_sig_derivs_ptr, T* out_ptr) {
-		tensor_log_backprop_<T>(out_ptr, log_sig_derivs_ptr, sig_ptr, aug_dimension, degree);
+		get_sig_to_log_sig_backprop_<T>(sig_ptr, out_ptr, log_sig_derivs_ptr, aug_dimension, degree, method);
 		};
 
 	const T* sig_ptr;
@@ -386,7 +456,7 @@ void batch_sig_to_log_sig_backprop_(
 	else {
 		for (log_sig_derivs_ptr = log_sig_derivs_copy, sig_ptr = sig, out_ptr = out;
 			sig_ptr < data_end;
-			log_sig_derivs_ptr += sig_len_, sig_ptr += sig_len_, out_ptr += sig_len_) {
+			log_sig_derivs_ptr += log_sig_len_, sig_ptr += sig_len_, out_ptr += sig_len_) {
 
 			log_sig_backprop_func(sig_ptr, log_sig_derivs_ptr, out_ptr);
 		}
