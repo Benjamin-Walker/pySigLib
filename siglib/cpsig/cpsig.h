@@ -386,14 +386,10 @@ extern "C" {
 	* @param method
 	* @return Status code (0 = success).
 	*/
-	CPSIG_API int log_signature_f(const float* path, float* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, float end_time = 1., int method = 0) noexcept; //bool time_aug = false, bool lead_lag = false, bool horner = true);
+	CPSIG_API int sig_to_log_sig_f(const float* sig, float* out, uint64_t dimension, uint64_t degree, bool time_aug = false, bool lead_lag = false, int method = 0) noexcept; //bool time_aug = false, bool lead_lag = false, bool horner = true);
 	/** @brief */
-	CPSIG_API int log_signature_d(const double* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int method = 0) noexcept;
+	CPSIG_API int sig_to_log_sig_d(const double* sig, double* out, uint64_t dimension, uint64_t degree, bool time_aug = false, bool lead_lag = false, int method = 0) noexcept;
 	/** @} */
-
-	CPSIG_API int log_signature_backprop_f(const float* path, float* out, float* log_sig_derivs, float* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, float end_time, int method) noexcept;
-	CPSIG_API int log_signature_backprop_d(const double* path, double* out, double* log_sig_derivs, double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, double end_time, int method) noexcept;
-
 
 	/** @defgroup batch_log_signature_functions Batch log signature functions
 	* @{
@@ -416,10 +412,13 @@ extern "C" {
 	*				if n_jobs = -2, all threads but one are used (default = 1).
 	* @return Status code (0 = success).
 	*/
-	CPSIG_API int batch_log_signature_f(const float* path, float* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, float end_time = 1., int method = 0, int n_jobs = 1) noexcept;
+	CPSIG_API int batch_sig_to_log_sig_f(const float* sig, float* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool time_aug = false, bool lead_lag = false, int method = 0, int n_jobs = 1) noexcept;
 	/** @brief */
-	CPSIG_API int batch_log_signature_d(const double* path, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int method = 0, int n_jobs = 1) noexcept;
+	CPSIG_API int batch_sig_to_log_sig_d(const double* sig, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool time_aug = false, bool lead_lag = false, int method = 0, int n_jobs = 1) noexcept;
 	/** @} */
+
+	CPSIG_API int log_signature_backprop_f(const float* path, float* out, float* log_sig_derivs, float* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, float end_time, int method) noexcept;
+	CPSIG_API int log_signature_backprop_d(const double* path, double* out, double* log_sig_derivs, double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, double end_time, int method) noexcept;
 
 	/** @defgroup sig_kernel_functions Signature kernel functions
 	* @{

@@ -20,20 +20,20 @@
 
 extern "C" {
 
-	CPSIG_API int log_signature_f(const float* path, float* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, float end_time, int method) noexcept {
-		SAFE_CALL(log_signature_<float>(path, out, dimension, length, degree, time_aug, lead_lag, end_time, method));
+	CPSIG_API int sig_to_log_sig_f(const float* sig, float* out, uint64_t dimension, uint64_t degree, bool time_aug, bool lead_lag, int method) noexcept {
+		SAFE_CALL(sig_to_log_sig_<float>(sig, out, dimension, degree, time_aug, lead_lag, method));
 	}
 
-	CPSIG_API int log_signature_d(const double* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, double end_time, int method) noexcept {
-		SAFE_CALL(log_signature_<double>(path, out, dimension, length, degree, time_aug, lead_lag, end_time, method));
+	CPSIG_API int sig_to_log_sig_d(const double* sig, double* out, uint64_t dimension, uint64_t degree, bool time_aug, bool lead_lag, int method) noexcept {
+		SAFE_CALL(sig_to_log_sig_<double>(sig, out, dimension, degree, time_aug, lead_lag, method));
 	}
 
-	CPSIG_API int batch_log_signature_f(const float* path, float* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, float end_time, int method, int n_jobs) noexcept {
-		SAFE_CALL(batch_log_signature_<float>(path, out, batch_size, dimension, length, degree, time_aug, lead_lag, end_time, method, n_jobs));
+	CPSIG_API int batch_sig_to_log_sig_f(const float* sig, float* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool time_aug, bool lead_lag, int method, int n_jobs) noexcept {
+		SAFE_CALL(batch_sig_to_log_sig_<float>(sig, out, batch_size, dimension, degree, time_aug, lead_lag, method, n_jobs));
 	}
 
-	CPSIG_API int batch_log_signature_d(const double* path, double* out, uint64_t batch_size, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, double end_time, int method, int n_jobs) noexcept {
-		SAFE_CALL(batch_log_signature_<double>(path, out, batch_size, dimension, length, degree, time_aug, lead_lag, end_time, method, n_jobs));
+	CPSIG_API int batch_sig_to_log_sig_d(const double* sig, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool time_aug, bool lead_lag, int method, int n_jobs) noexcept {
+		SAFE_CALL(batch_sig_to_log_sig_<double>(sig, out, batch_size, dimension, degree, time_aug, lead_lag, method, n_jobs));
 	}
 
 	CPSIG_API int log_signature_backprop_f(const float* path, float* out, float* log_sig_derivs, float* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, float end_time, int method) noexcept {

@@ -118,40 +118,36 @@ void tensor_log_(
 
 template<std::floating_point T>
 void log_sig_expanded(
-	const T* path,
+	const T* sig,
 	T* out,
 	uint64_t dimension,
-	uint64_t length,
 	uint64_t degree,
 	bool time_aug = false,
-	bool lead_lag = false,
-	T end_time = 1.
+	bool lead_lag = false
 ) {
-	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
-	call_signature_horner_(path_obj, out, degree);
+	Path<T> path_obj(nullptr, dimension, 2, time_aug, lead_lag, 1.);
+	std::memcpy(out, sig, ::sig_length(path_obj.dimension(), degree) * sizeof(T));
 	tensor_log_<T>(out, path_obj.dimension(), degree);
 }
 
 template<std::floating_point T>
 void log_sig_lyndon_words(
-	const T* path,
+	const T* sig,
 	T* out,
 	uint64_t dimension,
-	uint64_t length,
 	uint64_t degree,
 	bool time_aug = false,
-	bool lead_lag = false,
-	T end_time = 1.
+	bool lead_lag = false
 ) {
-	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
+	Path<T> path_obj(nullptr, dimension, 2, time_aug, lead_lag, 1.);
 	uint64_t aug_dimension = path_obj.dimension();
 
 	const BasisCache& cache_ = get_basis_cache(aug_dimension, degree, 1);
 
 	auto log_sig_uptr = std::make_unique<T[]>(::sig_length(aug_dimension, degree));
 	T* log_sig = log_sig_uptr.get();
+	std::memcpy(log_sig, sig, ::sig_length(path_obj.dimension(), degree) * sizeof(T));
 
-	call_signature_horner_(path_obj, log_sig, degree);
 	tensor_log_<T>(log_sig, aug_dimension, degree);
 
 	uint64_t m = cache_.lyndon_idx.size();
@@ -162,64 +158,58 @@ void log_sig_lyndon_words(
 
 template<std::floating_point T>
 void log_sig_lyndon_basis(
-	const T* path,
+	const T* sig,
 	T* out,
 	uint64_t dimension,
-	uint64_t length,
 	uint64_t degree,
 	bool time_aug = false,
-	bool lead_lag = false,
-	T end_time = 1.
+	bool lead_lag = false
 ) {
-	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
+	Path<T> path_obj(nullptr, dimension, 2, time_aug, lead_lag, 1.);
 	uint64_t aug_dimension = path_obj.dimension();
-	log_sig_lyndon_words(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
+	log_sig_lyndon_words(sig, out, dimension, degree, time_aug, lead_lag);
 	const BasisCache& cache_ = get_basis_cache(aug_dimension, degree, 2);
 	cache_.inv_proj_mat.mul_vec_inplace(out);
 }
 
 template<std::floating_point T>
 void get_log_sig_(
-	const T* path,
+	const T* sig,
 	T* out,
 	uint64_t dimension,
-	uint64_t length,
 	uint64_t degree,
 	bool time_aug = false,
 	bool lead_lag = false,
-	T end_time = 1.,
 	int method = 0
 )
 {
 	switch (method) {
 	case 0:
-		log_sig_expanded<T>(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
+		log_sig_expanded<T>(sig, out, dimension, degree, time_aug, lead_lag);
 		break;
 	case 1:
-		log_sig_lyndon_words<T>(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
+		log_sig_lyndon_words<T>(sig, out, dimension, degree, time_aug, lead_lag);
 		break;
 	case 2:
-		log_sig_lyndon_basis<T>(path, out, dimension, length, degree, time_aug, lead_lag, end_time);
+		log_sig_lyndon_basis<T>(sig, out, dimension, degree, time_aug, lead_lag);
 	}
 }
 
 template<std::floating_point T>
-void log_signature_(
-	const T* path,
+void sig_to_log_sig_(
+	const T* sig,
 	T* out,
 	uint64_t dimension,
-	uint64_t length,
 	uint64_t degree,
 	bool time_aug = false,
 	bool lead_lag = false,
-	T end_time = 1.,
 	int method = 0
 )
 {
 	if (dimension == 0) { throw std::invalid_argument("log signature received path of dimension 0"); }
 	if (degree == 0) { throw std::invalid_argument("log signature received degree 0"); }
 
-	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time); //Work with path_obj to capture time_aug, lead_lag transformations
+	Path<T> path_obj(nullptr, dimension, 2, time_aug, lead_lag, 1.); //Work with path_obj to capture time_aug, lead_lag transformations
 
 	if (path_obj.length() <= 1) {
 		uint64_t result_length = method ? ::log_sig_length(path_obj.dimension(), degree) : ::sig_length(path_obj.dimension(), degree);
@@ -227,29 +217,27 @@ void log_signature_(
 		return;
 	}
 
-	get_log_sig_<T>(path, out, dimension, length, degree, time_aug, lead_lag, end_time, method);
+	get_log_sig_<T>(sig, out, dimension, degree, time_aug, lead_lag, method);
 }
 
 template<std::floating_point T>
-void batch_log_signature_(
-	const T* path,
+void batch_sig_to_log_sig_(
+	const T* sig,
 	T* out,
 	uint64_t batch_size,
 	uint64_t dimension,
-	uint64_t length,
 	uint64_t degree,
 	bool time_aug = false,
 	bool lead_lag = false,
-	T end_time = 1.,
 	int method = 0,
 	int n_jobs = 1
 )
 {
 	//Deal with trivial cases
-	if (dimension == 0) { throw std::invalid_argument("signature received path of dimension 0"); }
+	if (dimension == 0) { throw std::invalid_argument("signature received dimension 0"); }
 	if (degree == 0) { throw std::invalid_argument("log signature received degree 0"); }
 
-	Path<T> dummy_path_obj(nullptr, dimension, length, time_aug, lead_lag, end_time); //Work with path_obj to capture time_aug, lead_lag transformations
+	Path<T> dummy_path_obj(nullptr, dimension, 2, time_aug, lead_lag, 1.); //Work with path_obj to capture time_aug, lead_lag transformations
 
 	const uint64_t result_length = method ? ::log_sig_length(dummy_path_obj.dimension(), degree) : ::sig_length(dummy_path_obj.dimension(), degree);
 
@@ -260,27 +248,27 @@ void batch_log_signature_(
 	}
 
 	//General case
-	const uint64_t flat_path_length = dimension * length;
-	const T* const data_end = path + flat_path_length * batch_size;
+	const uint64_t sig_len = sig_length(dummy_path_obj.dimension(), degree);
+	const T* const data_end = sig + sig_len * batch_size;
 
 	std::function<void(const T*, T*)> log_sig_func;
 
-	log_sig_func = [&](const T* path_ptr, T* out_ptr) {
-		get_log_sig_<T>(path_ptr, out_ptr, dimension, length, degree, time_aug, lead_lag, end_time, method);
+	log_sig_func = [&](const T* sig_ptr, T* out_ptr) {
+		get_log_sig_<T>(sig_ptr, out_ptr, dimension, degree, time_aug, lead_lag, method);
 		};
 
-	const T* path_ptr;
+	const T* sig_ptr;
 	T* out_ptr;
 
 	if (n_jobs != 1) {
-		multi_threaded_batch(log_sig_func, path, out, batch_size, flat_path_length, result_length, n_jobs);
+		multi_threaded_batch(log_sig_func, sig, out, batch_size, sig_len, result_length, n_jobs);
 	}
 	else {
-		for (path_ptr = path, out_ptr = out;
-			path_ptr < data_end;
-			path_ptr += flat_path_length, out_ptr += result_length) {
+		for (sig_ptr = sig, out_ptr = out;
+			sig_ptr < data_end;
+			sig_ptr += sig_len, out_ptr += result_length) {
 
-			log_sig_func(path_ptr, out_ptr);
+			log_sig_func(sig_ptr, out_ptr);
 		}
 	}
 	return;
