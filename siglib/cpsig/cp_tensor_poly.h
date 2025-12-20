@@ -166,6 +166,53 @@ FORCE_INLINE void uncombine_sig_deriv(
 }
 
 template<std::floating_point T>
+FORCE_INLINE void uncombine_sig_deriv_zero(
+	const T* sig1,
+	const T* sig2,
+	T* sig_concat_deriv,
+	T* sig2_deriv,
+	uint64_t dimension,
+	uint64_t degree,
+	const uint64_t* level_index
+) {
+	const uint64_t sig_len_ = sig_length(dimension, degree - 1);
+	std::fill(sig2_deriv, sig2_deriv + sig_len_, static_cast<T>(0.));
+
+	for (int64_t level = degree; level > 0; --level) {
+		for (int64_t left_level = level - 1, right_level = 1; left_level > 0; --left_level, ++right_level) {
+			T* result_ptr = sig_concat_deriv + level_index[level];
+			T* right_ptr_ = sig2_deriv + level_index[right_level];
+			const T* const right_ptr_upper_bound = sig2_deriv + level_index[right_level + 1];
+			const T* const left_ptr_upper_bound = sig1 + level_index[left_level + 1];
+
+			for (const T* left_ptr = sig1 + level_index[left_level]; left_ptr != left_ptr_upper_bound; ++left_ptr) {
+				for (T* right_ptr = right_ptr_; right_ptr != right_ptr_upper_bound; ++right_ptr) {
+					*right_ptr += *(result_ptr++) * *left_ptr;
+				}
+			}
+		}
+	}
+
+
+	for (uint64_t left_level = 1; left_level < degree; ++left_level) {
+		std::fill(sig_concat_deriv + level_index[left_level], sig_concat_deriv + level_index[left_level + 1], static_cast<T>(0.));
+		for (uint64_t level = left_level + 1, right_level = 1; level <= degree; ++level, ++right_level) {
+			T* result_ptr = sig_concat_deriv + level_index[level];
+			const T* const left_ptr_upper_bound = sig_concat_deriv + level_index[left_level + 1];
+			const T* right_ptr_ = sig2 + level_index[right_level];
+			const T* const right_ptr_upper_bound = sig2 + level_index[right_level + 1];
+
+			for (T* left_ptr = sig_concat_deriv + level_index[left_level]; left_ptr != left_ptr_upper_bound; ++left_ptr) {
+				for (const T* right_ptr = right_ptr_; right_ptr != right_ptr_upper_bound; ++right_ptr) {
+					*left_ptr += *(result_ptr++) * (*right_ptr);
+				}
+			}
+		}
+	}
+
+}
+
+template<std::floating_point T>
 FORCE_INLINE void linear_sig_deriv_to_increment_deriv(
 	const T* sig,
 	T* sig_deriv,

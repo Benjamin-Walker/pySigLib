@@ -391,6 +391,9 @@ extern "C" {
 	CPSIG_API int log_signature_d(const double* path, double* out, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug = false, bool lead_lag = false, double end_time = 1., int method = 0) noexcept;
 	/** @} */
 
+	CPSIG_API int log_signature_backprop_f(const float* path, float* out, float* log_sig_derivs, float* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, float end_time, int method) noexcept;
+	CPSIG_API int log_signature_backprop_d(const double* path, double* out, double* log_sig_derivs, double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, double end_time, int method) noexcept;
+
 
 	/** @defgroup batch_log_signature_functions Batch log signature functions
 	* @{

@@ -27,11 +27,17 @@
 #include "cp_vector_funcs.h"
 #endif
 
+// partial_logs will store intermediate steps in the calculation for backprop.
+// We make the decision here to recompute these on the backward pass, rather
+// than keeping them from the forward pass. The log calculation is minor compared
+// to that of the signature, so this is a small overhead, but avoids us allocating
+// massive chunks of memory on the forward.
 template<std::floating_point T>
-void log_sig_from_sig_(
+void tensor_log_(
 	T* sig,
 	uint64_t dimension,
-	uint64_t degree
+	uint64_t degree,
+	T* partial_logs = nullptr
 ) {
 	if (degree == 1)
 		return;
@@ -43,13 +49,22 @@ void log_sig_from_sig_(
 	for (uint64_t i = 1; i <= degree + 1; i++)
 		level_index[i] = level_index[i - 1] * dimension + 1;
 
-	auto buff1_uptr = std::make_unique<T[]>(::sig_length(dimension, degree - 1));
-	T* buff1 = buff1_uptr.get();
-	std::fill(buff1, buff1 + ::sig_length(dimension, degree - 1), static_cast<T>(0.));
+	uint64_t buff1_size = ::sig_length(dimension, degree - 1);
+	std::unique_ptr<T[]> buff1_uptr;
+	T* buff1;
+	if (partial_logs) {
+		buff1 = partial_logs;
+	}
+	else {
+		buff1_uptr = std::make_unique<T[]>(buff1_size);
+		buff1 = buff1_uptr.get();
+		std::fill(buff1, buff1 + buff1_size, static_cast<T>(0.));
+	}
 
-	auto buff2_uptr = std::make_unique<T[]>(::sig_length(dimension, degree));
+	uint64_t buff2_size = ::sig_length(dimension, degree);
+	auto buff2_uptr = std::make_unique<T[]>(buff2_size);
 	T* buff2 = buff2_uptr.get();
-	std::fill(buff2, buff2 + ::sig_length(dimension, degree), static_cast<T>(0.));
+	std::fill(buff2, buff2 + buff2_size, static_cast<T>(0.));
 
 	sig[0] = static_cast<T>(0.);
 
@@ -83,6 +98,10 @@ void log_sig_from_sig_(
 					res_ptr[i] = constant * ptr_1[i] - ptr_2[i];
 				}
 			}
+			if (partial_logs && k > 2 && k != degree) {
+				std::memcpy(partial_logs, buff1, buff1_size * sizeof(T));
+				partial_logs += buff1_size;
+			}
 		}
 	}
 	for (uint64_t target_level = 2; target_level <= degree; ++target_level) {
@@ -110,7 +129,7 @@ void log_sig_expanded(
 ) {
 	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
 	call_signature_horner_(path_obj, out, degree);
-	log_sig_from_sig_<T>(out, path_obj.dimension(), degree);
+	tensor_log_<T>(out, path_obj.dimension(), degree);
 }
 
 template<std::floating_point T>
@@ -133,7 +152,7 @@ void log_sig_lyndon_words(
 	T* log_sig = log_sig_uptr.get();
 
 	call_signature_horner_(path_obj, log_sig, degree);
-	log_sig_from_sig_<T>(log_sig, aug_dimension, degree);
+	tensor_log_<T>(log_sig, aug_dimension, degree);
 
 	uint64_t m = cache_.lyndon_idx.size();
 	for (uint64_t i = 0; i < m; ++i) {
@@ -265,4 +284,103 @@ void batch_log_signature_(
 		}
 	}
 	return;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+//// backpropagation
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<std::floating_point T>
+void tensor_log_backprop_(
+	T* out,
+	T* derivs,
+	const T* sig,
+	uint64_t dimension,
+	uint64_t degree
+) {
+	uint64_t sig_len_ = ::sig_length(dimension, degree);
+	uint64_t sig_len_2_ = ::sig_length(dimension, degree - 1);
+
+	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
+	uint64_t* level_index = level_index_uptr.get();
+
+	level_index[0] = 0;
+	for (uint64_t i = 1; i <= degree + 1; i++)
+		level_index[i] = level_index[i - 1] * dimension + 1;
+
+	std::memcpy(out, derivs, sig_len_ * sizeof(T));
+
+	auto sig_copy_uptr = std::make_unique<T[]>(sig_len_);
+	T* sig_copy = sig_copy_uptr.get();
+	std::memcpy(sig_copy, sig, sig_len_ * sizeof(T));
+
+	auto partial_logs_uptr = std::make_unique<T[]>(sig_len_2_ * (degree - 1));
+	T* partial_logs = partial_logs_uptr.get();
+
+	auto other_derivs_uptr = std::make_unique<T[]>(sig_len_);
+	T* other_derivs = other_derivs_uptr.get();
+	std::fill(other_derivs, other_derivs + sig_len_, static_cast<T>(0.));
+
+	if (degree <= 1)
+		return;
+
+	tensor_log_<T>(sig_copy, dimension, degree, partial_logs);
+
+	T factor = static_cast<T>(-1.);
+	for (uint64_t depth = 1; depth + 1 < degree; ++depth) {
+		T scalar = static_cast<T>(1.) / (1 + depth);
+		T* product_to_use = partial_logs + (degree - 2 - depth) * sig_len_2_;
+		uncombine_sig_deriv_zero(sig, product_to_use, derivs, other_derivs, dimension, degree + 1 - depth, level_index);
+		for (uint64_t lev = 1; lev <= degree - depth; ++lev) {
+			T* it = out + level_index[lev];
+			for (uint64_t i = level_index[lev]; i < level_index[lev + 1]; ++i) {
+				*it += factor * derivs[i];
+				*(it++) += factor * scalar * other_derivs[i];
+			}
+		}
+		std::swap(other_derivs, derivs);
+		factor = -factor;
+	}
+	// backprop level 2
+	T scalar = factor / degree;
+	for (uint64_t i = 0; i < dimension; ++i) {
+		for (uint64_t j = 0; j < dimension; ++j) {
+			(out + level_index[1])[i] += (derivs + level_index[2])[i + dimension * j] * (sig + level_index[1])[j] * scalar;
+			(out + level_index[1])[j] += (derivs + level_index[2])[i + dimension * j] * (sig + level_index[1])[i] * scalar;
+		}
+	}
+}
+
+template<std::floating_point T>
+void log_sig_backprop_(
+	const T* path,
+	T* out,
+	T* log_sig_derivs,
+	T* sig,
+	uint64_t dimension,
+	uint64_t length,
+	uint64_t degree,
+	bool time_aug = false,
+	bool lead_lag = false,
+	T end_time = 1.,
+	int method = 0
+) {
+	if (dimension == 0) { throw std::invalid_argument("sig_backprop received path of dimension 0"); }
+
+	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
+
+	if (path_obj.length() <= 1 || degree == 0) {
+		uint64_t result_length = dimension * length;
+		std::fill(out, out + result_length, static_cast<T>(0.));
+		return;
+	}
+
+	const uint64_t sig_len_ = ::sig_length(path_obj.dimension(), degree);
+	const uint64_t log_sig_len_ = method ? ::log_sig_length(path_obj.dimension(), degree) : ::sig_length(path_obj.dimension(), degree);
+
+	auto sig_derivs_uptr = std::make_unique<T[]>(sig_len_);
+	T* sig_derivs = sig_derivs_uptr.get();
+
+	tensor_log_backprop_<T>(sig_derivs, log_sig_derivs, sig, path_obj.dimension(), degree);
+	sig_backprop_inplace_<T>(path_obj, out, sig_derivs, sig, degree, sig_len_);
 }

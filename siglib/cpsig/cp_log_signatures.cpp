@@ -36,4 +36,12 @@ extern "C" {
 		SAFE_CALL(batch_log_signature_<double>(path, out, batch_size, dimension, length, degree, time_aug, lead_lag, end_time, method, n_jobs));
 	}
 
+	CPSIG_API int log_signature_backprop_f(const float* path, float* out, float* log_sig_derivs, float* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, float end_time, int method) noexcept {
+		SAFE_CALL(log_sig_backprop_<float>(path, out, log_sig_derivs, sig, dimension, length, degree, time_aug, lead_lag, end_time, method));
+	}
+
+	CPSIG_API int log_signature_backprop_d(const double* path, double* out, double* log_sig_derivs, double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, double end_time, int method) noexcept {
+		SAFE_CALL(log_sig_backprop_<double>(path, out, log_sig_derivs, sig, dimension, length, degree, time_aug, lead_lag, end_time, method));
+	}
+
 }
