@@ -175,7 +175,7 @@ batch_sig_kernel_backprop_cuda_d_fn batch_sig_kernel_backprop_cuda_d = nullptr;
 prepare_log_sig_fn prepare_log_sig = nullptr;
 reset_log_sig_fn reset_log_sig = nullptr;
 
-log_signature_d_fn log_signature_d = nullptr;
+sig_to_log_sig_d_fn sig_to_log_sig_d = nullptr;
 
 
 void get_cpsig_fn_ptrs()
@@ -196,7 +196,7 @@ void get_cpsig_fn_ptrs()
     GET_FN(batch_sig_kernel_backprop_d, cpsig);
     GET_FN(prepare_log_sig, cpsig);
     GET_FN(reset_log_sig, cpsig);
-    GET_FN(log_signature_d, cpsig);
+    GET_FN(sig_to_log_sig_d, cpsig);
 }
 
 void get_cusig_fn_ptrs()

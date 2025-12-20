@@ -1086,33 +1086,30 @@ public:
     public:
 
         TEST_METHOD(LinearPathTest) {
-            auto f = log_signature_backprop_d;
-            uint64_t dimension = 2, length = 2, degree = 2;
-            std::vector<double> path = { 0., 0., 1.,1. };
-            std::vector<double> deriv = { 1., 1., 1., 1., 1., 1. };
-            std::vector<double> true_ = { -1., -1., 1., 1. };
+            auto f = sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 2;
+            std::vector<double> deriv = { 1., 1., 1., 1., 1., 1., 1. };
+            std::vector<double> true_ = { 1., -1., -1.,  1.,  1.,  1.,  1. };
             std::vector<double> sig = {1., 1., 1., 0.5, 0.5, 0.5, 0.5};
-            check_result(f, path, true_, deriv.data(), sig.data(), dimension, length, degree, false, false, 1., 0);
+            check_result(f, sig, true_, deriv.data(), dimension, degree, false, false, 0);
         }
 
         TEST_METHOD(ManualTest) {
-            auto f = log_signature_backprop_d;
-            uint64_t dimension = 2, length = 3, degree = 2;
-            std::vector<double> path = { 0., 0., 1.,2., 0.5, 1. };
+            auto f = sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 2;
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6. };
-            std::vector<double> true_ = { -1.5, -1.75, -0.5, 0.25, 2., 1.5 };
+            std::vector<double> true_ = { 1., -5., -6.25, 3., 4., 5., 6. };
             std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5 };
-            check_result(f, path, true_, deriv.data(), sig.data(), dimension, length, degree, false, false, 1., 0);
+            check_result(f, sig, true_, deriv.data(), dimension, degree, false, false, 0);
         }
 
         TEST_METHOD(ManualTest2) {
-            auto f = log_signature_backprop_d;
-            uint64_t dimension = 2, length = 3, degree = 3;
-            std::vector<double> path = { 0., 0., 1., 2., 0.5, 1. };
+            auto f = sig_to_log_sig_backprop_d;
+            uint64_t dimension = 2, degree = 3;
             std::vector<double> deriv = { 1., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14. };
-            std::vector<double> true_ = { -1.125, -1.9375, -0.125, 0.0625, 1.25, 1.875 };
+            std::vector<double> true_ = { 1., 6.5, 7.6875, -10, -11.25, -12.5, -13.75, 7., 8., 9., 10., 11., 12., 13., 14. };
             std::vector<double> sig = { 1., 0.5, 1., 0.125, 0.25, 0.25, 0.5, 1. / 48, 1. / 24, 1. / 24, 1. / 12, 1. / 24, 1. / 12, 1. / 12, 1. / 6 };
-            check_result(f, path, true_, deriv.data(), sig.data(), dimension, length, degree, false, false, 1., 0);
+            check_result(f, sig, true_, deriv.data(), dimension, degree, false, false, 0);
         }
 
         /*TEST_METHOD(ManualTestAsBatch) {

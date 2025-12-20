@@ -288,9 +288,8 @@ void example_prepare_log_sig(
     std::cout << "done\n";
 }
 
-void example_log_signature_d(
+void example_sig_to_log_sig_d(
     uint64_t dimension,
-    uint64_t length,
     uint64_t degree,
     bool time_aug,
     bool lead_lag,
@@ -299,13 +298,13 @@ void example_log_signature_d(
 ) {
     print_header("Log Signature Double");
 
-    std::vector<double> path = test_data<double>(dimension * length);
+    std::vector<double> sig = test_data<double>(sig_length(dimension, degree));
 
     uint64_t out_size = method ? log_sig_length(dimension, degree) : sig_length(dimension, degree);
     std::vector<double> out(out_size, 0.);
 
     prepare_log_sig(dimension, degree, method);
-    time_function(num_runs, log_signature_d, path.data(), out.data(), dimension, length, degree, time_aug, lead_lag, 1., method);
+    time_function(num_runs, sig_to_log_sig_d, sig.data(), out.data(), dimension, degree, time_aug, lead_lag, method);
 
     std::cout << "done\n";
 }

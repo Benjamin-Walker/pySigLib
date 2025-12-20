@@ -72,7 +72,7 @@ using batch_sig_kernel_backprop_cuda_d_fn = void(CDECL_*)(const double*, double*
 using prepare_log_sig_fn = void(CDECL_*)(uint64_t, uint64_t, int);
 using reset_log_sig_fn = void(CDECL_*)();
 
-using log_signature_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, uint64_t, bool, bool, double, int);
+using sig_to_log_sig_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, bool, bool, int);
 
 extern HMODULE cpsig;
 extern HMODULE cusig;
@@ -102,7 +102,7 @@ extern batch_sig_kernel_backprop_cuda_d_fn batch_sig_kernel_backprop_cuda_d;
 extern prepare_log_sig_fn prepare_log_sig;
 extern reset_log_sig_fn reset_log_sig;
 
-extern log_signature_d_fn log_signature_d;
+extern sig_to_log_sig_d_fn sig_to_log_sig_d;
 
 #if defined(_WIN32)
 #define GET_FN_PTR ::GetProcAddress

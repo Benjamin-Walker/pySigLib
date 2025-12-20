@@ -417,8 +417,8 @@ extern "C" {
 	CPSIG_API int batch_sig_to_log_sig_d(const double* sig, double* out, uint64_t batch_size, uint64_t dimension, uint64_t degree, bool time_aug = false, bool lead_lag = false, int method = 0, int n_jobs = 1) noexcept;
 	/** @} */
 
-	CPSIG_API int log_signature_backprop_f(const float* path, float* out, float* log_sig_derivs, float* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, float end_time, int method) noexcept;
-	CPSIG_API int log_signature_backprop_d(const double* path, double* out, double* log_sig_derivs, double* sig, uint64_t dimension, uint64_t length, uint64_t degree, bool time_aug, bool lead_lag, double end_time, int method) noexcept;
+	CPSIG_API int sig_to_log_sig_backprop_f(const float* sig, float* out, const float* log_sig_derivs, uint64_t dimension, uint64_t degree, bool time_aug, bool lead_lag, int method) noexcept;
+	CPSIG_API int sig_to_log_sig_backprop_d(const double* sig, double* out, const double* log_sig_derivs, uint64_t dimension, uint64_t degree, bool time_aug, bool lead_lag, int method) noexcept;
 
 	/** @defgroup sig_kernel_functions Signature kernel functions
 	* @{

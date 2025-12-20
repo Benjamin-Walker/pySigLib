@@ -121,13 +121,10 @@ void log_sig_expanded(
 	const T* sig,
 	T* out,
 	uint64_t dimension,
-	uint64_t degree,
-	bool time_aug = false,
-	bool lead_lag = false
+	uint64_t degree
 ) {
-	Path<T> path_obj(nullptr, dimension, 2, time_aug, lead_lag, 1.);
-	std::memcpy(out, sig, ::sig_length(path_obj.dimension(), degree) * sizeof(T));
-	tensor_log_<T>(out, path_obj.dimension(), degree);
+	std::memcpy(out, sig, ::sig_length(dimension, degree) * sizeof(T));
+	tensor_log_<T>(out, dimension, degree);
 }
 
 template<std::floating_point T>
@@ -135,20 +132,15 @@ void log_sig_lyndon_words(
 	const T* sig,
 	T* out,
 	uint64_t dimension,
-	uint64_t degree,
-	bool time_aug = false,
-	bool lead_lag = false
+	uint64_t degree
 ) {
-	Path<T> path_obj(nullptr, dimension, 2, time_aug, lead_lag, 1.);
-	uint64_t aug_dimension = path_obj.dimension();
+	const BasisCache& cache_ = get_basis_cache(dimension, degree, 1);
 
-	const BasisCache& cache_ = get_basis_cache(aug_dimension, degree, 1);
-
-	auto log_sig_uptr = std::make_unique<T[]>(::sig_length(aug_dimension, degree));
+	auto log_sig_uptr = std::make_unique<T[]>(::sig_length(dimension, degree));
 	T* log_sig = log_sig_uptr.get();
-	std::memcpy(log_sig, sig, ::sig_length(path_obj.dimension(), degree) * sizeof(T));
+	std::memcpy(log_sig, sig, ::sig_length(dimension, degree) * sizeof(T));
 
-	tensor_log_<T>(log_sig, aug_dimension, degree);
+	tensor_log_<T>(log_sig, dimension, degree);
 
 	uint64_t m = cache_.lyndon_idx.size();
 	for (uint64_t i = 0; i < m; ++i) {
@@ -161,14 +153,10 @@ void log_sig_lyndon_basis(
 	const T* sig,
 	T* out,
 	uint64_t dimension,
-	uint64_t degree,
-	bool time_aug = false,
-	bool lead_lag = false
+	uint64_t degree
 ) {
-	Path<T> path_obj(nullptr, dimension, 2, time_aug, lead_lag, 1.);
-	uint64_t aug_dimension = path_obj.dimension();
-	log_sig_lyndon_words(sig, out, dimension, degree, time_aug, lead_lag);
-	const BasisCache& cache_ = get_basis_cache(aug_dimension, degree, 2);
+	log_sig_lyndon_words(sig, out, dimension, degree);
+	const BasisCache& cache_ = get_basis_cache(dimension, degree, 2);
 	cache_.inv_proj_mat.mul_vec_inplace(out);
 }
 
@@ -178,20 +166,18 @@ void get_log_sig_(
 	T* out,
 	uint64_t dimension,
 	uint64_t degree,
-	bool time_aug = false,
-	bool lead_lag = false,
 	int method = 0
 )
 {
 	switch (method) {
 	case 0:
-		log_sig_expanded<T>(sig, out, dimension, degree, time_aug, lead_lag);
+		log_sig_expanded<T>(sig, out, dimension, degree);
 		break;
 	case 1:
-		log_sig_lyndon_words<T>(sig, out, dimension, degree, time_aug, lead_lag);
+		log_sig_lyndon_words<T>(sig, out, dimension, degree);
 		break;
 	case 2:
-		log_sig_lyndon_basis<T>(sig, out, dimension, degree, time_aug, lead_lag);
+		log_sig_lyndon_basis<T>(sig, out, dimension, degree);
 	}
 }
 
@@ -209,15 +195,9 @@ void sig_to_log_sig_(
 	if (dimension == 0) { throw std::invalid_argument("log signature received path of dimension 0"); }
 	if (degree == 0) { throw std::invalid_argument("log signature received degree 0"); }
 
-	Path<T> path_obj(nullptr, dimension, 2, time_aug, lead_lag, 1.); //Work with path_obj to capture time_aug, lead_lag transformations
+	uint64_t aug_dimension = (lead_lag ? 2 * dimension : dimension) + (time_aug ? 1 : 0);
 
-	if (path_obj.length() <= 1) {
-		uint64_t result_length = method ? ::log_sig_length(path_obj.dimension(), degree) : ::sig_length(path_obj.dimension(), degree);
-		std::fill(out, out + result_length, static_cast<T>(0.));
-		return;
-	}
-
-	get_log_sig_<T>(sig, out, dimension, degree, time_aug, lead_lag, method);
+	get_log_sig_<T>(sig, out, aug_dimension, degree, method);
 }
 
 template<std::floating_point T>
@@ -237,24 +217,18 @@ void batch_sig_to_log_sig_(
 	if (dimension == 0) { throw std::invalid_argument("signature received dimension 0"); }
 	if (degree == 0) { throw std::invalid_argument("log signature received degree 0"); }
 
-	Path<T> dummy_path_obj(nullptr, dimension, 2, time_aug, lead_lag, 1.); //Work with path_obj to capture time_aug, lead_lag transformations
+	uint64_t aug_dimension = (lead_lag ? 2 * dimension : dimension) + (time_aug ? 1 : 0);
 
-	const uint64_t result_length = method ? ::log_sig_length(dummy_path_obj.dimension(), degree) : ::sig_length(dummy_path_obj.dimension(), degree);
-
-	if (dummy_path_obj.length() <= 1) {
-		T* const out_end = out + result_length * batch_size;
-		std::fill(out, out_end, static_cast<T>(0.));
-		return;
-	}
+	const uint64_t result_length = method ? ::log_sig_length(aug_dimension, degree) : ::sig_length(aug_dimension, degree);
 
 	//General case
-	const uint64_t sig_len = sig_length(dummy_path_obj.dimension(), degree);
+	const uint64_t sig_len = sig_length(aug_dimension, degree);
 	const T* const data_end = sig + sig_len * batch_size;
 
 	std::function<void(const T*, T*)> log_sig_func;
 
 	log_sig_func = [&](const T* sig_ptr, T* out_ptr) {
-		get_log_sig_<T>(sig_ptr, out_ptr, dimension, degree, time_aug, lead_lag, method);
+		get_log_sig_<T>(sig_ptr, out_ptr, dimension, degree, method);
 		};
 
 	const T* sig_ptr;
@@ -340,35 +314,26 @@ void tensor_log_backprop_(
 }
 
 template<std::floating_point T>
-void log_sig_backprop_(
-	const T* path,
+void sig_to_log_sig_backprop_(
+	const T* sig,
 	T* out,
-	T* log_sig_derivs,
-	T* sig,
+	const T* log_sig_derivs,
 	uint64_t dimension,
-	uint64_t length,
 	uint64_t degree,
 	bool time_aug = false,
 	bool lead_lag = false,
-	T end_time = 1.,
 	int method = 0
 ) {
 	if (dimension == 0) { throw std::invalid_argument("sig_backprop received path of dimension 0"); }
 
-	Path<T> path_obj(path, dimension, length, time_aug, lead_lag, end_time);
+	uint64_t aug_dimension = (lead_lag ? 2 * dimension : dimension) + (time_aug ? 1 : 0);
 
-	if (path_obj.length() <= 1 || degree == 0) {
-		uint64_t result_length = dimension * length;
-		std::fill(out, out + result_length, static_cast<T>(0.));
-		return;
-	}
+	const uint64_t sig_len_ = ::sig_length(aug_dimension, degree);
+	const uint64_t log_sig_len_ = method ? ::log_sig_length(aug_dimension, degree) : ::sig_length(aug_dimension, degree);
 
-	const uint64_t sig_len_ = ::sig_length(path_obj.dimension(), degree);
-	const uint64_t log_sig_len_ = method ? ::log_sig_length(path_obj.dimension(), degree) : ::sig_length(path_obj.dimension(), degree);
+	auto log_sig_derivs_copy_uptr = std::make_unique<T[]>(log_sig_len_);
+	T* log_sig_derivs_copy = log_sig_derivs_copy_uptr.get();
+	std::memcpy(log_sig_derivs_copy, log_sig_derivs, log_sig_len_ * sizeof(T));
 
-	auto sig_derivs_uptr = std::make_unique<T[]>(sig_len_);
-	T* sig_derivs = sig_derivs_uptr.get();
-
-	tensor_log_backprop_<T>(sig_derivs, log_sig_derivs, sig, path_obj.dimension(), degree);
-	sig_backprop_inplace_<T>(path_obj, out, sig_derivs, sig, degree, sig_len_);
+	tensor_log_backprop_<T>(out, log_sig_derivs_copy, sig, aug_dimension, degree);
 }
