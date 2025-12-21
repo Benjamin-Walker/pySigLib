@@ -13,7 +13,7 @@
 # limitations under the License.
 # =========================================================================
 from typing import Union, Optional
-from ctypes import c_double, POINTER, cast
+from ctypes import POINTER, cast
 
 import numpy as np
 import torch

@@ -156,7 +156,7 @@ def sig_to_log_sig(
         degree : int,
         time_aug : bool = False,
         lead_lag : bool = False,
-        method : str = 0,
+        method : int = 1,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     return SigToLogSig.apply(sig, dimension, degree, time_aug, lead_lag, method, n_jobs)
@@ -170,7 +170,7 @@ def log_sig(
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
-        method : str = 0,
+        method : int = 1,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     sig_ = signature(path, degree, time_aug, lead_lag, end_time, True, n_jobs)

@@ -81,7 +81,7 @@ def reset_log_sig() -> Union[np.ndarray, torch.tensor]:
     are requested in ``pysiglib.prepare_log_sig``, and unused combinations are
     using up memory.
     """
-    err_code = CPSIG.reset_log_sig()
+    CPSIG.reset_log_sig()
 
 def sig_to_log_sig_(data, result, data_dimension, degree, time_aug, lead_lag, method):
     err_code = CPSIG_SIG_TO_LOG_SIG[data.dtype](
@@ -121,7 +121,7 @@ def sig_to_log_sig(
         degree : int,
         time_aug : bool = False,
         lead_lag : bool = False,
-        method : str = 1,
+        method : int = 1,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     """
@@ -196,7 +196,7 @@ def log_sig(
         time_aug : bool = False,
         lead_lag : bool = False,
         end_time : float = 1.,
-        method : str = 1,
+        method : int = 1,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     """

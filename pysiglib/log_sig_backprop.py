@@ -18,13 +18,11 @@ from typing import Union
 import numpy as np
 import torch
 
-from .param_checks import check_type, check_non_neg, log_sig_method_parser
+from .param_checks import check_type
 from .error_codes import err_msg
 from .dtypes import CPSIG_SIG_TO_LOG_SIG_BACKPROP, CPSIG_BATCH_SIG_TO_LOG_SIG_BACKPROP
 from .sig_length import sig_length, log_sig_length
-from .sig import signature
 from .data_handlers import SigOutputHandler, DeviceToHost, SigInputHandler
-from .load_siglib import CPSIG
 
 
 ######################################################
@@ -72,7 +70,7 @@ def sig_to_log_sig_backprop(
         degree : int,
         time_aug : bool = False,
         lead_lag : bool = False,
-        method : str = 0,
+        method : int = 1,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     """
@@ -137,19 +135,3 @@ def sig_to_log_sig_backprop(
     if device_handler.device is not None:
         res = res.to(device_handler.device)
     return res
-
-# def log_sig_backprop_(
-#         path : Union[np.ndarray, torch.tensor],
-#         degree : int,
-#         time_aug : bool = False,
-#         lead_lag : bool = False,
-#         end_time : float = 1.,
-#         method : str = 0,
-#         n_jobs : int = 1
-# ) -> Union[np.ndarray, torch.tensor]:
-#     """#TODO
-#     """
-#     sig_ = signature(path, degree, time_aug, lead_lag, end_time, True, n_jobs)
-#     dimension = path.shape[-1]
-#     log_sig_ = sig_to_log_sig(sig_, dimension, degree, time_aug, lead_lag, method, n_jobs)
-#     return log_sig_

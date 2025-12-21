@@ -41,7 +41,7 @@ combination. This call is not thread safe.
         Y_ls = pysiglib.log_sig(Y, 3, method=2)
 
 The ordering of the methods is chosen such that higher
-methods are strictly more complicated than lower methods.
+methods require strictly more preparation than lower methods.
 As such, preparing for ``method=2`` is also sufficient to
 run ``method=1``. We note also that ``method=0`` does not
 require a call to ``pysiglib.prepare_log_sig``.

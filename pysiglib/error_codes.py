@@ -25,6 +25,6 @@ CPP_ERR_MSG = {
 def err_msg(err_code):
     if err_code < 100000:
         return CPP_ERR_MSG[err_code] + " (" + str(err_code) + ")"
-    elif err_code == 100500:
+    if err_code == 100500:
         return "CUDA error: named symbol not found (500). pysiglib: This error may suggest your GPU's compute capability is currently not supported by pysiglib. Please contact the developer."
     return "CUDA error (" + str(err_code - 100000) + ")"
