@@ -1,7 +1,7 @@
-pysiglib.transform_path_backprop
-=================================
+pysiglib.sig_to_log_sig_backprop
+===================================
 
-.. versionadded:: v0.2
+.. versionadded:: v0.3.0
 
 .. warning::
 
@@ -10,4 +10,4 @@ pysiglib.transform_path_backprop
     incorrectly. In addition, some ``pysiglib`` functions can only be backpropagated through
     using their ``pysiglib.torch_api`` variants and do not expose explicit backpropagation functions.
 
-.. autofunction:: pysiglib.transform_path_backprop
+.. autofunction:: pysiglib.sig_to_log_sig_backprop

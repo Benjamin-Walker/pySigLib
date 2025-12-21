@@ -75,7 +75,40 @@ def sig_to_log_sig_backprop(
         method : str = 0,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
-    """#TODO
+    """
+    Backpropagates through the ``pysiglib.sig_to_log_sig`` function.
+    Given the derivatives of a scalar function :math:`F` with respect to the
+    log signature, :math:`\\partial F / \\partial \\log(S(x))`, returns the
+    derivatives of :math:`F` with respect to the signature,
+    :math:`\\partial F / \\partial S(x)`.
+
+    :param sig: The signature or batch of signatures, given as a `numpy.ndarray` or `torch.tensor`.
+        For a single signature, this must be of shape ``sig_length``. For a batch of paths, this must
+        be of shape ``(batch_size, sig_length)``.
+    :type sig: numpy.ndarray | torch.tensor
+    :param log_sig_derivs: Derivatives of the scalar function :math:`F` with respect to the log signature(s),
+        :math:`\\partial F / \\partial S(x)`. This must be an array of the same shape as the
+        log signature(s).
+    :type log_sig_derivs: numpy.ndarray | torch.tensor
+    :param dimension: Dimension of the underlying path(s).
+    :type dimension: int
+    :param degree: Truncation degree of the (log) signature(s).
+    :type degree: int
+    :param time_aug: Whether the signatures were computed with ``time_aug=True``.
+    :type time_aug: bool
+    :param lead_lag: Whether the signatures were computed with ``lead_lag=True``.
+    :type lead_lag: bool
+    :param method: Method used for the log signature computation (`0`, `1` or `2`).
+    :type method: int
+    :param n_jobs: Number of threads to run in parallel.
+        If n_jobs = 1, the computation is run serially. If set to -1, all available threads
+        are used. For n_jobs below -1, (max_threads + 1 + n_jobs) threads are used. For example
+        if n_jobs = -2, all threads but one are used.
+    :type n_jobs: int
+    :return: Derivatives of the scalar function :math:`F` with respect to the signature(s),
+        :math:`\\partial F / \\partial S(x)`.
+        This is an array of the same shape as the provided signature(s).
+    :rtype: numpy.ndarray | torch.tensor
     """
     check_type(degree, "degree", int)
     check_type(method, "method", int)

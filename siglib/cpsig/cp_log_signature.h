@@ -172,6 +172,9 @@ void get_log_sig_(
 		break;
 	case 2:
 		log_sig_lyndon_basis<T>(sig, out, dimension, degree);
+		break;
+	default:
+		throw std::runtime_error("method must be one of 0, 1 or 2");
 	}
 }
 
@@ -376,6 +379,8 @@ void get_sig_to_log_sig_backprop_(
 	case 2:
 		tensor_log_backprop_lyndon_basis<T>(out, log_sig_derivs, sig, dimension, degree);
 		break;
+	default:
+		throw std::runtime_error("method must be one of 0, 1 or 2");
 	}
 }
 
