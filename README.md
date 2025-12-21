@@ -68,7 +68,18 @@ sig = pysiglib.signature(X, degree = 5)
 
 ### Log Signatures
 
-Log signatures will be available from version 0.3.0 (exp. Jan 2026)
+Similarly to signatures, pySigLib implements truncated log signature transforms through the
+function `pysiglib.log_sig`. The function takes a `method` parameter, which determines
+the method used to compute the log signature and the form of the output. For details,
+please see the documentation.
+
+```python
+import pysiglib
+import numpy as np
+
+X = np.random.uniform(size=(32, 1000, 10))
+sig = pysiglib.log_sig(X, degree = 5, method = 1)
+```
 
 ### Signature Kernels
 
