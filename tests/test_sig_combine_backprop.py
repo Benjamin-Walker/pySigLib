@@ -70,11 +70,11 @@ def test_batch_sig_backprop_random(deg):
     sig2 = np.random.uniform(size=(batch_size, sig_len))
     derivs = np.random.uniform(size=(batch_size, sig_len))
 
-    sig1_deriv, sig2_deriv = pysiglib.sig_combine_backprop(derivs, sig1, sig2, dimension, deg, 1)
+    sig1_deriv, sig2_deriv = pysiglib.sig_combine_backprop(derivs, sig1, sig2, dimension, deg, n_jobs=1)
     iisig1_deriv, iisig2_deriv = iisignature.sigcombinebackprop(derivs[:, 1:], sig1[:, 1:], sig2[:, 1:], dimension, deg)
     check_close(sig1_deriv[:, 1:], iisig1_deriv)
     check_close(sig2_deriv[:, 1:], iisig2_deriv)
 
-    sig1_deriv, sig2_deriv = pysiglib.sig_combine_backprop(derivs, sig1, sig2, dimension, deg, -1)
+    sig1_deriv, sig2_deriv = pysiglib.sig_combine_backprop(derivs, sig1, sig2, dimension, deg, n_jobs=-1)
     check_close(sig1_deriv[:, 1:], iisig1_deriv)
     check_close(sig2_deriv[:, 1:], iisig2_deriv)

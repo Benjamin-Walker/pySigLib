@@ -35,6 +35,8 @@ def sig_combine(
         sig2 : Union[np.ndarray, torch.tensor],
         dimension : int,
         degree : int,
+        time_aug : bool = False,
+        lead_lag : bool = False,
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
     """
@@ -57,6 +59,12 @@ def sig_combine(
     :type dimension: int
     :param degree: Truncation level of the signatures, :math:`N`
     :type degree: int
+    :param time_aug: Whether time augmentation was applied before computing
+        the signature.
+    :type time_aug: bool
+    :param lead_lag: Whether the lead lag transformation was applied before computing
+        the signature.
+    :type lead_lag: bool
     :param n_jobs: Number of threads to run in parallel. If n_jobs = 1, the computation is run serially.
         If set to -1, all available threads are used. For n_jobs below -1, (max_threads + 1 + n_jobs)
         threads are used. For example if n_jobs = -2, all threads but one are used.
@@ -108,11 +116,13 @@ def sig_combine(
     if n_jobs == 0:
         raise ValueError("n_jobs cannot be 0")
 
+    aug_dimension = (2 * dimension if lead_lag else dimension) + (1 if time_aug else 0)
+
     # If sig1 and sig2 on GPU, move to CPU
     device_handler = DeviceToHost([sig1, sig2], ["sig1", "sig2"])
     sig1, sig2 = device_handler.data
 
-    sig_len = sig_length(dimension, degree)
+    sig_len = sig_length(aug_dimension, degree)
     data = DoubleSigInputHandler(sig1, sig2, sig_len, "sig1", "sig2")
     result = SigOutputHandler(data, sig_len)
 
@@ -122,7 +132,7 @@ def sig_combine(
             data.sig2_ptr,
             result.data_ptr,
             data.batch_size,
-            dimension,
+            aug_dimension,
             degree,
             n_jobs
         )
@@ -131,7 +141,7 @@ def sig_combine(
             data.sig1_ptr,
             data.sig2_ptr,
             result.data_ptr,
-            dimension,
+            aug_dimension,
             degree
         )
 

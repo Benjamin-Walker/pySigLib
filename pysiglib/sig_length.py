@@ -16,7 +16,12 @@
 from .load_siglib import CPSIG
 from .param_checks import check_type, check_non_neg, check_pos
 
-def sig_length(dimension : int, degree : int) -> int:
+def sig_length(
+        dimension : int,
+        degree : int,
+        time_aug : bool = False,
+        lead_lag : bool = False
+) -> int:
     """
     Returns the length of a truncated signature,
 
@@ -31,6 +36,14 @@ def sig_length(dimension : int, degree : int) -> int:
     :type dimension: int
     :param degree: Truncation level of the signature, :math:`N`
     :type degree: int
+    :param time_aug: Whether time augmentation is applied before computing
+        the signature. This flag is provided for convenience, and is equivalent
+        to calling ``sig_length(dimension + 1, degree)``.
+    :type time_aug: bool
+    :param lead_lag: Whether the lead lag transformation is applied before computing
+        the signature. This flag is provided for convenience, and is equivalent
+        to calling ``sig_length(2 * dimension, degree)``.
+    :type lead_lag: bool
     :return: Length of a truncated signature
     :rtype: int
     """
@@ -39,12 +52,19 @@ def sig_length(dimension : int, degree : int) -> int:
     check_non_neg(dimension, "dimension")
     check_non_neg(degree, "degree")
 
-    out = CPSIG.sig_length(dimension, degree)
+    aug_dimension = (2 * dimension if lead_lag else dimension) + (1 if time_aug else 0)
+
+    out = CPSIG.sig_length(aug_dimension, degree)
     if out == 0:
         raise ValueError("Integer overflow encountered in sig_length")
     return out
 
-def log_sig_length(dimension : int, degree : int) -> int:
+def log_sig_length(
+        dimension : int,
+        degree : int,
+        time_aug: bool = False,
+        lead_lag: bool = False
+) -> int:
     """
     Returns the length of a truncated log signature,
 
@@ -60,6 +80,14 @@ def log_sig_length(dimension : int, degree : int) -> int:
     :type dimension: int
     :param degree: Truncation level of the log signature, :math:`N`
     :type degree: int
+    :param time_aug: Whether time augmentation is applied before computing
+        the signature. This flag is provided for convenience, and is equivalent
+        to calling ``sig_length(dimension + 1, degree)``.
+    :type time_aug: bool
+    :param lead_lag: Whether the lead lag transformation is applied before computing
+        the signature. This flag is provided for convenience, and is equivalent
+        to calling ``sig_length(2 * dimension, degree)``.
+    :type lead_lag: bool
     :return: Length of a truncated log signature
     :rtype: int
     """
@@ -68,7 +96,9 @@ def log_sig_length(dimension : int, degree : int) -> int:
     check_pos(dimension, "dimension")
     check_pos(degree, "degree")
 
-    out = CPSIG.log_sig_length(dimension, degree)
+    aug_dimension = (2 * dimension if lead_lag else dimension) + (1 if time_aug else 0)
+
+    out = CPSIG.log_sig_length(aug_dimension, degree)
     if out == 0:
         raise ValueError("Integer overflow encountered in sig_length")
     return out
