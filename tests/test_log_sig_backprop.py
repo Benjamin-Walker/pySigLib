@@ -104,6 +104,23 @@ def test_batch_log_signature_backprop_expanded_random(deg, dtype):
 
     check_close(d1, d2)
 
+@pytest.mark.parametrize("deg", range(1, 6))
+@pytest.mark.parametrize("dtype", [torch.float64, torch.float32])
+def test_batch_log_signature_backprop_expanded_time_aug_random(deg, dtype):
+    X = torch.rand(size=(32, 100, 2), requires_grad=True, dtype=dtype)
+    ls = pysiglib.log_sig(X, deg, time_aug=True, method=0)
+    derivs = torch.rand(size=ls.shape, dtype=dtype)
+    ls.backward(derivs)
+    d1 = X.grad
+
+    X = np.array(X.detach())
+    X = pysiglib.transform_path(X, time_aug=True)
+    derivs = np.array(derivs)[:, 1:]
+    s = iisignature.prepare(3, deg, "x")
+    d2 = iisignature.logsigbackprop(derivs, X, s, "x")[:, :, :-1]
+
+    check_close(d1, d2)
+
 @pytest.mark.skipif(signatory is None, reason="signatory not available")
 @pytest.mark.parametrize("deg", range(1, 6))
 @pytest.mark.parametrize("dtype", [torch.float64, torch.float32])

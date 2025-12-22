@@ -18,7 +18,7 @@ from typing import Union
 import numpy as np
 import torch
 
-from .param_checks import check_type
+from .param_checks import check_type, check_log_sig_method
 from .error_codes import err_msg
 from .dtypes import CPSIG_SIG_TO_LOG_SIG_BACKPROP, CPSIG_BATCH_SIG_TO_LOG_SIG_BACKPROP
 from .sig_length import sig_length, log_sig_length
@@ -110,13 +110,14 @@ def sig_to_log_sig_backprop(
     """
     check_type(degree, "degree", int)
     check_type(method, "method", int)
+    check_log_sig_method(method)
 
     # If path is on GPU, move to CPU
     device_handler = DeviceToHost([sig, log_sig_derivs], ["sig", "log_sig_derivs"])
     sig, log_sig_derivs = device_handler.data
 
-    sig_len = sig_length(dimension, degree)
-    log_sig_len = log_sig_length(dimension, degree) if method else sig_length(dimension, degree)
+    sig_len = sig_length(dimension, degree, time_aug, lead_lag)
+    log_sig_len = log_sig_length(dimension, degree, time_aug, lead_lag) if method else sig_length(dimension, degree, time_aug, lead_lag)
     data = SigInputHandler(sig, sig_len, "sig")
     derivs_data = SigInputHandler(log_sig_derivs, log_sig_len, "log_sig_derivs")
 

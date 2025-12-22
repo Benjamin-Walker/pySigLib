@@ -74,10 +74,7 @@ void signature_naive_(
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
-
-	level_index[0] = 0;
-	for (uint64_t i = 1; i <= degree + 1; i++)
-		level_index[i] = level_index[i - 1] * dimension + 1;
+	populate_level_index(level_index, dimension, degree + 2);
 
 	linear_signature_(prev_pt, next_pt, out, dimension, degree, level_index); //Zeroth step
 
@@ -113,10 +110,7 @@ FORCE_INLINE void signature_horner_(
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
-
-	level_index[0] = 0;
-	for (uint64_t i = 1; i <= degree + 1; i++)
-		level_index[i] = level_index[i - 1] * dimension + 1;
+	populate_level_index(level_index, dimension, degree + 2);
 
 	linear_signature_(prev_pt, next_pt, out, dimension, degree, level_index); //Zeroth step
 
@@ -617,10 +611,7 @@ void sig_backprop_inplace_(
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
-
-	level_index[0] = 0;
-	for (uint64_t i = 1; i <= degree + 1; i++)
-		level_index[i] = level_index[i - 1] * dimension + 1;
+	populate_level_index(level_index, dimension, degree + 2);
 
 	auto horner_step_uptr = std::make_unique<T[]>(level_index[degree + 1] - level_index[degree]);
 	T* horner_step = horner_step_uptr.get();

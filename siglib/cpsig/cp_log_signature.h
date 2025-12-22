@@ -45,10 +45,7 @@ void tensor_log_(
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
-
-	level_index[0] = 0;
-	for (uint64_t i = 1; i <= degree + 1; i++)
-		level_index[i] = level_index[i - 1] * dimension + 1;
+	populate_level_index(level_index, dimension, degree + 2);
 
 	uint64_t buff1_size = ::sig_length(dimension, degree - 1);
 	std::unique_ptr<T[]> buff1_uptr = std::make_unique<T[]>(buff1_size);
@@ -78,22 +75,23 @@ void tensor_log_(
 						*(res_ptr++) += *left_ptr * *right_ptr;
 			}
 		}
-		if (k > 1) {
-			for (uint64_t target_level = 1; target_level <= 1 + degree - k; ++target_level) {
 
-				uint64_t target_level_size = level_index[target_level + 1] - level_index[target_level];
-				T* const res_ptr = buff1 + level_index[target_level];
-				T* const ptr_1 = sig + level_index[target_level];
-				T* const ptr_2 = buff2 + level_index[target_level];
+		if (k == 1) continue;
 
-				for (uint64_t i = 0; i < target_level_size; ++i) {
-					res_ptr[i] = constant * ptr_1[i] - ptr_2[i];
-				}
+		for (uint64_t target_level = 1; target_level <= 1 + degree - k; ++target_level) {
+
+			uint64_t target_level_size = level_index[target_level + 1] - level_index[target_level];
+			T* const res_ptr = buff1 + level_index[target_level];
+			T* const ptr_1 = sig + level_index[target_level];
+			T* const ptr_2 = buff2 + level_index[target_level];
+
+			for (uint64_t i = 0; i < target_level_size; ++i) {
+				res_ptr[i] = constant * ptr_1[i] - ptr_2[i];
 			}
-			if (partial_logs && k > 2 && k != static_cast<int64_t>(degree)) {
-				std::memcpy(partial_logs, buff1, sizeof(T) * buff1_size);
-				partial_logs += buff1_size;
-			}
+		}
+		if (partial_logs && k > 2 && k != static_cast<int64_t>(degree)) {
+			std::memcpy(partial_logs, buff1, sizeof(T) * buff1_size);
+			partial_logs += buff1_size;
 		}
 	}
 	for (uint64_t target_level = 2; target_level <= degree; ++target_level) {
@@ -262,10 +260,7 @@ void tensor_log_backprop_(
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
-
-	level_index[0] = 0;
-	for (uint64_t i = 1; i <= degree + 1; i++)
-		level_index[i] = level_index[i - 1] * dimension + 1;
+	populate_level_index(level_index, dimension, degree + 2);
 
 	std::memcpy(out, derivs, sig_len_ * sizeof(T));
 

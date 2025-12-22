@@ -50,21 +50,6 @@ def check_dtype(arr, arr_name):
     if arr.dtype not in SUPPORTED_DTYPES:
         raise TypeError(arr_name + ".dtype must be " + SUPPORTED_DTYPES_STR + ", got " + str(arr.dtype) + " instead")
 
-def check_dtype_double(arr, arr_name):
-    if arr.dtype not in [np.float64, torch.float64]:
-        raise TypeError(arr_name + ".dtype must be float64, got " + str(arr.dtype) + " instead")
-
-def to_double(arr):
-    if isinstance(arr, torch.Tensor):
-        arr.to(dtype = torch.float64, copy = False)
-    else:
-        arr.astype(dtype = np.float64, copy = False)
-
-def check_cpu(arr, arr_name):
-    if isinstance(arr, torch.Tensor):
-        if not arr.device.type == "cpu":
-            raise ValueError(arr_name + " must be located on the cpu")
-
 def warn(msg):
     frame = inspect.currentframe().f_back
     depth = 2
@@ -101,3 +86,7 @@ def ensure_own_contiguous_storage(arr):
         return arr
 
     raise TypeError("Unexpected error in ensure_own_contiguous_storage: arr must be of type torch.Tensor or numpy.ndarray")
+
+def check_log_sig_method(method):
+    if method < 0 or method > 2:
+        raise ValueError("method must be one of 0, 1 or 2. Got " + str(method) + " instead.")

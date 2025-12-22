@@ -125,10 +125,7 @@ SparseIntMatrix lyndon_proj_matrix(
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
-
-	level_index[0] = 0;
-	for (uint64_t i = 1; i <= degree + 1; i++)
-		level_index[i] = level_index[i - 1] * dimension + 1;
+	populate_level_index(level_index, dimension, degree + 2);
 
 	SparseIntMatrix full_mat_transpose(m, n);
 

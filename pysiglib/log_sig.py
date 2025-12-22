@@ -18,7 +18,7 @@ from typing import Union
 import numpy as np
 import torch
 
-from .param_checks import check_type
+from .param_checks import check_type, check_log_sig_method
 from .error_codes import err_msg
 from .dtypes import CPSIG_SIG_TO_LOG_SIG, CPSIG_BATCH_SIG_TO_LOG_SIG
 from .sig_length import sig_length, log_sig_length
@@ -57,6 +57,7 @@ def prepare_log_sig(
     check_type(dimension, "dimension", int)
     check_type(degree, "degree", int)
     check_type(method, "method", int)
+    check_log_sig_method(method)
     check_type(time_aug, "time_aug", bool)
     check_type(lead_lag, "lead_lag", bool)
 
@@ -166,7 +167,7 @@ def sig_to_log_sig(
     """
     check_type(degree, "degree", int)
     check_type(method, "method", int)
-    #method = log_sig_method_parser(method)
+    check_log_sig_method(method)
 
     # If path is on GPU, move to CPU
     device_handler = DeviceToHost([sig], ["sig"])

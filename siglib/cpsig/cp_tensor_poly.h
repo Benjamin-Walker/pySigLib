@@ -23,6 +23,8 @@
 // Return 0 on error (integer overflow)
 uint64_t power(uint64_t base, uint64_t exp) noexcept;
 
+void populate_level_index(uint64_t* level_index, uint64_t dimension, uint64_t degree);
+
 template<std::floating_point T>
 FORCE_INLINE void sig_combine_inplace_(
 	T* sig1, 
@@ -252,10 +254,7 @@ void sig_combine_(
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
-
-	level_index[0] = 0;
-	for (uint64_t i = 1; i <= degree + 1; i++)
-		level_index[i] = level_index[i - 1] * dimension + 1;
+	populate_level_index(level_index, dimension, degree + 2);
 
 	std::memcpy(out, sig1, sizeof(T) * level_index[degree + 1]);
 
@@ -318,10 +317,7 @@ void sig_combine_backprop_(
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
-
-	level_index[0] = 0;
-	for (uint64_t i = 1; i <= degree + 1; i++)
-		level_index[i] = level_index[i - 1] * dimension + 1;
+	populate_level_index(level_index, dimension, degree + 2);
 
 	std::memcpy(sig1_deriv, sig_combined_deriv, sizeof(T) * level_index[degree + 1]);
 
@@ -346,10 +342,7 @@ void batch_sig_combine_backprop_(
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
 	uint64_t* level_index = level_index_uptr.get();
-
-	level_index[0] = 0;
-	for (uint64_t i = 1; i <= degree + 1; i++)
-		level_index[i] = level_index[i - 1] * dimension + 1;
+	populate_level_index(level_index, dimension, degree + 2);
 
 	const uint64_t siglength = level_index[degree + 1];
 

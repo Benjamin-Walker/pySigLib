@@ -125,6 +125,12 @@ extern "C" CPSIG_API uint64_t log_sig_length(uint64_t dimension, uint64_t degree
     return result;
 }
 
+void populate_level_index(uint64_t* level_index, uint64_t dimension, uint64_t degree) {
+    level_index[0] = 0;
+    for (uint64_t i = 1; i < degree; i++)
+        level_index[i] = level_index[i - 1] * dimension + 1;
+}
+
 extern "C" {
 
 	CPSIG_API int sig_combine_f(const float* sig1, const float* sig2, float* out, uint64_t dimension, uint64_t degree) noexcept {
