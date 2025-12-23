@@ -20,14 +20,6 @@ it to `0`:
     set CUSIG=0
     pip install pysiglib
 
-Similarly, the package will automatically detect if AVX2 instructions are supported.
-To disable these manually, create an environment variable `SIGLIB_VEC` and set it to `0`:
-
-.. code-block::
-
-    set SIGLIB_VEC=0
-    pip install pysiglib
-
 
 Linux
 -------
@@ -40,8 +32,7 @@ Please ensure this exists, then run:
     pip install pysiglib
 
 pySigLib will automatically detect CUDA, provided the `CUDA_PATH` environment variable is set correctly.
-
-Typically:
+On most systems, this path will be ``/usr/lib/nvidia-cuda-toolkit`` and one can set it manually by running:
 
 .. code-block::
 
@@ -55,13 +46,6 @@ it to `0`:
     export CUSIG=0
     pip install pysiglib
 
-Similarly, the package will automatically detect if AVX2 instructions are supported.
-To disable these manually, create an environment variable `SIGLIB_VEC` and set it to `0`:
-
-.. code-block::
-
-    export SIGLIB_VEC=0
-    pip install pysiglib
 
 MacOS
 -------
@@ -73,5 +57,4 @@ Please ensure this exists, then run:
 
     pip install pysiglib
 
-pySigLib does not support CUDA or AVX2 instructions on MacOS, and will build without
-them when installed.
+pySigLib does not support CUDA on MacOS, and will build without it when installed.
