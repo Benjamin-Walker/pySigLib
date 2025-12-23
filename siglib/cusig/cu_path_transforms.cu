@@ -222,7 +222,7 @@ void transform_path_backprop_(
 		std::string msg = e.what();							\
 		std::regex pattern(R"(CUDA Error \((\d+)\):)");		\
 		std::smatch match;									\
-		int ret_code = 8;									\
+		int ret_code = 10;									\
 		if (std::regex_search(msg, match, pattern)) {		\
 			ret_code = 100000 + std::stoi(match[1]);		\
 		}													\
@@ -231,7 +231,7 @@ void transform_path_backprop_(
 	}														\
     catch (...) {                                           \
 		std::cerr << "Unknown exception";		            \
-        return 9;                                           \
+        return 11;                                           \
     }                                                       \
     return 0;
 

@@ -17,7 +17,7 @@
 #include "cppch.h"
 #include "log_sig_cache.h"
 
-const char* version = "1";
+const char* version = "v1";
 std::filesystem::path cache_dir;
 const char* cache_folder_name = "pysiglib_cache";
 std::unordered_map<std::pair<uint64_t, uint64_t>, std::unique_ptr<BasisCache>, PairHash> basis_cache;

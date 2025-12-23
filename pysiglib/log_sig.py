@@ -37,8 +37,14 @@ def set_cache_dir(
 ):
     """
     Sets the cache directory to use in ``pysiglib.prepare_log_sig``
-    when ``use_disk=True``. If the cache directory is unset,
-    a default directory will be used. This function is not thread safe.
+    when ``use_disk=True``. If the cache directory is not explicitly
+    set by a call to this function, a default directory will be used:
+
+    - Windows: ``%LOCALAPPDATA%``
+    - Linux: ``~/.cache``
+    - Mac: ``~/Library/Caches``
+
+    This function is not thread safe.
 
     :param dir: Path to cache directory
     :type dir: str

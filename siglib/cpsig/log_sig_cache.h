@@ -56,6 +56,7 @@ struct BasisCache {
 	}
 };
 
+constexpr uint64_t cache_magic_number = 0x70797369676C6962;
 extern const char* version;
 extern std::filesystem::path cache_dir;
 extern const char* cache_folder_name;
@@ -70,7 +71,7 @@ public:
 
 		dimension = dimension_;
 		degree = degree_;
-		file_name = std::to_string(dimension) + "_" + std::to_string(degree) + "_v_" + version + ".bin";
+		file_name = std::to_string(dimension) + "_" + std::to_string(degree) + "_" + version + ".bin";
 		file_path = cache_dir / cache_folder_name / file_name;
 	}
 
@@ -80,11 +81,16 @@ public:
 
 	void write(std::unique_ptr<BasisCache>& obj) const {
 		std::ofstream out(file_path, std::ios::binary);
+		out.write(reinterpret_cast<const char*>(&cache_magic_number), sizeof(cache_magic_number));
 		obj->serialize(out);
 	}
 
 	void read(std::unique_ptr<BasisCache>& obj) {
 		std::ifstream in(file_path, std::ios::binary);
+		uint64_t magic;
+		in.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+		if (magic != cache_magic_number)
+			throw std::runtime_error("Tried to read an invalid cache file. Cache may have been corrupted.");
 		obj->deserialize(in);
 	}
 

@@ -18,11 +18,13 @@ CPP_ERR_MSG = {
     2: "Invalid argument",
     3: "Out of range",
     4: "Filesystem error",
-    5: "Could not find log_sig cache. Please make sure you have run pysiglib.prepare_log_sig with the correct parameters.",
+    5: "Could not find log sig cache. Please make sure you have run pysiglib.prepare_log_sig with the correct parameters.",
     6: "Directory does not exist",
-    7: "Unexpected internal error. Cache directory was not set correctly.",
-    8: "Runtime error",
-    9: "Unknown exception"
+    7: "Failed to get default cache directory. Please ensure default directory exists or provide one explicitly using pysiglib.set_cache_dir",
+    8: "Unexpected internal error. Cache directory was not set correctly.",
+    9: "Tried to read an invalid cache file. Cache may have been corrupted.",
+    10: "Runtime error",
+    11: "Unknown exception"
 }
 
 def err_msg(err_code):

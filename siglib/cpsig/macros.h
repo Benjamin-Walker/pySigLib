@@ -56,17 +56,25 @@
             std::cerr << e.what();                                  \
             return 6;                                               \
         }                                                           \
-        if (std::string(e.what()) == "Unexpected internal error. Cache directory was not set correctly.") {       \
+        if (std::string(e.what()) == "Failed to get default cache directory.") { \
             std::cerr << e.what();                                  \
             return 7;                                               \
         }                                                           \
-        else {                                                      \
+        if (std::string(e.what()) == "Unexpected internal error. Cache directory was not set correctly.") {       \
             std::cerr << e.what();                                  \
             return 8;                                               \
+        }                                                           \
+        if (std::string(e.what()) == "Tried to read an invalid cache file. Cache may have been corrupted.") {       \
+            std::cerr << e.what();                                  \
+            return 9;                                               \
+        }                                                           \
+        else {                                                      \
+            std::cerr << e.what();                                  \
+            return 10;                                               \
         }                                                           \
     }                                                               \
     catch (...) {                                                   \
 		std::cerr << "Unknown exception";		                    \
-        return 9;                                                   \
+        return 11;                                                   \
     }                                                               \
     return 0;
