@@ -69,8 +69,9 @@ using batch_sig_kernel_backprop_d_fn = void(CDECL_*)(const double*, double*, con
 using sig_kernel_backprop_cuda_d_fn = void(CDECL_*)(const double*, double*, double, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
 using batch_sig_kernel_backprop_cuda_d_fn = void(CDECL_*)(const double*, double*, const double*, const double*, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
 
-using prepare_log_sig_fn = void(CDECL_*)(uint64_t, uint64_t, int);
-using reset_log_sig_fn = void(CDECL_*)();
+using set_cache_dir_fn = void(CDECL_*)(const char*);
+using prepare_log_sig_fn = void(CDECL_*)(uint64_t, uint64_t, int, bool);
+using reset_log_sig_fn = void(CDECL_*)(bool);
 
 using sig_to_log_sig_d_fn = void(CDECL_*)(const double*, double*, uint64_t, uint64_t, bool, bool, int);
 
@@ -99,6 +100,7 @@ extern batch_sig_kernel_backprop_d_fn batch_sig_kernel_backprop_d;
 extern sig_kernel_backprop_cuda_d_fn sig_kernel_backprop_cuda_d;
 extern batch_sig_kernel_backprop_cuda_d_fn batch_sig_kernel_backprop_cuda_d;
 
+extern set_cache_dir_fn set_cache_dir;
 extern prepare_log_sig_fn prepare_log_sig;
 extern reset_log_sig_fn reset_log_sig;
 

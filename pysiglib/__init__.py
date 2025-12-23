@@ -17,7 +17,7 @@ from .load_siglib import SYSTEM, BUILT_WITH_CUDA, BUILT_WITH_AVX
 from .sig_length import sig_length, log_sig_length
 from .sig import sig_combine, signature
 from .sig_backprop import sig_backprop, sig_combine_backprop
-from .log_sig import prepare_log_sig, reset_log_sig, sig_to_log_sig, log_sig
+from .log_sig import set_cache_dir, prepare_log_sig, reset_log_sig, sig_to_log_sig, log_sig
 from .log_sig_backprop import sig_to_log_sig_backprop
 from .sig_kernel import sig_kernel, sig_kernel_gram
 from .sig_kernel_backprop import sig_kernel_backprop, sig_kernel_gram_backprop

@@ -17,7 +17,7 @@ import os
 import sys
 import platform
 import ctypes
-from ctypes import c_float, c_double, c_int, c_uint64, c_bool, POINTER
+from ctypes import c_char_p, c_float, c_double, c_int, c_uint64, c_bool, POINTER
 
 ######################################################
 # Figure out how pysiglib was built, in particular
@@ -545,13 +545,23 @@ CPSIG.log_sig_length.argtypes = (
 CPSIG.log_sig_length.restype = c_uint64
 
 ######################################################
+# set_cache_dir
+######################################################
+
+CPSIG.set_cache_dir.argtypes = (
+    c_char_p,
+)
+CPSIG.set_cache_dir.restype = c_int
+
+######################################################
 # prepare_log_sig
 ######################################################
 
 CPSIG.prepare_log_sig.argtypes = (
     c_uint64,
     c_uint64,
-    c_int
+    c_int,
+    c_bool
 )
 CPSIG.prepare_log_sig.restype = c_int
 
@@ -559,8 +569,10 @@ CPSIG.prepare_log_sig.restype = c_int
 # reset_log_sig
 ######################################################
 
-CPSIG.reset_log_sig.argtypes = ()
-CPSIG.reset_log_sig.restype = None
+CPSIG.reset_log_sig.argtypes = (
+    c_bool,
+)
+CPSIG.reset_log_sig.restype = c_int
 
 ######################################################
 # sig_to_log_sig

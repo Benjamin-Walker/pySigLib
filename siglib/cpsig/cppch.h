@@ -23,6 +23,7 @@
 #define CPPCH_H
 
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <stdexcept>
 #include <vector>
@@ -38,6 +39,8 @@
 #include <set>
 #include <map>
 #include <unordered_set>
+#include <fstream>
+#include <filesystem>
 
 #ifdef VEC
 #ifndef __APPLE__

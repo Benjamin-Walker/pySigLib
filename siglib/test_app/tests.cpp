@@ -279,8 +279,8 @@ void example_prepare_log_sig(
 
     auto f = [&]()
     {
-            prepare_log_sig(dimension, degree, method);
-            reset_log_sig();
+            prepare_log_sig(dimension, degree, method, false);
+            reset_log_sig(false);
     };
 
     time_function(num_runs, f);
@@ -303,7 +303,7 @@ void example_sig_to_log_sig_d(
     uint64_t out_size = method ? log_sig_length(dimension, degree) : sig_length(dimension, degree);
     std::vector<double> out(out_size, 0.);
 
-    prepare_log_sig(dimension, degree, method);
+    prepare_log_sig(dimension, degree, method, true);
     time_function(num_runs, sig_to_log_sig_d, sig.data(), out.data(), dimension, degree, time_aug, lead_lag, method);
 
     std::cout << "done\n";

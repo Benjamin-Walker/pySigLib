@@ -145,7 +145,8 @@ public:
         true_inv.insert_entry(3, 0, 6);
         true_inv.insert_entry(3, 2, -3);
 
-        SparseIntMatrix inv = mat.inverse();
+        SparseIntMatrix inv;
+        mat.inverse(inv);
 
         Assert::IsTrue(true_inv == inv);
     }
@@ -166,7 +167,8 @@ public:
         true_inv.insert_entry(4, 0, -5);
         true_inv.insert_entry(4, 3, 2);
 
-        SparseIntMatrix inv = mat.inverse();
+        SparseIntMatrix inv;
+        mat.inverse(inv);
 
         Assert::IsTrue(true_inv == inv);
     }
@@ -941,7 +943,8 @@ public:
             uint64_t dimension = 2, degree = 2;
             std::vector<word> lyndon_words = all_lyndon_words(dimension, degree);
             std::vector<uint64_t> lyndon_idx = all_lyndon_idx(dimension, degree);
-            SparseIntMatrix out = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
+            SparseIntMatrix out;
+            lyndon_proj_matrix(out, lyndon_words, lyndon_idx, dimension, degree);
 
             SparseIntMatrix true_(out.n);
 
@@ -951,7 +954,8 @@ public:
             uint64_t dimension = 3, degree = 4;
             std::vector<word> lyndon_words = all_lyndon_words(dimension, degree);
             std::vector<uint64_t> lyndon_idx = all_lyndon_idx(dimension, degree);
-            SparseIntMatrix out = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
+            SparseIntMatrix out;
+            lyndon_proj_matrix(out, lyndon_words, lyndon_idx, dimension, degree);
 
             SparseIntMatrix true_(out.n);
             true_.insert_entry(10, 9, -1);
@@ -971,7 +975,8 @@ public:
             uint64_t dimension = 2, degree = 5;
             std::vector<word> lyndon_words = all_lyndon_words(dimension, degree);
             std::vector<uint64_t> lyndon_idx = all_lyndon_idx(dimension, degree);
-            SparseIntMatrix out = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
+            SparseIntMatrix out;
+            lyndon_proj_matrix(out, lyndon_words, lyndon_idx, dimension, degree);
 
             SparseIntMatrix true_(out.n);
             true_.insert_entry(10, 9, -2);
@@ -1179,6 +1184,24 @@ public:
             check_result(f, sig, true_, dimension, degree, false, false, 1);
         }
 
+        TEST_METHOD(LinearPathCacheTest) {
+            auto f = sig_to_log_sig_d;
+            uint64_t dimension = 2, degree = 3;
+            uint64_t level_3_start = sig_length(dimension, 2);
+            uint64_t level_4_start = sig_length(dimension, 3);
+            std::vector<double> true_ = { 1., 1., 0., 0., 0. };
+            std::vector<double> sig;
+            sig.resize(level_4_start);
+            sig[0] = 1.;
+            for (uint64_t i = 1; i < dimension + 1; ++i) { sig[i] = 1.; }
+            for (uint64_t i = dimension + 1; i < level_3_start; ++i) { sig[i] = 1 / 2.; }
+            for (uint64_t i = level_3_start; i < level_4_start; ++i) { sig[i] = 1 / 6.; }
+            reset_log_sig(true); // Clear disk
+            prepare_log_sig(dimension, degree, 1, true);
+            reset_log_sig(false); // Remove from memory but keep on disk
+            check_result(f, sig, true_, dimension, degree, false, false, 1);
+        }
+
         TEST_METHOD(LinearPathTest2) {
             auto f = sig_to_log_sig_d;
             uint64_t dimension = 2, degree = 3;
@@ -1354,6 +1377,24 @@ public:
             for (uint64_t i = dimension + 1; i < level_3_start; ++i) { sig[i] = 1 / 2.; }
             for (uint64_t i = level_3_start; i < level_4_start; ++i) { sig[i] = 1 / 6.; }
             prepare_log_sig(dimension, degree, 2);
+            check_result(f, sig, true_, dimension, degree, false, false, 2);
+        }
+
+        TEST_METHOD(LinearPathCacheTest) {
+            auto f = sig_to_log_sig_d;
+            uint64_t dimension = 2, degree = 3;
+            uint64_t level_3_start = sig_length(dimension, 2);
+            uint64_t level_4_start = sig_length(dimension, 3);
+            std::vector<double> true_ = { 1., 1., 0., 0., 0. };
+            std::vector<double> sig;
+            sig.resize(level_4_start);
+            sig[0] = 1.;
+            for (uint64_t i = 1; i < dimension + 1; ++i) { sig[i] = 1.; }
+            for (uint64_t i = dimension + 1; i < level_3_start; ++i) { sig[i] = 1 / 2.; }
+            for (uint64_t i = level_3_start; i < level_4_start; ++i) { sig[i] = 1 / 6.; }
+            reset_log_sig(true); // Clear disk
+            prepare_log_sig(dimension, degree, 2, true);
+            reset_log_sig(false); // Clear memory
             check_result(f, sig, true_, dimension, degree, false, false, 2);
         }
 

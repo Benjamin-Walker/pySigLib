@@ -17,8 +17,6 @@
 #include "cppch.h"
 #include "words.h"
 
-std::unordered_map<std::pair<uint64_t, uint64_t>, std::unique_ptr<BasisCache>, PairHash> basis_cache;
-
 bool is_lyndon(word w) {
 	const uint64_t n = w.size();
 	if (n == 0)
@@ -111,7 +109,8 @@ uint64_t concatenate_idx(uint64_t i, uint64_t j, uint64_t len_j, uint64_t dimens
 
 }
 
-SparseIntMatrix lyndon_proj_matrix(
+void lyndon_proj_matrix(
+	SparseIntMatrix& out,
 	const std::vector<word>& lyndon_words,
 	std::vector<uint64_t> lyndon_idx, // copy here is intentional
 	uint64_t dimension,
@@ -165,66 +164,13 @@ SparseIntMatrix lyndon_proj_matrix(
 		}
 	}
 
-	SparseIntMatrix full_mat = full_mat_transpose.transpose();
-	SparseIntMatrix lyndon_mat(full_mat.m);
+	SparseIntMatrix full_mat;
+	full_mat_transpose.transpose(full_mat);
+	out.resize(full_mat.m, full_mat.m);
 
 	for (uint64_t i = 0; i < m; ++i) {
-		lyndon_mat.rows[i] = full_mat.rows[lyndon_idx[i]];
+		out.rows[i] = full_mat.rows[lyndon_idx[i]];
 	}
 
-	lyndon_mat.drop_diagonal();
-	return lyndon_mat;
-}
-
-void set_basis_cache(uint64_t dimension, uint64_t degree, int method) {
-	if (method < 1)
-		return;
-
-	std::pair<uint64_t, uint64_t> key(dimension, degree);
-
-	auto it = basis_cache.find(key);
-	if (it == basis_cache.end() || it->second->method < method) {
-
-		std::vector<word> lyndon_words = all_lyndon_words(dimension, degree);
-		std::vector<uint64_t> lyndon_idx = all_lyndon_idx(dimension, degree);
-		SparseIntMatrix p, p_inv, p_inv_t;
-		if (method == 2) {
-			p = lyndon_proj_matrix(lyndon_words, lyndon_idx, dimension, degree);
-			p_inv = p.inverse();
-			p_inv_t = p_inv.transpose();
-		}
-
-		auto basis_obj = std::make_unique<BasisCache>(
-			method,
-			std::move(lyndon_words),
-			std::move(lyndon_idx),
-			std::move(p_inv),
-			std::move(p_inv_t)
-		);
-
-		basis_cache.erase(key); // In case cache already exists but with inferior method
-		basis_cache.emplace(key, std::move(basis_obj));
-	}
-}
-
-const BasisCache& get_basis_cache(uint64_t dimension, uint64_t degree, int method) {
-	std::pair<uint64_t, uint64_t> key(dimension, degree);
-
-	auto it = basis_cache.find(key);
-	if (it == basis_cache.end() || it->second->method < method) {
-		throw std::runtime_error("Could not find basis cache");
-	}
-	return *(it->second);
-}
-
-extern "C" {
-
-	CPSIG_API int prepare_log_sig(uint64_t dimension, uint64_t degree, int method) noexcept {
-		SAFE_CALL(set_basis_cache(dimension, degree, method));
-	}
-
-	CPSIG_API void reset_log_sig() noexcept {
-		basis_cache.clear();
-	}
-
+	out.drop_diagonal();
 }

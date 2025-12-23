@@ -58,11 +58,6 @@ public:
         swap(rows, other.rows);
     }
 
-    SparseIntMatrix& operator=(SparseIntMatrix other) {
-        swap(other);
-        return *this;
-    }
-
     void populate_diagonal() {
 #ifdef _DEBUG
         if (n != m) {
@@ -127,7 +122,7 @@ public:
             throw std::out_of_range("i,j out of range in SparseIntMatrix.insert_entry");
         }
 #endif
-        rows[i].push_back({ j, v });
+        rows[i].emplace_back(j, v);
     }
 
     void drop_row(uint64_t i) {
@@ -140,7 +135,7 @@ public:
         --n;
     }
 
-    SparseIntMatrix inverse() const {
+    void inverse(SparseIntMatrix& out) const {
         // This assumes matrix is lower triangular with ones on the diagonal
         // The output will omit the diagonal.
 #ifdef _DEBUG
@@ -149,10 +144,10 @@ public:
         }
 #endif
 
-        SparseIntMatrix inv(n);
+        out.resize(n, n);
 
         for (uint64_t i = 0; i < n; ++i) {
-            inv.insert_entry(i, i, 1);
+            out.insert_entry(i, i, 1);
         }
 
         for (uint64_t i = 0; i < n; ++i) {
@@ -163,7 +158,7 @@ public:
                 int Lik = e.val;
                 if (k >= i) continue;
 
-                for (const auto& ek : inv.rows[k]) {
+                for (const auto& ek : out.rows[k]) {
                     uint64_t j = ek.col;
                     row_i[j] -= Lik * ek.val;
                 }
@@ -171,27 +166,23 @@ public:
                 row_i[k] -= Lik;
             }
 
-            inv.rows[i].clear();
+            out.rows[i].clear();
             for (const auto& [j, v] : row_i) {
                 if (v != 0) {
-                    inv.rows[i].push_back({ j, v });
+                    out.rows[i].emplace_back(j, v);
                 }
             }
         }
-
-        return inv;
     }
 
-    SparseIntMatrix transpose() const {
-        SparseIntMatrix tr(m, n);
+    void transpose(SparseIntMatrix& out) const {
+        out.resize(m, n);
 
         for (uint64_t i = 0; i < n; ++i) {
             for (const auto& e : rows[i]) {
-                tr.rows[e.col].push_back({ i, e.val });
+                out.rows[e.col].emplace_back(i, e.val);
             }
         }
-
-        return tr;
     }
 
     template<std::floating_point T>
@@ -250,6 +241,40 @@ public:
                 return;
             }
         }
-        rows[i].push_back({ j, v });
+        rows[i].emplace_back(j, v);
+    }
+
+    void serialize(std::ostream& out) const {
+        out.write(reinterpret_cast<const char*>(&n), sizeof(n));
+        out.write(reinterpret_cast<const char*>(&m), sizeof(m));
+
+        for (uint64_t i = 0; i < n; ++i) {
+            uint64_t nnz = rows[i].size();
+            out.write(reinterpret_cast<const char*>(&nnz), sizeof(nnz));
+
+            for (const auto& e : rows[i]) {
+                out.write(reinterpret_cast<const char*>(&e.col), sizeof(e.col));
+                out.write(reinterpret_cast<const char*>(&e.val), sizeof(e.val));
+            }
+        }
+    }
+
+    static void deserialize(std::istream& in, SparseIntMatrix& out) {
+
+        in.read(reinterpret_cast<char*>(&out.n), sizeof(out.n));
+        in.read(reinterpret_cast<char*>(&out.m), sizeof(out.m));
+
+        out.rows.resize(out.n);
+
+        for (uint64_t i = 0; i < out.n; ++i) {
+            uint64_t nnz;
+            in.read(reinterpret_cast<char*>(&nnz), sizeof(nnz));
+
+            out.rows[i].resize(nnz);
+            for (uint64_t k = 0; k < nnz; ++k) {
+                in.read(reinterpret_cast<char*>(&out.rows[i][k].col), sizeof(uint64_t));
+                in.read(reinterpret_cast<char*>(&out.rows[i][k].val), sizeof(int));
+            }
+        }
     }
 };

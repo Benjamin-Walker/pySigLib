@@ -20,6 +20,7 @@
 #include "cp_tensor_poly.h"
 #include "cp_signature.h"
 #include "words.h"
+#include "log_sig_cache.h"
 
 #include "cp_path.h"
 #include "macros.h"

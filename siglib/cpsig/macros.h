@@ -43,18 +43,30 @@
 		std::cerr << e.what();					                    \
 		return 3;                                                   \
 	}  											                    \
+    catch (std::filesystem::filesystem_error& e) {                  \
+        std::cerr << e.what();                                      \
+        return 4;                                                   \
+    }                                                               \
     catch (std::runtime_error& e) {                                 \
         if (std::string(e.what()) == "Could not find basis cache") {\
             std::cerr << e.what();                                  \
-            return 4;                                               \
+            return 5;                                               \
+        }                                                           \
+        if (std::string(e.what()).rfind("Directory ") == 0) {       \
+            std::cerr << e.what();                                  \
+            return 6;                                               \
+        }                                                           \
+        if (std::string(e.what()) == "Unexpected internal error. Cache directory was not set correctly.") {       \
+            std::cerr << e.what();                                  \
+            return 7;                                               \
         }                                                           \
         else {                                                      \
             std::cerr << e.what();                                  \
-            return 5;                                               \
+            return 8;                                               \
         }                                                           \
     }                                                               \
     catch (...) {                                                   \
 		std::cerr << "Unknown exception";		                    \
-        return 6;                                                   \
+        return 9;                                                   \
     }                                                               \
     return 0;

@@ -37,23 +37,6 @@ def check_close(a, b):
     EPSILON = SINGLE_EPSILON if a_.dtype == np.float32 else DOUBLE_EPSILON
     assert not np.any(np.abs(a_ - b_) > EPSILON)
 
-def test_prepare():
-    X = np.random.uniform(size=(100, 5))
-    pysiglib.prepare_log_sig(5, 2, 1)
-
-    with pytest.raises(Exception):
-        pysiglib.log_sig(X, 2, method=2)
-
-    pysiglib.reset_log_sig()
-
-    with pytest.raises(Exception):
-        pysiglib.log_sig(X, 2, method=1)
-
-    pysiglib.prepare_log_sig(5, 2, 2)
-    pysiglib.log_sig(X, 2, method=1)
-    pysiglib.reset_log_sig()
-
-
 @pytest.mark.skipif(signatory is None, reason="signatory not available")
 @pytest.mark.parametrize("deg", range(1, 6))
 @pytest.mark.parametrize("dtype", [torch.float64, torch.float32])

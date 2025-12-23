@@ -41,29 +41,6 @@ struct PairHash {
 	}
 };
 
-struct BasisCache {
-	int method;
-	std::vector<word> lyndon_words;
-	std::vector<uint64_t> lyndon_idx;
-	SparseIntMatrix inv_proj_mat;
-	SparseIntMatrix inv_proj_mat_transpose;
-
-	BasisCache(
-		int method_,
-		std::vector<word>&& lyndon_words_,
-		std::vector<uint64_t>&& lyndon_idx_,
-		SparseIntMatrix&& inv_proj_mat_,
-		SparseIntMatrix&& inv_proj_mat_transpose_
-	) : method{ method_ },
-		lyndon_words{ std::move(lyndon_words_) },
-		lyndon_idx{ std::move(lyndon_idx_) },
-		inv_proj_mat{ std::move(inv_proj_mat_) },
-		inv_proj_mat_transpose{ std::move(inv_proj_mat_transpose_) } {
-	}
-};
-
-extern std::unordered_map<std::pair<uint64_t, uint64_t>, std::unique_ptr<BasisCache>, PairHash> basis_cache;
-
 bool is_lyndon(word w);
 std::vector<word> all_lyndon_words(uint64_t dimension, uint64_t degree);
 std::vector<uint64_t> all_lyndon_idx(uint64_t dimension, uint64_t degree);
@@ -72,12 +49,11 @@ word longest_lyndon_suffix_(word w, const std::unordered_set<word, WordHash>& ly
 word concatenate_words(word& a, word& b);
 uint64_t concatenate_idx(uint64_t i, uint64_t j, uint64_t len_j, uint64_t dimension);
 
-SparseIntMatrix lyndon_proj_matrix(
+void lyndon_proj_matrix(
+	SparseIntMatrix& out,
 	const std::vector<word>& lyndon_words,
 	std::vector<uint64_t> lyndon_idx, // copy here is intentional
 	uint64_t dimension,
 	uint64_t degree
 );
 
-void set_basis_cache(uint64_t dimension, uint64_t degree, int method);
-const BasisCache& get_basis_cache(uint64_t dimension, uint64_t degree, int method);
