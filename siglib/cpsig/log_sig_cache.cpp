@@ -19,7 +19,7 @@
 
 const char* version = "1";
 std::filesystem::path cache_dir;
-const char* cache_folder_name = "siglib";
+const char* cache_folder_name = "pysiglib_cache";
 std::unordered_map<std::pair<uint64_t, uint64_t>, std::unique_ptr<BasisCache>, PairHash> basis_cache;
 
 void serialize_vector(std::ostream& out, const std::vector<uint64_t>& v) {
@@ -163,7 +163,7 @@ const BasisCache& get_basis_cache(uint64_t dimension, uint64_t degree, int metho
 	return *(it->second);
 }
 
-void reset_log_sig_(bool use_disk) {
+void clear_cache_(bool use_disk) {
 	if (cache_dir.empty()) {
 		set_default_cache_dir();
 	}
@@ -184,8 +184,8 @@ extern "C" {
 		SAFE_CALL(set_basis_cache(dimension, degree, method, use_disk));
 	}
 
-	CPSIG_API int reset_log_sig(bool use_disk) noexcept {
-		SAFE_CALL(reset_log_sig_(use_disk));
+	CPSIG_API int clear_cache(bool use_disk) noexcept {
+		SAFE_CALL(clear_cache_(use_disk));
 	}
 
 }

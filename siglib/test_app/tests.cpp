@@ -280,7 +280,7 @@ void example_prepare_log_sig(
     auto f = [&]()
     {
             prepare_log_sig(dimension, degree, method, false);
-            reset_log_sig(false);
+            clear_cache(false);
     };
 
     time_function(num_runs, f);

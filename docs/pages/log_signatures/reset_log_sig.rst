@@ -1,6 +1,6 @@
-pysiglib.reset_log_sig
+pysiglib.clear_cache
 =========================
 
 .. versionadded:: v0.3.0
 
-.. autofunction:: pysiglib.reset_log_sig
+.. autofunction:: pysiglib.clear_cache

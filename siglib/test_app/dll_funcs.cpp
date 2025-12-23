@@ -174,7 +174,7 @@ batch_sig_kernel_backprop_cuda_d_fn batch_sig_kernel_backprop_cuda_d = nullptr;
 
 set_cache_dir_fn set_cache_dir = nullptr;
 prepare_log_sig_fn prepare_log_sig = nullptr;
-reset_log_sig_fn reset_log_sig = nullptr;
+clear_cache_fn clear_cache = nullptr;
 
 sig_to_log_sig_d_fn sig_to_log_sig_d = nullptr;
 
@@ -197,7 +197,7 @@ void get_cpsig_fn_ptrs()
     GET_FN(batch_sig_kernel_backprop_d, cpsig);
     GET_FN(prepare_log_sig, cpsig);
     GET_FN(set_cache_dir, cpsig);
-    GET_FN(reset_log_sig, cpsig);
+    GET_FN(clear_cache, cpsig);
     GET_FN(sig_to_log_sig_d, cpsig);
 }
 

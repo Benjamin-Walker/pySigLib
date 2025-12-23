@@ -99,7 +99,7 @@ def prepare_log_sig(
     if err_code:
         raise Exception("Error in pysiglib.prepare_log_sig: " + err_msg(err_code))
 
-def reset_log_sig(
+def clear_cache(
         use_disk : bool = False
 ):
     """
@@ -108,7 +108,7 @@ def reset_log_sig(
     are requested in ``pysiglib.prepare_log_sig``, and unused combinations are
     using up memory.
     """
-    err_code = CPSIG.reset_log_sig(use_disk)
+    err_code = CPSIG.clear_cache(use_disk)
     if err_code:
         raise Exception("Error in pysiglib.prepare_log_sig: " + err_msg(err_code))
 

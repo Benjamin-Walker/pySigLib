@@ -3,10 +3,10 @@ prepare_log_sig
 
 .. doxygenfunction:: prepare_log_sig
 
-reset_log_sig
+clear_cache
 =================
 
-.. doxygenfunction:: reset_log_sig
+.. doxygenfunction:: clear_cache
 
 sig_to_log_sig
 ================

@@ -99,4 +99,4 @@ void set_default_cache_dir();
 void set_cache_dir_(const char* dir);
 void set_basis_cache(uint64_t dimension, uint64_t degree, int method, bool use_disk = false);
 const BasisCache& get_basis_cache(uint64_t dimension, uint64_t degree, int method);
-void reset_log_sig_(bool use_disk);
+void clear_cache_(bool use_disk);

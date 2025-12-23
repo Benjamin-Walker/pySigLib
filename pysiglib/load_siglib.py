@@ -566,13 +566,13 @@ CPSIG.prepare_log_sig.argtypes = (
 CPSIG.prepare_log_sig.restype = c_int
 
 ######################################################
-# reset_log_sig
+# clear_cache
 ######################################################
 
-CPSIG.reset_log_sig.argtypes = (
+CPSIG.clear_cache.argtypes = (
     c_bool,
 )
-CPSIG.reset_log_sig.restype = c_int
+CPSIG.clear_cache.restype = c_int
 
 ######################################################
 # sig_to_log_sig

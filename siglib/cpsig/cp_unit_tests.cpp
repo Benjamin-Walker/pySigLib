@@ -1196,9 +1196,9 @@ public:
             for (uint64_t i = 1; i < dimension + 1; ++i) { sig[i] = 1.; }
             for (uint64_t i = dimension + 1; i < level_3_start; ++i) { sig[i] = 1 / 2.; }
             for (uint64_t i = level_3_start; i < level_4_start; ++i) { sig[i] = 1 / 6.; }
-            reset_log_sig(true); // Clear disk
+            clear_cache(true); // Clear disk
             prepare_log_sig(dimension, degree, 1, true);
-            reset_log_sig(false); // Remove from memory but keep on disk
+            clear_cache(false); // Remove from memory but keep on disk
             check_result(f, sig, true_, dimension, degree, false, false, 1);
         }
 
@@ -1392,9 +1392,9 @@ public:
             for (uint64_t i = 1; i < dimension + 1; ++i) { sig[i] = 1.; }
             for (uint64_t i = dimension + 1; i < level_3_start; ++i) { sig[i] = 1 / 2.; }
             for (uint64_t i = level_3_start; i < level_4_start; ++i) { sig[i] = 1 / 6.; }
-            reset_log_sig(true); // Clear disk
+            clear_cache(true); // Clear disk
             prepare_log_sig(dimension, degree, 2, true);
-            reset_log_sig(false); // Clear memory
+            clear_cache(false); // Clear memory
             check_result(f, sig, true_, dimension, degree, false, false, 2);
         }
 
