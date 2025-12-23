@@ -18,4 +18,6 @@ from ..transform_path import transform_path
 from ..sig_length import sig_length, log_sig_length
 from ..log_sig import set_cache_dir, prepare_log_sig, clear_cache
 from ..static_kernels import Context, StaticKernel, LinearKernel, ScaledLinearKernel, RBFKernel
-from .torch_api import signature, sig_combine, transform_path, sig_to_log_sig, log_sig, sig_kernel, sig_kernel_gram, sig_score, expected_sig_score, sig_mmd
+from .torch_api import sig, sig_combine, transform_path, sig_to_log_sig, log_sig, sig_kernel, sig_kernel_gram, sig_score, expected_sig_score, sig_mmd
+
+signature = sig

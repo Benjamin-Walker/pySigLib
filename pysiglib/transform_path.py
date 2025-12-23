@@ -174,8 +174,8 @@ def transform_path(
 
         This function is provided for convenience only, and one should prefer the in-built flags for
         these transformations within ``pysiglib`` functions where available. For example, running
-        ``pysiglib.signature`` with ``lead_lag=True`` will be faster and more memory-efficient than
-        pre-computing the lead-lag transform and passing it to ``pysiglib.signature``, as the former
+        ``pysiglib.sig`` with ``lead_lag=True`` will be faster and more memory-efficient than
+        pre-computing the lead-lag transform and passing it to ``pysiglib.sig``, as the former
         method will never explicitly compute or store the lead-lag transform, and will instead
         modify the signature computation directly.
 

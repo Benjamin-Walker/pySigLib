@@ -40,7 +40,7 @@ def test_sig_length_value_error(dim, deg):
 ])
 def test_signature_type_error(args):
     with pytest.raises(TypeError):
-        pysiglib.signature(*args)
+        pysiglib.sig(*args)
 
 
 @pytest.mark.parametrize("X, deg", [
@@ -50,7 +50,7 @@ def test_signature_type_error(args):
 ])
 def test_signature_value_error(X, deg):
     with pytest.raises(ValueError):
-        pysiglib.signature(X, deg)
+        pysiglib.sig(X, deg)
 
 
 @pytest.mark.parametrize("x, y, d", [
@@ -76,10 +76,10 @@ def test_sig_kernel_value_error(x, y, d):
 
 def test_signature_n_jobs_zero():
     with pytest.raises(ValueError):
-        pysiglib.signature(np.array([[[0.], [1.]]]), 2, n_jobs = 0)
+        pysiglib.sig(np.array([[[0.], [1.]]]), 2, n_jobs = 0)
 
 def test_sig_combine_n_jobs_zero():
-    sig = pysiglib.signature(np.array([[0.], [1.]]), 2)
+    sig = pysiglib.sig(np.array([[0.], [1.]]), 2)
     with pytest.raises(ValueError):
         pysiglib.sig_combine(sig, sig, 1, 2, n_jobs = 0)
 

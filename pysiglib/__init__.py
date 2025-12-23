@@ -15,7 +15,7 @@
 
 from .load_siglib import SYSTEM, BUILT_WITH_CUDA, BUILT_WITH_AVX
 from .sig_length import sig_length, log_sig_length
-from .sig import sig_combine, signature
+from .sig import sig_combine, sig
 from .sig_backprop import sig_backprop, sig_combine_backprop
 from .log_sig import set_cache_dir, prepare_log_sig, clear_cache, sig_to_log_sig, log_sig
 from .log_sig_backprop import sig_to_log_sig_backprop
@@ -25,6 +25,8 @@ from .sig_metrics import sig_score, expected_sig_score, sig_mmd
 from .transform_path import transform_path
 from .transform_path_backprop import transform_path_backprop
 from .static_kernels import Context, StaticKernel, LinearKernel, ScaledLinearKernel, RBFKernel
+
+signature = sig
 
 import pysiglib.torch_api
 

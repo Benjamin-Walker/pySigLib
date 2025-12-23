@@ -79,7 +79,7 @@ def test_sig_backprop_random(deg, dtype):
     X = np.random.uniform(size=(100, 5)).astype(dtype)
     sig_derivs = np.random.uniform(size = pysiglib.sig_length(5, deg)).astype(dtype)
 
-    sig = pysiglib.signature(X, deg)
+    sig = pysiglib.sig(X, deg)
 
     sig_back1 = pysiglib.sig_backprop(X.copy(), sig.copy(), sig_derivs.copy(), deg)
     sig_back2 = iisignature.sigbackprop(sig_derivs[1:].copy(), X.copy(), deg)
@@ -91,7 +91,7 @@ def test_sig_backprop_random_cuda(deg):
     X = torch.rand(size=(100, 5), device = "cuda")
     sig_derivs = torch.rand(size = (pysiglib.sig_length(5, deg),), device = "cuda")
 
-    sig = pysiglib.signature(X, deg)
+    sig = pysiglib.sig(X, deg)
 
     sig_back1 = pysiglib.sig_backprop(X.clone(), sig.clone(), sig_derivs.clone(), deg)
     sig_back2 = iisignature.sigbackprop(sig_derivs[1:].clone().cpu(), X.clone().cpu(), deg)
@@ -102,7 +102,7 @@ def test_batch_sig_backprop_random(deg):
     X = np.random.uniform(size=(100, 3, 2)).astype("double")
     sig_derivs = np.random.uniform(size = (100, pysiglib.sig_length(2, deg))).astype("double")
 
-    sig = pysiglib.signature(X.copy(), deg)
+    sig = pysiglib.sig(X.copy(), deg)
 
     sig_back1 = pysiglib.sig_backprop(X.copy(), sig.copy(), sig_derivs.copy(), deg)
     sig_back2 = iisignature.sigbackprop(sig_derivs[:, 1:].copy(), X.copy(), deg)
@@ -116,7 +116,7 @@ def test_sig_backprop_time_aug_random(deg):
     X_time_aug = np.concatenate([X, t], axis = 1)
     sig_derivs = np.random.uniform(size=pysiglib.sig_length(dimension + 1, deg))
 
-    sig = pysiglib.signature(X, deg, time_aug = True)
+    sig = pysiglib.sig(X, deg, time_aug = True)
 
     sig_back1 = pysiglib.sig_backprop(X.copy(), sig.copy(), sig_derivs.copy(), deg, time_aug = True)
     sig_back2 = pysiglib.sig_backprop(X_time_aug.copy(), sig.copy(), sig_derivs.copy(), deg)[:, :-1]
@@ -131,7 +131,7 @@ def test_batch_sig_backprop_time_aug_random(deg):
     X_time_aug = np.concatenate([X, t], axis=2)
     sig_derivs = np.random.uniform(size = (batch_size, pysiglib.sig_length(dimension + 1, deg)))
 
-    sig = pysiglib.signature(X.copy(), deg, time_aug = True)
+    sig = pysiglib.sig(X.copy(), deg, time_aug = True)
 
     sig_back1 = pysiglib.sig_backprop(X.copy(), sig.copy(), sig_derivs.copy(), deg, time_aug = True)
     sig_back2 = pysiglib.sig_backprop(X_time_aug.copy(), sig.copy(), sig_derivs.copy(), deg)[:, :, :-1]
@@ -143,7 +143,7 @@ def test_sig_backprop_lead_lag_random(deg):
     X = np.random.uniform(size=(length, dimension))
     X = torch.tensor(X, dtype = torch.float64, requires_grad = True)
     X_ll = lead_lag(X)
-    sig = pysiglib.signature(X_ll, deg)
+    sig = pysiglib.sig(X_ll, deg)
     sig_derivs = np.random.uniform(size=pysiglib.sig_length(dimension * 2, deg))
     sig_derivs = torch.tensor(sig_derivs)
 
@@ -160,7 +160,7 @@ def test_batch_sig_backprop_lead_lag_random(deg):
     X = np.random.uniform(size=(batch_size, length, dimension))
     X = torch.tensor(X, dtype = torch.float64, requires_grad = True)
     X_ll = batch_lead_lag(X)
-    sig = pysiglib.signature(X_ll, deg)
+    sig = pysiglib.sig(X_ll, deg)
     sig_derivs = np.random.uniform(size=(batch_size, pysiglib.sig_length(dimension * 2, deg)))
     sig_derivs = torch.tensor(sig_derivs)
 
@@ -178,7 +178,7 @@ def test_sig_backprop_time_aug_lead_lag_random(deg, dtype):
     X = np.random.uniform(size=(length, dimension)).astype(dtype)
     X = torch.tensor(X, dtype = torch.float64, requires_grad = True)
     X_ll = time_aug_lead_lag(X)
-    sig = pysiglib.signature(X_ll, deg)
+    sig = pysiglib.sig(X_ll, deg)
     sig_derivs = np.random.uniform(size=pysiglib.sig_length(dimension * 2 + 1, deg))
     sig_derivs = torch.tensor(sig_derivs)
 
@@ -195,7 +195,7 @@ def test_batch_sig_backprop_time_aug_lead_lag_random(deg):
     X = np.random.uniform(size=(batch_size, length, dimension))
     X = torch.tensor(X, dtype = torch.float64, requires_grad = True)
     X_ll = batch_time_aug_lead_lag(X)
-    sig = pysiglib.signature(X_ll, deg)
+    sig = pysiglib.sig(X_ll, deg)
     sig_derivs = np.random.uniform(size=(batch_size, pysiglib.sig_length(dimension * 2 + 1, deg)))
     sig_derivs = torch.tensor(sig_derivs)
 

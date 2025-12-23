@@ -46,7 +46,7 @@ Full documentation is available at [https://pysiglib.readthedocs.io](https://pys
 
 ### Signatures
 
-pySigLib implements truncated signature transforms through the function `pysiglib.signature`,
+pySigLib implements truncated signature transforms through the function `pysiglib.sig`,
 which takes as input a path or batch of paths `X`, and a truncation `degree`.</p>
 
 `X` can be a numpy array or a torch tensor. For a single path, `X` must be of shape
@@ -59,11 +59,11 @@ on the CPU, whilst `X = torch.rand(32, 1000, 10, device = "cuda")` will run
 on the CUDA device.
 
 ```python
-import pysiglib
 import numpy as np
+import pysiglib
 
 X = np.random.uniform(size=(32, 1000, 10))
-sig = pysiglib.signature(X, degree = 5)
+s = pysiglib.sig(X, degree = 5)
 ```
 
 ### Log Signatures
@@ -74,11 +74,12 @@ the method used to compute the log signature and the form of the output. For det
 please see the documentation.
 
 ```python
-import pysiglib
 import numpy as np
+import pysiglib
+pysiglib.prepare_log_sig(dimension = 10, degree = 5, method = 1)
 
 X = np.random.uniform(size=(32, 1000, 10))
-sig = pysiglib.log_sig(X, degree = 5, method = 1)
+ls = pysiglib.log_sig(X, degree = 5, method = 1)
 ```
 
 ### Signature Kernels
@@ -95,12 +96,12 @@ same shapes as described above. Again, the computation will run on whichever
 device `X,Y` are located on.
 
 ```python
-import pysiglib
 import numpy as np
+import pysiglib
 
 X = np.random.uniform(size=(32, 1000, 10))
 Y = np.random.uniform(size=(32, 1000, 10))
-sig = pysiglib.sig_kernel(X, Y, dyadic_order=1)
+k = pysiglib.sig_kernel(X, Y, dyadic_order=1)
 
 # In cases where the paths differ in length, it may
 # be advantageous to refine the PDE grid by different
@@ -108,7 +109,7 @@ sig = pysiglib.sig_kernel(X, Y, dyadic_order=1)
 
 X = np.random.uniform(size=(32, 100, 10))
 Y = np.random.uniform(size=(32, 5000, 10))
-sig = pysiglib.sig_kernel(X, Y, dyadic_order=(3, 0))
+k = pysiglib.sig_kernel(X, Y, dyadic_order=(3, 0))
 ```
 
 ## Contribution

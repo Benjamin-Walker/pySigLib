@@ -38,9 +38,9 @@ def test_sig_combine_random(deg):
     X2 = np.random.uniform(size=(100, 5))
     X = np.concatenate((X1, X2), axis=0)
     X2 = np.concatenate((X1[[-1], :], X2), axis=0)
-    sig1 = pysiglib.signature(X1, deg)
-    sig2 = pysiglib.signature(X2, deg)
-    sig = pysiglib.signature(X, deg)
+    sig1 = pysiglib.sig(X1, deg)
+    sig2 = pysiglib.sig(X2, deg)
+    sig = pysiglib.sig(X, deg)
     sig_mult = pysiglib.sig_combine(sig1, sig2, 5, deg)
     check_close(sig, sig_mult)
 
@@ -56,9 +56,9 @@ def test_sig_combine_random_cuda(deg):
     X2 = torch.tensor(X2, device="cuda")
     X = torch.tensor(X, device="cuda")
 
-    sig1 = pysiglib.signature(X1, deg)
-    sig2 = pysiglib.signature(X2, deg)
-    sig = pysiglib.signature(X, deg)
+    sig1 = pysiglib.sig(X1, deg)
+    sig2 = pysiglib.sig(X2, deg)
+    sig = pysiglib.sig(X, deg)
     sig_mult = pysiglib.sig_combine(sig1, sig2, 5, deg)
     check_close(sig.cpu(), sig_mult.cpu())
 
@@ -69,9 +69,9 @@ def test_sig_combine_random_batch(deg):
     X2 = np.random.uniform(size=(32, 100, 5))
     X = np.concatenate((X1, X2), axis=1)
     X2 = np.concatenate((X1[:, [-1], :], X2), axis=1)
-    sig1 = pysiglib.signature(X1, deg)
-    sig2 = pysiglib.signature(X2, deg)
-    sig = pysiglib.signature(X, deg)
+    sig1 = pysiglib.sig(X1, deg)
+    sig2 = pysiglib.sig(X2, deg)
+    sig = pysiglib.sig(X, deg)
     sig_mult = pysiglib.sig_combine(sig1, sig2, 5, deg)
     check_close(sig, sig_mult)
 

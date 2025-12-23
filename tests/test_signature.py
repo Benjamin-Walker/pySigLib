@@ -49,9 +49,9 @@ def check_close(a, b):
     assert not np.any(np.abs(a_ - b_) > EPSILON)
 
 def test_signature_trivial():
-    check_close(pysiglib.signature(np.array([[0., 0.], [1., 1.]]), 0), [1.])
-    check_close(pysiglib.signature(np.array([[0., 0.], [1., 1.]]), 1), [1., 1., 1.])
-    check_close(pysiglib.signature(np.array([[0., 0.]]), 1), [1., 0., 0.])
+    check_close(pysiglib.sig(np.array([[0., 0.], [1., 1.]]), 0), [1.])
+    check_close(pysiglib.sig(np.array([[0., 0.], [1., 1.]]), 1), [1., 1., 1.])
+    check_close(pysiglib.sig(np.array([[0., 0.]]), 1), [1., 0., 0.])
 
 
 @pytest.mark.parametrize("deg", range(1, 6))
@@ -59,7 +59,7 @@ def test_signature_trivial():
 def test_signature_random(deg, dtype):
     X = np.random.uniform(size=(100, 5)).astype(dtype)
     iisig = iisignature.sig(X, deg).astype(dtype)
-    sig = pysiglib.signature(X, deg).astype(dtype)
+    sig = pysiglib.sig(X, deg).astype(dtype)
     check_close(iisig, sig[1:])
 
 @pytest.mark.skipif(not (pysiglib.BUILT_WITH_CUDA and torch.cuda.is_available()), reason="CUDA not available or disabled")
@@ -68,7 +68,7 @@ def test_signature_random_cuda(deg):
     X = np.random.uniform(size=(100, 5))
     iisig = iisignature.sig(X, deg)
     X = torch.tensor(X, device="cuda")
-    sig = pysiglib.signature(X, deg).cpu()
+    sig = pysiglib.sig(X, deg).cpu()
     check_close(iisig, sig[1:])
 
 
@@ -76,8 +76,8 @@ def test_signature_random_cuda(deg):
 def test_signature_random_batch(deg):
     X = np.random.uniform(size=(32, 100, 5))
     iisig = iisignature.sig(X, deg)
-    sig_serial = pysiglib.signature(X, deg, n_jobs=1)
-    sig_parallel = pysiglib.signature(X, deg, n_jobs=-1)
+    sig_serial = pysiglib.sig(X, deg, n_jobs=1)
+    sig_parallel = pysiglib.sig(X, deg, n_jobs=-1)
     check_close(iisig, sig_serial[:, 1:])
     check_close(iisig, sig_parallel[:, 1:])
 
@@ -90,16 +90,16 @@ def test_signature_non_contiguous():
     X_non_cont = rand_data.expand(-1, -1, dim)
     X = X_non_cont.clone()
 
-    res1 = pysiglib.signature(X, degree)
-    res2 = pysiglib.signature(X_non_cont, degree)
+    res1 = pysiglib.sig(X, degree)
+    res2 = pysiglib.sig(X_non_cont, degree)
     check_close(res1, res2)
 
     rand_data = np.random.normal(size=(batch, length))[:, :, None]
     X_non_cont = np.broadcast_to(rand_data, (batch, length, dim))
     X = np.array(X_non_cont)
 
-    res1 = pysiglib.signature(X, degree)
-    res2 = pysiglib.signature(X_non_cont, degree)
+    res1 = pysiglib.sig(X, degree)
+    res2 = pysiglib.sig(X_non_cont, degree)
     check_close(res1, res2)
 
 @pytest.mark.parametrize("deg", range(1, 6))
@@ -108,7 +108,7 @@ def test_signature_time_aug(deg):
     t = np.linspace(0, 1, 10)[:, np.newaxis]
     X_aug = np.concatenate([X, t], axis = 1)
     iisig = iisignature.sig(X_aug, deg)
-    sig = pysiglib.signature(X, deg, time_aug = True)
+    sig = pysiglib.sig(X, deg, time_aug = True)
     check_close(iisig, sig[1:])
 
 @pytest.mark.parametrize("deg", range(1, 6))
@@ -116,7 +116,7 @@ def test_signature_lead_lag(deg):
     X = np.random.uniform(size=(10, 2))
     X_aug = lead_lag(X)
     iisig = iisignature.sig(X_aug, deg)
-    sig = pysiglib.signature(X, deg, lead_lag = True)
+    sig = pysiglib.sig(X, deg, lead_lag = True)
     check_close(iisig, sig[1:])
 
 @pytest.mark.parametrize("deg", range(1, 6))
@@ -127,5 +127,5 @@ def test_signature_time_aug_lead_lag(deg, dtype):
     t = np.linspace(0, 1, 19)[:, np.newaxis]
     X_aug = np.concatenate([X_aug, t], axis = 1)
     iisig = iisignature.sig(X_aug, deg).astype(dtype)
-    sig = pysiglib.signature(X, deg, lead_lag = True, time_aug = True)
+    sig = pysiglib.sig(X, deg, lead_lag = True, time_aug = True)
     check_close(iisig, sig[1:])

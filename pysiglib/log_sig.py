@@ -23,7 +23,7 @@ from .param_checks import check_type, check_log_sig_method
 from .error_codes import err_msg
 from .dtypes import CPSIG_SIG_TO_LOG_SIG, CPSIG_BATCH_SIG_TO_LOG_SIG
 from .sig_length import sig_length, log_sig_length
-from .sig import signature
+from .sig import sig
 from .data_handlers import SigOutputHandler, DeviceToHost, SigInputHandler
 from .load_siglib import CPSIG
 
@@ -229,7 +229,7 @@ def sig_to_log_sig(
         pysiglib.prepare_log_sig(5, 3, lead_lag=True, method=2)
 
         X = torch.rand((32,100,5))
-        X_sig = pysiglib.signature(X, 3, lead_lag=True)
+        X_sig = pysiglib.sig(X, 3, lead_lag=True)
         X_log_sig = pysiglib.sig_to_log_sig(X_sig, 5, 3, lead_lag=True, method=2)
     """
     check_type(degree, "degree", int)
@@ -308,7 +308,7 @@ def log_sig(
         X = torch.rand((32,100,5))
         X_log_sig = pysiglib.log_sig(X, 3, lead_lag=True, method=2)
     """
-    sig_ = signature(path, degree, time_aug, lead_lag, end_time, True, n_jobs)
+    sig_ = sig(path, degree, time_aug, lead_lag, end_time, True, n_jobs)
     dimension = path.shape[-1]
     log_sig_ = sig_to_log_sig(sig_, dimension, degree, time_aug, lead_lag, method, n_jobs)
     return log_sig_

@@ -98,14 +98,14 @@ def sig_combine(
         X_concat = np.concatenate((X1, X2), axis=1)
 
         X2 = np.concatenate((X1[:, [-1], :], X2), axis=1) # Make sure first pt of X2 is last pt of X1
-        sig1 = pysiglib.signature(X1, degree)
-        sig2 = pysiglib.signature(X2, degree)
+        sig1 = pysiglib.sig(X1, degree)
+        sig2 = pysiglib.sig(X2, degree)
 
         # The tensor product...
         sig_mult = pysiglib.sig_combine(sig1, sig2, dimension, degree)
 
         # ... is the same as the signature of the concatenated path:
-        sig = pysiglib.signature(X_concat, degree)
+        sig = pysiglib.sig(X_concat, degree)
     """
 
     check_type(dimension, "dimension", int)
@@ -146,14 +146,14 @@ def sig_combine(
         )
 
     if err_code:
-        raise Exception("Error in pysiglib.signature: " + err_msg(err_code))
+        raise Exception("Error in pysiglib.sig: " + err_msg(err_code))
 
     res = result.data
     if device_handler.device is not None:
         res = res.to(device_handler.device)
     return res
 
-def signature_(data, result, degree, horner = True):
+def sig_(data, result, degree, horner = True):
     err_code = CPSIG_SIGNATURE[data.dtype](
         data.data_ptr,
         result.data_ptr,
@@ -167,10 +167,10 @@ def signature_(data, result, degree, horner = True):
     )
 
     if err_code:
-        raise Exception("Error in pysiglib.signature: " + err_msg(err_code))
+        raise Exception("Error in pysiglib.sig: " + err_msg(err_code))
     return result.data
 
-def batch_signature_(data, result, degree, horner = True, n_jobs = 1):
+def batch_sig_(data, result, degree, horner = True, n_jobs = 1):
     err_code = CPSIG_BATCH_SIGNATURE[data.dtype](
         data.data_ptr,
         result.data_ptr,
@@ -186,10 +186,10 @@ def batch_signature_(data, result, degree, horner = True, n_jobs = 1):
     )
 
     if err_code:
-        raise Exception("Error in pysiglib.signature: " + err_msg(err_code))
+        raise Exception("Error in pysiglib.sig: " + err_msg(err_code))
     return result.data
 
-def signature(
+def sig(
         path : Union[np.ndarray, torch.tensor],
         degree : int,
         time_aug : bool = False,
@@ -234,9 +234,14 @@ def signature(
 
     .. note::
 
-        Ideally, any array passed to ``pysiglib.signature`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.signature`` will internally create a contiguous copy, which may be
+        Ideally, any array passed to ``pysiglib.sig`` should be both contiguous and own its data.
+        If this is not the case, ``pysiglib.sig`` will internally create a contiguous copy, which may be
         inefficient.
+
+    .. note::
+
+        ``pysiglib.signature`` is an alias of ``pysiglib.sig`` included for backward
+        compatibility with versions ``<0.3.0``.
 
     """
     check_type(degree, "degree", int)
@@ -253,9 +258,9 @@ def signature(
         check_type(n_jobs, "n_jobs", int)
         if n_jobs == 0:
             raise ValueError("n_jobs cannot be 0")
-        res = batch_signature_(data, result, degree, horner, n_jobs)
+        res = batch_sig_(data, result, degree, horner, n_jobs)
     else:
-        res = signature_(data, result, degree, horner)
+        res = sig_(data, result, degree, horner)
 
     if device_handler.device is not None:
         res = res.to(device_handler.device)
