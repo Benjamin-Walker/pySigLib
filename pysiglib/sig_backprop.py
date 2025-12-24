@@ -226,6 +226,12 @@ def sig_backprop(
     path_data = PathInputHandler(path, time_aug, lead_lag, end_time, "path")
     sig_len = sig_length(path_data.dimension, degree)
     sig_data = DoubleSigInputHandler(sig, sig_derivs, sig_len, "sig", "sig_derivs")
+
+    if path_data.type_ != sig_data.type_:
+        raise ValueError("path, sig and sig_derivs must all be numpy arrays or torch tensors")
+    if path_data.dtype != sig_data.dtype:
+        raise ValueError("path, sig and sig_derivs must have the same dtype")
+
     result = PathOutputHandler(path_data.data_length, path_data.data_dimension, path_data)
 
     if path_data.is_batch != sig_data.is_batch or path_data.batch_size != sig_data.batch_size:

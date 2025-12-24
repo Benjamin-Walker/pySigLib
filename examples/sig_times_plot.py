@@ -12,25 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========================================================================
-
 from tqdm import tqdm
-
 from timing_utils import time_iisig_sig, time_pysiglib_sig, time_signatory_sig, plot_times
-
 import plotting_params
 plotting_params.set_plotting_params(8, 10, 12)
-
 # pip install signatory==1.2.6.1.9.0 --no-cache-dir --force-reinstall
 
 if __name__ == '__main__':
+    cfg = {
+        'batch_size': 32,
+        'length': 1024,
+        'dimension': 5,
+        'degree_arr': list(range(1, 8)),
+        'dtype': "float",
+        'device': 'cpu',
+        'num_runs': 5
+    }
 
-    batch_size = 32
-    length = 1024
-    dimension = 5
-    N = 5
-    device = "cpu"
-
-    degree_arr = list(range(1, 8))
     iisigtime = []
     signatorytime = []
     pysiglibtime = []
@@ -38,13 +36,14 @@ if __name__ == '__main__':
     pysiglibtimehorner = []
     pysiglibtimehornerparallel = []
 
-    for degree in tqdm(degree_arr):
-        iisigtime.append(time_iisig_sig(batch_size, length, dimension, degree, device, N))
-        signatorytime.append(time_signatory_sig(batch_size, length, dimension, degree, device, N))
-        pysiglibtime.append(time_pysiglib_sig(batch_size, length, dimension, degree, False, False, device, N))
-        pysiglibtimeparallel.append(time_pysiglib_sig(batch_size, length, dimension, degree, False, True, device, N))
-        pysiglibtimehorner.append(time_pysiglib_sig(batch_size, length, dimension, degree, True, False, device, N))
-        pysiglibtimehornerparallel.append(time_pysiglib_sig(batch_size, length, dimension, degree, True, True, device, N))
+    for degree in tqdm(cfg['degree_arr']):
+        cfg['degree'] = degree
+        iisigtime.append(time_iisig_sig(cfg))
+        signatorytime.append(time_signatory_sig(cfg))
+        pysiglibtime.append(time_pysiglib_sig(cfg, False, 1))
+        pysiglibtimeparallel.append(time_pysiglib_sig(cfg, False, -1))
+        pysiglibtimehorner.append(time_pysiglib_sig(cfg, True, 1))
+        pysiglibtimehornerparallel.append(time_pysiglib_sig(cfg, True, -1))
 
     print(iisigtime)
     print(signatorytime)
@@ -55,9 +54,10 @@ if __name__ == '__main__':
 
     for scale in ["linear", "log"]:
         plot_times(
-            x= degree_arr,
+            x= cfg['degree_arr'],
             ys= [iisigtime, pysiglibtime, pysiglibtimehorner],
             legend = ["iisignature (Direct)", "pySigLib (Direct)", "pySigLib (Horner)"],
+            linestyles=["-", "--", "--"],
             title = "Truncated Signatures (Serial)",
             xlabel = "Truncation Level",
             ylabel = "Elapsed Time (s)",
@@ -66,9 +66,10 @@ if __name__ == '__main__':
         )
 
         plot_times(
-            x=degree_arr,
+            x=cfg['degree_arr'],
             ys=[signatorytime, pysiglibtimeparallel, pysiglibtimehornerparallel],
             legend=["signatory (Horner)", "pySigLib (Direct)", "pySigLib (Horner)"],
+            linestyles=["-", "--", "--"],
             title= "Truncated Signatures (Parallel)",
             xlabel="Truncation Level",
             ylabel="Elapsed Time (s)",

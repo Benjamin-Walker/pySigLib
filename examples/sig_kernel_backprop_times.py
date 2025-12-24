@@ -15,16 +15,20 @@
 
 from timing_utils import time_sigkernel_kernel_backprop, time_pysiglib_kernel_backprop
 
-length = 1024
-dimension = 32
-batch_size = 128
-dyadic_order = 0
-
-num_runs = 50
-
 if __name__ == '__main__':
-    print("\nsigkernel (CPU): ", time_sigkernel_kernel_backprop(batch_size, length, dimension, dyadic_order, "cpu", num_runs, True))
-    print("\npysiglib (CPU): ", time_pysiglib_kernel_backprop(batch_size, length, dimension, dyadic_order, "cpu", num_runs, -1, True))
+    cfg = {
+        'batch_size': 128,
+        'length': 100,
+        'dimension': 32,
+        'dyadic_order': 0,
+        'dtype': "double",
+        'device': 'cpu',
+        'num_runs': 5
+    }
 
-    print("\nsigkernel (CUDA): ", time_sigkernel_kernel_backprop(batch_size, length, dimension, dyadic_order, "cuda", num_runs, True))
-    print("\npysiglib (CUDA): ", time_pysiglib_kernel_backprop(batch_size, length, dimension, dyadic_order, "cuda", num_runs, -1, True))
+    print("\nsigkernel (CPU): ", time_sigkernel_kernel_backprop(cfg, True))
+    print("\npysiglib (CPU): ", time_pysiglib_kernel_backprop(cfg, -1, True))
+
+    cfg['device'] = 'cuda'
+    print("\nsigkernel (CUDA): ", time_sigkernel_kernel_backprop(cfg, True))
+    print("\npysiglib (CUDA): ", time_pysiglib_kernel_backprop(cfg, -1, True))

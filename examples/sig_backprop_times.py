@@ -15,16 +15,19 @@
 
 from timing_utils import time_signatory_sig_backprop, time_iisig_sig_backprop, time_pysiglib_sig_backprop
 
-length = 256
-dimension = 4
-degree = 6
-batch_size = 128
-
-num_runs = 50
-
 if __name__ == '__main__':
-    print("\niisignature (serial): ", time_iisig_sig_backprop(batch_size, length, dimension, degree, "cpu", num_runs, True))
-    print("\npysiglib (serial): ", time_pysiglib_sig_backprop(batch_size, length, dimension, degree, 1, "cpu", num_runs, True))
+    cfg = {
+        'batch_size': 128,
+        'length': 256,
+        'dimension': 4,
+        'degree' : 6,
+        'dtype': "float",
+        'device': 'cpu',
+        'num_runs': 5
+    }
 
-    print("\nsignatory (parallel): ", time_signatory_sig_backprop(batch_size, length, dimension, degree, "cpu", num_runs, True))
-    print("\npysiglib (parallel): ", time_pysiglib_sig_backprop(batch_size, length, dimension, degree, -1, "cpu", num_runs, True))
+    print("\niisignature (serial): ", time_iisig_sig_backprop(cfg, True))
+    print("\npysiglib (serial): ", time_pysiglib_sig_backprop(cfg, 1, True))
+
+    print("\nsignatory (parallel): ", time_signatory_sig_backprop(cfg, True))
+    print("\npysiglib (parallel): ", time_pysiglib_sig_backprop(cfg, -1, True))

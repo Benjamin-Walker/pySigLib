@@ -14,40 +14,39 @@
 # =========================================================================
 
 from tqdm import tqdm
-from timing_utils import plot_times, time_pysiglib_sig_backprop, time_iisig_sig_backprop, time_signatory_sig_backprop
+from timing_utils import time_iisig_log_sig, time_pysiglib_log_sig, time_signatory_log_sig, plot_times
 import plotting_params
 plotting_params.set_plotting_params(8, 10, 12)
 # pip install signatory==1.2.6.1.9.0 --no-cache-dir --force-reinstall
 
-import pysiglib
-assert pysiglib.BUILT_WITH_AVX
-
 if __name__ == '__main__':
+
     cfg = {
-        'batch_size': 8,
-        'length': 1024,
-        'dimension': 5,
-        'degree_arr': list(range(1, 7)),
-        'dtype': "float",
-        'device': 'cpu',
-        'num_runs': 5
+        'batch_size' : 32,
+        'length' : 1024,
+        'dimension' : 5,
+        'degree_arr' : list(range(1, 8)),
+        'dtype' : "float",
+        'device' : 'cpu',
+        'method' : 2,
+        'num_runs' : 5
     }
 
     iisigtime = []
+    signatorytime = []
     pysiglibtime = []
     pysiglibtimeparallel = []
-    signatorytime = []
 
     for degree in tqdm(cfg['degree_arr']):
         cfg['degree'] = degree
-        iisigtime.append(time_iisig_sig_backprop(cfg))
-        pysiglibtime.append(time_pysiglib_sig_backprop(cfg, 1))
-        signatorytime.append(time_signatory_sig_backprop(cfg))
-        pysiglibtimeparallel.append(time_pysiglib_sig_backprop(cfg, -1))
+        iisigtime.append(time_iisig_log_sig(cfg))
+        signatorytime.append(time_signatory_log_sig(cfg))
+        pysiglibtime.append(time_pysiglib_log_sig(cfg, n_jobs = 1))
+        pysiglibtimeparallel.append(time_pysiglib_log_sig(cfg, n_jobs = -1))
 
     print(iisigtime)
-    print(pysiglibtime)
     print(signatorytime)
+    print(pysiglibtime)
     print(pysiglibtimeparallel)
 
     for scale in ["linear", "log"]:
@@ -55,22 +54,22 @@ if __name__ == '__main__':
             x= cfg['degree_arr'],
             ys= [iisigtime, pysiglibtime],
             legend = ["iisignature", "pySigLib"],
-            linestyles=['-', '--'],
-            title = "Sig Backprop (Serial)",
+            linestyles=["-", "--"],
+            title = "Truncated Log Signatures (Serial)",
             xlabel = "Truncation Level",
             ylabel = "Elapsed Time (s)",
             scale = scale,
-            filename = "sig_backprop_times_" + scale + "_serial"
+            filename = "log_signature_times_" + scale + "_serial"
         )
 
         plot_times(
             x=cfg['degree_arr'],
             ys=[signatorytime, pysiglibtimeparallel],
             legend=["signatory", "pySigLib"],
-            linestyles=['-', '--'],
-            title="Sig Backprop (Parallel)",
+            linestyles=["-", "--"],
+            title= "Truncated Log Signatures (Parallel)",
             xlabel="Truncation Level",
             ylabel="Elapsed Time (s)",
             scale=scale,
-            filename="sig_backprop_times_" + scale + "_parallel"
+            filename="log_signature_times_" + scale + "_parallel"
         )

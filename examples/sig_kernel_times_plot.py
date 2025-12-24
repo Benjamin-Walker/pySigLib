@@ -20,45 +20,48 @@ import plotting_params
 plotting_params.set_plotting_params(8, 10, 12)
 
 if __name__ == '__main__':
+    cfg = {
+        'batch_size': 32,
+        'length_arr': list(range(10, 2100, 100)),
+        'dimension': 5,
+        'dyadic_order': 0,
+        'dtype': "double",
+        'device': 'cuda',
+        'num_runs': 5
+    }
 
-    dyadic_order = 0
-    batch_size = 32
-    dimension = 5
-    N = 10
-    device = "cuda"
-
-    length_arr = list(range(10, 2100, 100))
     sigkerneltime = []
     pysiglibtime = []
 
 
-    for length in tqdm(length_arr):
-        sigkerneltime.append(time_sigkernel_kernel(batch_size, length, dimension, dyadic_order, device, N))
-        pysiglibtime.append(time_pysiglib_kernel(batch_size, length, dimension, dyadic_order, device, N, -1))
+    for length in tqdm(cfg['length_arr']):
+        cfg['length'] = length
+        sigkerneltime.append(time_sigkernel_kernel(cfg))
+        pysiglibtime.append(time_pysiglib_kernel(cfg, -1))
 
     print(sigkerneltime)
     print(pysiglibtime)
 
     for scale in ["linear", "log"]:
         plot_times(
-                x=length_arr[:9],
+                x=cfg['length_arr'][:9],
                 ys= [sigkerneltime[:9], pysiglibtime[:9]],
                 legend = ["sigkernel", "pysiglib"],
-                title = "Signature Kernels " + ("(CPU)" if device == "cpu" else "(CUDA)"),
+                title = "Signature Kernels " + ("(CPU)" if cfg['device'] == "cpu" else "(CUDA)"),
                 xlabel = "Path Length",
                 ylabel = "Elapsed Time (s)",
                 scale = scale,
-                filename = "sigkernel_times_len_" + scale + "_" + device + "_1",
+                filename = "sigkernel_times_len_" + scale + "_" + cfg['device'] + "_1",
                 linestyles = ["-", "--"]
         )
         plot_times(
-                x= length_arr,
+                x= cfg['length_arr'],
                 ys= [sigkerneltime, pysiglibtime],
                 legend = ["sigkernel", "pysiglib"],
-                title = "Signature Kernels " + ("(CPU)" if device == "cpu" else "(CUDA)"),
+                title = "Signature Kernels " + ("(CPU)" if cfg['device'] == "cpu" else "(CUDA)"),
                 xlabel = "Path Length",
                 ylabel = "Elapsed Time (s)",
                 scale = scale,
-                filename = "sigkernel_times_len_" + scale + "_" + device + "_2",
+                filename = "sigkernel_times_len_" + scale + "_" + cfg['device'] + "_2",
                 linestyles = ["-", "--"]
         )

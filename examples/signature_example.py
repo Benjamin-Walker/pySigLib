@@ -30,14 +30,14 @@ if __name__ == '__main__':
     X = np.random.uniform(size=(batch_size, length, dim)).astype("double")
 
     start = timeit.default_timer()
-    sig = iisignature.sig(X, degree)
+    s = iisignature.sig(X, degree)
     end = timeit.default_timer()
 
     print(end - start)
-    print(sig[0][:5])
+    print(s[0][:5])
 
     start = timeit.default_timer()
-    sig = pysiglib.signature(X, degree)
+    s = pysiglib.sig(X, degree)
     end = timeit.default_timer()
     print(end - start)
-    print(sig[0][1:6])
+    print(s[0][1:6])

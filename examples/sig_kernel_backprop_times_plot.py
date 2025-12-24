@@ -14,6 +14,7 @@
 # =========================================================================
 
 from tqdm import tqdm
+import torch
 from timing_utils import time_sigkernel_kernel_backprop, time_pysiglib_kernel_backprop, plot_times
 
 import plotting_params
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     batch_size = 32
     dimension = 5
     N = 10
-    device = "cpu"
+    device = "cuda"
 
     length_arr = list(range(10, 2100, 200))
     sigkerneltime = []
@@ -33,8 +34,8 @@ if __name__ == '__main__':
 
 
     for length in tqdm(length_arr):
-        sigkerneltime.append(time_sigkernel_kernel_backprop(batch_size, length, dimension, dyadic_order, device, N))
-        pysiglibtime.append(time_pysiglib_kernel_backprop(batch_size, length, dimension, dyadic_order, device, N, -1))
+        sigkerneltime.append(time_sigkernel_kernel_backprop(batch_size, length, dimension, dyadic_order, device, N, torch.float64))
+        pysiglibtime.append(time_pysiglib_kernel_backprop(batch_size, length, dimension, dyadic_order, device, N, torch.float64, -1))
 
     print(sigkerneltime)
     print(pysiglibtime)

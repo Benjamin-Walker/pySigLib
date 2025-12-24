@@ -15,17 +15,20 @@
 
 from timing_utils import time_iisig_sig, time_signatory_sig, time_pysiglib_sig, time_esig_sig
 
-length = 256
-dimension = 4
-degree = 6
-batch_size = 128
-
-num_runs = 50
-
 if __name__ == '__main__':
-    #print("\nesig (serial): ", time_esig_sig(batch_size, length, dimension, degree, "cpu", num_runs, True))
-    print("\niisignature (serial): ", time_iisig_sig(batch_size, length, dimension, degree, "cpu", num_runs, True))
-    print("\npysiglib (serial): ", time_pysiglib_sig(batch_size, length, dimension, degree, True, 1, "cpu", num_runs, True))
+    cfg = {
+        'batch_size': 128,
+        'length': 256,
+        'dimension': 4,
+        'degree': 6,
+        'dtype': "float",
+        'device': 'cpu',
+        'num_runs': 5
+    }
 
-    print("\nsignatory (parallel): ", time_signatory_sig(batch_size, length, dimension, degree, "cpu", num_runs, True))
-    print("\npysiglib (parallel): ", time_pysiglib_sig(batch_size, length, dimension, degree, True, -1, "cpu", num_runs, True))
+    #print("\nesig (serial): ", time_esig_sig(cfg, True))
+    print("\niisignature (serial): ", time_iisig_sig(cfg, True))
+    print("\npysiglib (serial): ", time_pysiglib_sig(cfg, True, 1, True))
+
+    print("\nsignatory (parallel): ", time_signatory_sig(cfg, True))
+    print("\npysiglib (parallel): ", time_pysiglib_sig(cfg, True, -1, True))

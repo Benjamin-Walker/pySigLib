@@ -28,19 +28,19 @@ if __name__ == '__main__':
     degree = 4
 
     X = np.random.uniform(size=(batch_size, length, dim)).astype("double")
-    sig = iisignature.sig(X, degree)
+    s = iisignature.sig(X, degree)
 
     start = timeit.default_timer()
-    sig_combine = iisignature.sigcombine(sig, sig, dim, degree)
+    sig_combine = iisignature.sigcombine(s, s, dim, degree)
     end = timeit.default_timer()
 
     print(end - start)
     print(sig_combine[0][:5])
 
-    sig = pysiglib.signature(X, degree)
+    s = pysiglib.sig(X, degree)
 
     start = timeit.default_timer()
-    sig_combine = pysiglib.sig_combine(sig, sig, dim, degree)
+    sig_combine = pysiglib.sig_combine(s, s, dim, degree)
     end = timeit.default_timer()
     print(end - start)
     print(sig_combine[0][1:6])
