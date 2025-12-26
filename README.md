@@ -7,7 +7,7 @@
 </p>
 
 
-<h2 align='center'>Fast Signature Computations on CPU and GPU</h2>
+<h2 align='center'>Fast Signature, Log Signature and Signature Kernel Computations on CPU and GPU</h2>
 
 ![PyPI - Version](https://img.shields.io/pypi/v/pysiglib)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pysiglib)
