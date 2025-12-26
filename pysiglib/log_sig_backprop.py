@@ -18,7 +18,7 @@ from typing import Union
 import numpy as np
 import torch
 
-from .param_checks import check_type, check_log_sig_method
+from .param_checks import check_type, check_non_neg, check_log_sig_method
 from .error_codes import err_msg
 from .dtypes import CPSIG_SIG_TO_LOG_SIG_BACKPROP, CPSIG_BATCH_SIG_TO_LOG_SIG_BACKPROP
 from .sig_length import sig_length, log_sig_length
@@ -108,7 +108,12 @@ def sig_to_log_sig_backprop(
         This is an array of the same shape as the provided signature(s).
     :rtype: numpy.ndarray | torch.tensor
     """
+    check_type(dimension, "dimension", int)
+    check_non_neg(dimension, "dimension")
     check_type(degree, "degree", int)
+    check_non_neg(degree, "degree")
+    check_type(time_aug, "time_aug", bool)
+    check_type(lead_lag, "lead_lag", bool)
     check_type(method, "method", int)
     check_log_sig_method(method)
 

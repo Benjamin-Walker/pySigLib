@@ -18,19 +18,19 @@ from typing import Union
 import numpy as np
 import torch
 
-from .param_checks import check_type
+from .param_checks import check_type, check_non_neg
 from .error_codes import err_msg
-from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, DoubleSigInputHandler, TripleSigInputHandler, DeviceToHost
+from .data_handlers import PathInputHandler, SigOutputHandler, PathOutputHandler, MultipleSigInputHandler, DeviceToHost
 from .dtypes import CPSIG_SIG_BACKPROP, CPSIG_BATCH_SIG_BACKPROP, CPSIG_SIG_COMBINE_BACKPROP, CPSIG_BATCH_SIG_COMBINE_BACKPROP
 from .sig_length import sig_length
 
 def sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree):
     err_code = CPSIG_SIG_COMBINE_BACKPROP[sig_data.dtype](
-        sig_data.sig3_ptr,
+        sig_data.sig_ptr[2],
         sig1_deriv.data_ptr,
         sig2_deriv.data_ptr,
-        sig_data.sig1_ptr,
-        sig_data.sig2_ptr,
+        sig_data.sig_ptr[0],
+        sig_data.sig_ptr[1],
         dimension,
         degree
     )
@@ -41,11 +41,11 @@ def sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree):
 
 def batch_sig_combine_backprop_(sig_data, sig1_deriv, sig2_deriv, dimension, degree, n_jobs):
     err_code = CPSIG_BATCH_SIG_COMBINE_BACKPROP[sig_data.dtype](
-        sig_data.sig3_ptr,
+        sig_data.sig_ptr[2],
         sig1_deriv.data_ptr,
         sig2_deriv.data_ptr,
-        sig_data.sig1_ptr,
-        sig_data.sig2_ptr,
+        sig_data.sig_ptr[0],
+        sig_data.sig_ptr[1],
         sig_data.batch_size,
         dimension,
         degree,
@@ -104,6 +104,12 @@ def sig_combine_backprop(
         inefficient.
 
     """
+    check_type(dimension, "dimension", int)
+    check_non_neg(dimension, "dimension")
+    check_type(degree, "degree", int)
+    check_non_neg(degree, "degree")
+    check_type(time_aug, "time_aug", bool)
+    check_type(lead_lag, "lead_lag", bool)
 
     device_handler = DeviceToHost([deriv, sig1, sig2], ["deriv", "sig1", "sig2"])
     deriv, sig1, sig2 = device_handler.data
@@ -114,7 +120,7 @@ def sig_combine_backprop(
     aug_dimension = (2 * dimension if lead_lag else dimension) + (1 if time_aug else 0)
 
     sig_len = sig_length(aug_dimension, degree)
-    sig_data = TripleSigInputHandler(sig1, sig2, deriv, sig_len, "sig1", "sig2", "sig_combined_deriv")
+    sig_data = MultipleSigInputHandler([sig1, sig2, deriv], sig_len, ["sig1", "sig2", "sig_combined_deriv"])
 
     sig1_deriv = SigOutputHandler(sig_data, sig_len)
     sig2_deriv = SigOutputHandler(sig_data, sig_len)
@@ -136,8 +142,8 @@ def sig_backprop_(path_data, sig_data, result, degree):
     err_code = CPSIG_SIG_BACKPROP[path_data.dtype](
         path_data.data_ptr,
         result.data_ptr,
-        sig_data.sig2_ptr,
-        sig_data.sig1_ptr,
+        sig_data.sig_ptr[1],
+        sig_data.sig_ptr[0],
         path_data.data_dimension,
         path_data.data_length,
         degree,
@@ -154,8 +160,8 @@ def batch_sig_backprop_(path_data, sig_data, result, degree, n_jobs):
     err_code = CPSIG_BATCH_SIG_BACKPROP[path_data.dtype](
         path_data.data_ptr,
         result.data_ptr,
-        sig_data.sig2_ptr,
-        sig_data.sig1_ptr,
+        sig_data.sig_ptr[1],
+        sig_data.sig_ptr[0],
         path_data.batch_size,
         path_data.data_dimension,
         path_data.data_length,
@@ -219,13 +225,18 @@ def sig_backprop(
         inefficient.
 
     """
+    check_type(degree, "degree", int)
+    check_non_neg(degree, "degree")
+    check_type(time_aug, "time_aug", bool)
+    check_type(lead_lag, "lead_lag", bool)
+    check_type(end_time, "end_time", float)
 
     device_handler = DeviceToHost([path, sig, sig_derivs], ["path", "sig", "sig_derivs"])
     path, sig, sig_derivs = device_handler.data
 
     path_data = PathInputHandler(path, time_aug, lead_lag, end_time, "path")
     sig_len = sig_length(path_data.dimension, degree)
-    sig_data = DoubleSigInputHandler(sig, sig_derivs, sig_len, "sig", "sig_derivs")
+    sig_data = MultipleSigInputHandler([sig, sig_derivs], sig_len, ["sig", "sig_derivs"])
 
     if path_data.type_ != sig_data.type_:
         raise ValueError("path, sig and sig_derivs must all be numpy arrays or torch tensors")

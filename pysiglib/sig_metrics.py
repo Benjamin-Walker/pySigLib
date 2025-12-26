@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from .param_checks import check_type_multiple
-from .data_handlers import DoublePathInputHandler
+from .data_handlers import MultiplePathInputHandler
 
 from .static_kernels import StaticKernel
 from .sig_kernel import sig_kernel_gram
@@ -91,7 +91,7 @@ def sig_score(
     if len(y.shape) == 2:
         y = y.unsqueeze(0).contiguous().clone()
 
-    data = DoublePathInputHandler(sample, y, time_aug, lead_lag, end_time, "sample_paths", "y", False)
+    data = MultiplePathInputHandler([sample, y], time_aug, lead_lag, end_time, ["sample_paths", "y"], False)
 
     B = sample.shape[0]
 
@@ -262,11 +262,11 @@ def sig_mmd(
         If this is not the case, ``pysiglib.sig_mmd`` will internally create a contiguous copy, which may be
         inefficient.
     """
-    data = DoublePathInputHandler(sample1, sample2, time_aug, lead_lag, end_time, "sample1", "sample2", False)
+    data = MultiplePathInputHandler([sample1, sample2], time_aug, lead_lag, end_time, ["sample1", "sample2"], False)
 
     # Use torch for simplicity
-    sample1 = torch.as_tensor(data.path1)
-    sample2 = torch.as_tensor(data.path2)
+    sample1 = torch.as_tensor(data.path[0])
+    sample2 = torch.as_tensor(data.path[1])
 
     m = sample1.shape[0]
     n = sample2.shape[0]

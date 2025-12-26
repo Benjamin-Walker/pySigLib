@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from .param_checks import check_type, check_log_sig_method
+from .param_checks import check_type, check_non_neg, check_log_sig_method
 from .error_codes import err_msg
 from .dtypes import CPSIG_SIG_TO_LOG_SIG, CPSIG_BATCH_SIG_TO_LOG_SIG
 from .sig_length import sig_length, log_sig_length
@@ -238,7 +238,12 @@ def sig_to_log_sig(
         X_sig = pysiglib.sig(X, 3, lead_lag=True)
         X_log_sig = pysiglib.sig_to_log_sig(X_sig, 5, 3, lead_lag=True, method=2)
     """
+    check_type(dimension, "dimension", int)
+    check_non_neg(dimension, "dimension")
     check_type(degree, "degree", int)
+    check_non_neg(degree, "degree")
+    check_type(time_aug, "time_aug", bool)
+    check_type(lead_lag, "lead_lag", bool)
     check_type(method, "method", int)
     check_log_sig_method(method)
 

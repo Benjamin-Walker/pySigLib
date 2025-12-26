@@ -22,7 +22,7 @@ from .param_checks import check_type, check_non_neg
 from .error_codes import err_msg
 from .dtypes import CPSIG_SIGNATURE, CPSIG_BATCH_SIGNATURE, CPSIG_SIG_COMBINE, CPSIG_BATCH_SIG_COMBINE
 from .sig_length import sig_length
-from .data_handlers import PathInputHandler, DoubleSigInputHandler, SigOutputHandler, DeviceToHost
+from .data_handlers import PathInputHandler, MultipleSigInputHandler, SigOutputHandler, DeviceToHost
 
 
 ######################################################
@@ -109,9 +109,11 @@ def sig_combine(
     """
 
     check_type(dimension, "dimension", int)
-    check_type(degree, "degree", int)
     check_non_neg(dimension, "dimension")
+    check_type(degree, "degree", int)
     check_non_neg(degree, "degree")
+    check_type(time_aug, "time_aug", bool)
+    check_type(lead_lag, "lead_lag", bool)
     check_type(n_jobs, "n_jobs", int)
     if n_jobs == 0:
         raise ValueError("n_jobs cannot be 0")
@@ -123,13 +125,13 @@ def sig_combine(
     sig1, sig2 = device_handler.data
 
     sig_len = sig_length(aug_dimension, degree)
-    data = DoubleSigInputHandler(sig1, sig2, sig_len, "sig1", "sig2")
+    data = MultipleSigInputHandler([sig1, sig2], sig_len, ["sig1", "sig2"])
     result = SigOutputHandler(data, sig_len)
 
     if data.is_batch:
         err_code = CPSIG_BATCH_SIG_COMBINE[data.dtype](
-            data.sig1_ptr,
-            data.sig2_ptr,
+            data.sig_ptr[0],
+            data.sig_ptr[1],
             result.data_ptr,
             data.batch_size,
             aug_dimension,
@@ -138,8 +140,8 @@ def sig_combine(
         )
     else:
         err_code = CPSIG_SIG_COMBINE[data.dtype](
-            data.sig1_ptr,
-            data.sig2_ptr,
+            data.sig_ptr[0],
+            data.sig_ptr[1],
             result.data_ptr,
             aug_dimension,
             degree
@@ -245,7 +247,11 @@ def sig(
 
     """
     check_type(degree, "degree", int)
+    check_non_neg(degree, "degree")
     check_type(horner, "horner", bool)
+    check_type(time_aug, "time_aug", bool)
+    check_type(lead_lag, "lead_lag", bool)
+    check_type(end_time, "end_time", float)
 
     # If path is on GPU, move to CPU
     device_handler = DeviceToHost([path], ["path"])

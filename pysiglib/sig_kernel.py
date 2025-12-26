@@ -23,7 +23,7 @@ from .load_siglib import BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
 from .dtypes import CPSIG_BATCH_SIG_KERNEL, DTYPES, CUSIG_BATCH_SIG_KERNEL_CUDA
-from .data_handlers import DoublePathInputHandler, ScalarOutputHandler, GridOutputHandler
+from .data_handlers import MultiplePathInputHandler, ScalarOutputHandler, GridOutputHandler
 from .static_kernels import StaticKernel, LinearKernel, Context
 
 def sig_kernel_(data, result, gram, dyadic_order_1, dyadic_order_2, n_jobs, return_grid):
@@ -32,8 +32,8 @@ def sig_kernel_(data, result, gram, dyadic_order_1, dyadic_order_2, n_jobs, retu
         result.data_ptr,
         data.batch_size,
         data.dimension,
-        data.length_1,
-        data.length_2,
+        data.length[0],
+        data.length[1],
         dyadic_order_1,
         dyadic_order_2,
         n_jobs,
@@ -48,8 +48,8 @@ def sig_kernel_cuda_(data, result, gram, dyadic_order_1, dyadic_order_2, return_
         cast(gram.data_ptr(), POINTER(DTYPES[str(gram.dtype)[6:]])),
         result.data_ptr, data.batch_size,
         data.dimension,
-        data.length_1,
-        data.length_2,
+        data.length[0],
+        data.length[1],
         dyadic_order_1,
         dyadic_order_2,
         return_grid
@@ -130,6 +130,8 @@ def sig_kernel(
         If this is not the case, ``pysiglib.sig_kernel`` will internally create a contiguous copy, which may be
         inefficient.
     """
+    check_type(time_aug, "time_aug", bool)
+    check_type(lead_lag, "lead_lag", bool)
     check_type(n_jobs, "n_jobs", int)
     if n_jobs == 0:
         raise ValueError("n_jobs cannot be 0")
@@ -150,17 +152,17 @@ def sig_kernel(
         path1 = transform_path(path1, time_aug, lead_lag, end_time, n_jobs)
         path2 = transform_path(path2, time_aug, lead_lag, end_time, n_jobs)
 
-    data = DoublePathInputHandler(path1, path2, False, False, 0., "path1", "path2")
+    data = MultiplePathInputHandler([path1, path2], False, False, 0., ["path1", "path2"])
 
     if not return_grid:
         result = ScalarOutputHandler(data)
     else:
-        dyadic_len_1 = ((data.length_1 - 1) << dyadic_order_1) + 1
-        dyadic_len_2 = ((data.length_2 - 1) << dyadic_order_2) + 1
+        dyadic_len_1 = ((data.length[0] - 1) << dyadic_order_1) + 1
+        dyadic_len_2 = ((data.length[1] - 1) << dyadic_order_2) + 1
         result = GridOutputHandler(dyadic_len_1, dyadic_len_2, data)
 
-    torch_path1 = torch.as_tensor(data.path1)  # Avoids data copy
-    torch_path2 = torch.as_tensor(data.path2)
+    torch_path1 = torch.as_tensor(data.path[0])  # Avoids data copy
+    torch_path2 = torch.as_tensor(data.path[1])
 
     if not data.is_batch:
         torch_path1 = torch_path1.unsqueeze(0)
@@ -278,18 +280,20 @@ def sig_kernel_gram(
     # There is clearly more overhead here than is necessary, but it
     # shouldn't be significant for large computations.
 
+    check_type(time_aug, "time_aug", bool)
+    check_type(lead_lag, "lead_lag", bool)
     check_type(max_batch, "max_batch", int)
     if max_batch == 0 or max_batch < -1:
         raise ValueError("max_batch must be a positive integer or -1")
 
-    data = DoublePathInputHandler(path1, path2, time_aug, lead_lag, end_time, "path1", "path2", False)
+    data = MultiplePathInputHandler([path1, path2], time_aug, lead_lag, end_time, ["path1", "path2"], False)
 
     if len(path1.shape) != 3 or len(path2.shape) != 3:
         raise ValueError("path1 and path2 must be 3D arrays.")
 
     # Use torch for simplicity
-    path1 = torch.as_tensor(data.path1)
-    path2 = torch.as_tensor(data.path2)
+    path1 = torch.as_tensor(data.path[0])
+    path2 = torch.as_tensor(data.path[1])
 
     batch1 = path1.shape[0]
     batch2 = path2.shape[0]

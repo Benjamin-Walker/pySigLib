@@ -182,6 +182,7 @@ def transform_path(
     """
     check_type(time_aug, "time_aug", bool)
     check_type(lead_lag, "lead_lag", bool)
+    check_type(end_time, "end_time", float)
 
     if (not time_aug) and (not lead_lag):
         return path

@@ -26,7 +26,7 @@ from .load_siglib import BUILT_WITH_CUDA
 from .param_checks import check_type
 from .error_codes import err_msg
 from .dtypes import CPSIG_BATCH_SIG_KERNEL_BACKPROP, DTYPES, CUSIG_BATCH_SIG_KERNEL_BACKPROP_CUDA
-from .data_handlers import DoublePathInputHandler, ScalarInputHandler, GridOutputHandler, PathInputHandler
+from .data_handlers import MultiplePathInputHandler, ScalarInputHandler, GridOutputHandler, PathInputHandler
 from .static_kernels import StaticKernel, LinearKernel, Context
 
 def sig_kernel_backprop_(data, derivs_data, result, gram, k_grid_data, dyadic_order_1, dyadic_order_2, n_jobs):
@@ -38,8 +38,8 @@ def sig_kernel_backprop_(data, derivs_data, result, gram, k_grid_data, dyadic_or
         k_grid_data.data_ptr,
         data.batch_size,
         data.dimension,
-        data.length_1,
-        data.length_2,
+        data.length[0],
+        data.length[1],
         dyadic_order_1,
         dyadic_order_2,
         n_jobs
@@ -56,8 +56,8 @@ def sig_kernel_backprop_cuda_(data, derivs_data, result, gram, k_grid_data, dyad
         k_grid_data.data_ptr,
         data.batch_size,
         data.dimension,
-        data.length_1,
-        data.length_2,
+        data.length[0],
+        data.length[1],
         dyadic_order_1,
         dyadic_order_2
     )
@@ -75,7 +75,7 @@ def gram_deriv(
         n_jobs : int = 1
 ) -> Union[np.ndarray, torch.tensor]:
 
-    result = GridOutputHandler(data.length_1 - 1, data.length_2 - 1, derivs_data) #Derivatives with respect to gram matrix
+    result = GridOutputHandler(data.length[0] - 1, data.length[1] - 1, derivs_data) #Derivatives with respect to gram matrix
 
     if data.device == "cpu":
         sig_kernel_backprop_(data, derivs_data, result, gram, k_grid_data, dyadic_order_1, dyadic_order_2, n_jobs)
@@ -182,7 +182,7 @@ def sig_kernel_backprop(
         path1 = transform_path(path1, time_aug, lead_lag, end_time, n_jobs)
         path2 = transform_path(path2, time_aug, lead_lag, end_time, n_jobs)
 
-    data = DoublePathInputHandler(path1, path2, False, False, end_time, "path1", "path2")
+    data = MultiplePathInputHandler([path1, path2], False, False, end_time, ["path1", "path2"])
 
     derivs = torch.as_tensor(derivs)
     derivs_data = ScalarInputHandler(derivs, data.is_batch, "derivs")
@@ -192,8 +192,8 @@ def sig_kernel_backprop(
     if data.batch_size != derivs_data.batch_size:
         raise ValueError("batch size for derivs does not match batch size of paths")
 
-    torch_path1 = torch.as_tensor(data.path1)  # Avoids data copy
-    torch_path2 = torch.as_tensor(data.path2)
+    torch_path1 = torch.as_tensor(data.path[0])  # Avoids data copy
+    torch_path2 = torch.as_tensor(data.path[1])
 
     if k_grid is None:
         k_grid = sig_kernel(torch.as_tensor(path1), torch.as_tensor(path2), dyadic_order, static_kernel, False, False, end_time, n_jobs, True)
@@ -316,6 +316,8 @@ def sig_kernel_gram_backprop(
     # There is clearly more overhead here than is necessary, but it
     # shouldn't be significant for large computations.
 
+    check_type(time_aug, "time_aug", bool)
+    check_type(lead_lag, "lead_lag", bool)
     check_type(left_deriv, "left_deriv", bool)
     check_type(right_deriv, "right_deriv", bool)
     if not (left_deriv or right_deriv):
@@ -325,7 +327,7 @@ def sig_kernel_gram_backprop(
     if max_batch == 0 or max_batch < -1:
         raise ValueError("max_batch must be a positive integer or -1")
 
-    data = DoublePathInputHandler(path1, path2, time_aug, lead_lag, end_time, "path1", "path2", False)
+    data = MultiplePathInputHandler([path1, path2], time_aug, lead_lag, end_time, ["path1", "path2"], False)
 
     derivs = torch.as_tensor(derivs)
     # derivs_data = ScalarInputHandler(derivs, data.is_batch, "derivs")
@@ -334,8 +336,8 @@ def sig_kernel_gram_backprop(
     #     raise ValueError("derivs, path1 and path2 must all be numpy arrays or all torch tensors on the same device")
 
     # Use torch for simplicity
-    path1 = torch.as_tensor(data.path1)
-    path2 = torch.as_tensor(data.path2)
+    path1 = torch.as_tensor(data.path[0])
+    path2 = torch.as_tensor(data.path[1])
     if k_grid is not None:
         k_grid = torch.as_tensor(k_grid)
 
