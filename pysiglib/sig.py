@@ -72,18 +72,6 @@ def sig_combine(
     :return: Combined signature, :math:`S(x_1 * x_2)`
     :rtype: numpy.ndarray | torch.tensor
 
-    .. note::
-
-        Parallelising the computation by setting ``n_jobs != 1`` can be beneficial when the
-        workload is large. However, if the workload is too small, it may be faster to set this
-        to ``1`` and run the computation serially, due to parallelisation overhead.
-
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.sig_combine`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig_combine`` will internally create a contiguous copy, which may be
-        inefficient.
-
     Example usage::
 
         import pysiglib
@@ -233,12 +221,6 @@ def sig(
     :type n_jobs: int
     :return: Truncated signature, or a batch of truncated signatures.
     :rtype: numpy.ndarray | torch.tensor
-
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.sig`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig`` will internally create a contiguous copy, which may be
-        inefficient.
 
     .. note::
 

@@ -36,6 +36,12 @@ Fast Signature Computations on CPU and GPU.
    :titlesonly:
    :maxdepth: 2
 
+   /pages/conventions
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 2
+
    /pages/path_transformations
 
 .. toctree::

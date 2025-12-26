@@ -123,12 +123,6 @@ def transform_path_backprop(
         :math:`\\{\\partial F / x_{t_i}\\}_{i=0}^L`.
     :rtype: numpy.ndarray | torch.tensor
 
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.transform_path_backprop`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.transform_path_backprop`` will internally create a contiguous copy, which may be
-        inefficient.
-
     """
     check_type(time_aug, "time_aug", bool)
     check_type(lead_lag, "lead_lag", bool)

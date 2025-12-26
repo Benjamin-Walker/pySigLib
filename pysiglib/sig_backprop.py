@@ -97,12 +97,6 @@ def sig_combine_backprop(
     :return: Derivatives with respect to ``sig1`` and ``sig2``
     :rtype: Tuple[numpy.ndarray | torch.tensor, numpy.ndarray | torch.tensor]
 
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.sig_combine_backprop`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig_combine_backprop`` will internally create a contiguous copy, which may be
-        inefficient.
-
     """
     check_type(dimension, "dimension", int)
     check_non_neg(dimension, "dimension")
@@ -216,13 +210,6 @@ def sig_backprop(
     :return: Derivatives of the scalar function :math:`F` with respect to the path(s), :math:`\\partial F / \\partial x`.
         This is an array of the same shape as the provided path(s).
     :rtype: numpy.ndarray | torch.tensor
-
-
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.sig_backprop`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig_backprop`` will internally create a contiguous copy, which may be
-        inefficient.
 
     """
     check_type(degree, "degree", int)

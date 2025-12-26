@@ -124,11 +124,6 @@ def sig_kernel(
     :return: Single signature kernel or batch of signature kernels
     :rtype: numpy.ndarray | torch.tensor
 
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.sig_kernel`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig_kernel`` will internally create a contiguous copy, which may be
-        inefficient.
     """
     check_type(time_aug, "time_aug", bool)
     check_type(lead_lag, "lead_lag", bool)
@@ -262,12 +257,6 @@ def sig_kernel_gram(
     :type return_grid: bool
     :return: Gram matrix of signature kernels
     :rtype: numpy.ndarray | torch.tensor
-
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.sig_kernel_gram`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig_kernel_gram`` will internally create a contiguous copy, which may be
-        inefficient.
 
     .. note::
 

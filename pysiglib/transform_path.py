@@ -164,12 +164,6 @@ def transform_path(
         :math:`X^{LL} := (X^{\\text{Lag}}, X^{\\text{Lead}})` rather than the more commonly used
         order of channels :math:`X^{LL} := (X^{\\text{Lead}}, X^{\\text{Lag}})`.
 
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.transform_path`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.transform_path`` will internally create a contiguous copy, which may be
-        inefficient.
-
     .. important::
 
         This function is provided for convenience only, and one should prefer the in-built flags for

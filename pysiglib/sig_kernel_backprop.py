@@ -152,11 +152,6 @@ def sig_kernel_backprop(
         :math:`\\{\\partial F / y_{t_i}\\}_{i=0}^{L_2}`.
     :rtype: numpy.ndarray | torch.tensor | Tuple[numpy.ndarray | numpy.ndarray] | Tuple[torch.tensor | torch.tensor]
 
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.sig_kernel_backprop`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig_kernel_backprop`` will internally create a contiguous copy, which may be
-        inefficient.
     """
     check_type(n_jobs, "n_jobs", int)
     if n_jobs == 0:
@@ -301,12 +296,6 @@ def sig_kernel_gram_backprop(
 
     .. note::
 
-        Ideally, any array passed to ``pysiglib.sig_kernel_backprop`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig_kernel_backprop`` will internally create a contiguous copy, which may be
-        inefficient.
-
-    .. note::
-
         When called via ``pysiglib.torch_api``, the default behaviour is to pass ``k_grid = None`` and reconstruct the
         PDE grids. This is done to avoid memory allocation issues for large batch sizes.
 
@@ -330,10 +319,6 @@ def sig_kernel_gram_backprop(
     data = MultiplePathInputHandler([path1, path2], time_aug, lead_lag, end_time, ["path1", "path2"], False)
 
     derivs = torch.as_tensor(derivs)
-    # derivs_data = ScalarInputHandler(derivs, data.is_batch, "derivs")
-    #
-    # if not (derivs_data.type_ == data.type_ and derivs_data.device == data.device):
-    #     raise ValueError("derivs, path1 and path2 must all be numpy arrays or all torch tensors on the same device")
 
     # Use torch for simplicity
     path1 = torch.as_tensor(data.path[0])

@@ -75,11 +75,6 @@ def sig_score(
     :return: Signature kernel score
     :rtype: numpy.ndarray | torch.tensor
 
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.sig_score`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig_score`` will internally create a contiguous copy, which may be
-        inefficient.
     """
 
     check_type_multiple(sample, "sample", (np.ndarray, torch.Tensor))
@@ -173,11 +168,6 @@ def expected_sig_score(
     :return: Expected signature kernel score
     :rtype: numpy.ndarray | torch.tensor
 
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.expected_sig_score`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.expected_sig_score`` will internally create a contiguous copy, which may be
-        inefficient.
     """
 
     res = sig_score(sample1, sample2, dyadic_order, lam, static_kernel, time_aug, lead_lag, end_time, n_jobs, max_batch)
@@ -256,11 +246,6 @@ def sig_mmd(
     :return: Signature MMD
     :rtype: numpy.ndarray | torch.tensor
 
-    .. note::
-
-        Ideally, any array passed to ``pysiglib.sig_mmd`` should be both contiguous and own its data.
-        If this is not the case, ``pysiglib.sig_mmd`` will internally create a contiguous copy, which may be
-        inefficient.
     """
     data = MultiplePathInputHandler([sample1, sample2], time_aug, lead_lag, end_time, ["sample1", "sample2"], False)
 
