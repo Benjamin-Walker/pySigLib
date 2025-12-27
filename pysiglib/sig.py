@@ -225,7 +225,7 @@ def sig(
     .. note::
 
         ``pysiglib.signature`` is an alias of ``pysiglib.sig`` included for backward
-        compatibility with versions ``<0.3.0``.
+        compatibility with versions ``< 1.0.0``.
 
     """
     check_type(degree, "degree", int)

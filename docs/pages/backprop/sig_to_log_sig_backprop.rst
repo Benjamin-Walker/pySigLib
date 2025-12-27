@@ -1,7 +1,7 @@
 pysiglib.sig_to_log_sig_backprop
 ===================================
 
-.. versionadded:: v0.3.0
+.. versionadded:: v1.0.0
 
 .. warning::
 

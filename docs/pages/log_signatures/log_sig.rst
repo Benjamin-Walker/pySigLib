@@ -1,6 +1,6 @@
 pysiglib.log_sig
 =========================
 
-.. versionadded:: v0.3.0
+.. versionadded:: v1.0.0
 
 .. autofunction:: pysiglib.log_sig
