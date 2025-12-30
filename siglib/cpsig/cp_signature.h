@@ -101,7 +101,8 @@ FORCE_INLINE void signature_horner_(
 	const Path<T>& path,
 	T* out,
 	uint64_t degree,
-	uint64_t dimension // path.dimension()
+	uint64_t dimension, // path.dimension()
+	T* increments
 )
 {
 	Point<T> prev_pt = path.begin();
@@ -109,7 +110,7 @@ FORCE_INLINE void signature_horner_(
 	++next_pt;
 
 	auto level_index_uptr = std::make_unique<uint64_t[]>(degree + 2);
-	uint64_t* level_index = level_index_uptr.get();
+	uint64_t* const level_index = level_index_uptr.get();
 	populate_level_index(level_index, dimension, degree + 2);
 
 	linear_signature_(prev_pt, next_pt, out, dimension, degree, level_index); //Zeroth step
@@ -120,10 +121,7 @@ FORCE_INLINE void signature_horner_(
 	++next_pt;
 
 	auto horner_step_uptr = std::make_unique<T[]>(level_index[degree + 1] - level_index[degree]);
-	T* horner_step = horner_step_uptr.get();
-
-	auto increments_uptr = std::make_unique<T[]>(dimension);
-	T* increments = increments_uptr.get();
+	T* const horner_step = horner_step_uptr.get();
 
 	Point<T> last_pt(path.end());
 
@@ -218,7 +216,8 @@ void signature_horner_template_(
 	T* out,
 	uint64_t degree
 ) {
-	signature_horner_(path, out, degree, dimension);
+	T increments[dimension];
+	signature_horner_(path, out, degree, dimension, increments);
 }
 
 template<std::floating_point T>
@@ -250,7 +249,9 @@ void call_signature_horner_(
 	case 19: return signature_horner_template_<T, 19>(path, out, degree);
 	case 20: return signature_horner_template_<T, 20>(path, out, degree);
 	default:
-		return signature_horner_<T>(path, out, degree, dimension);
+		auto increments_uptr = std::make_unique<T[]>(dimension);
+		T* const increments = increments_uptr.get();
+		return signature_horner_<T>(path, out, degree, dimension, increments);
 	}
 }
 
