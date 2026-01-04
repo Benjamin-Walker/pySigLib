@@ -50,12 +50,19 @@ FORCE_INLINE void linear_signature_(
 		T* result_ptr = out + level_index[level];
 		const T* left_ptr_upper_bound = out + level_index[level];
 
+#ifdef VEC
+		for (T* left_ptr = out + level_index[level - 1]; left_ptr != left_ptr_upper_bound; ++left_ptr, result_ptr += dimension) {
+			left_over_level = (*left_ptr) * one_over_level;
+			vec_mult_assign(result_ptr, out + 1, left_over_level, dimension);
+		}
+#else
 		for (T* left_ptr = out + level_index[level - 1]; left_ptr != left_ptr_upper_bound; ++left_ptr) {
 			left_over_level = (*left_ptr) * one_over_level;
 			for (T* right_ptr = out + 1; right_ptr != out + dimension + 1; ++right_ptr) {
 				*(result_ptr++) = left_over_level * (*right_ptr);
 			}
 		}
+#endif
 	}
 }
 
