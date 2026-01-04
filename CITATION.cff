@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+preferred-citation:
+  type: article
+  title: "pySigLib--Fast Signature-Based Computations on CPU and GPU"
+  authors:
+    - family-names: Shmelev
+      given-names: Daniil
+    - family-names: Salvi
+      given-names: Cristopher
+  year: 2025
+  journal: "arXiv preprint arXiv:2509.10613"
