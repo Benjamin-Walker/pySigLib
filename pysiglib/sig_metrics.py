@@ -264,4 +264,8 @@ def sig_mmd(
     xy_sum = 2. * torch.mean(xy)
     yy_sum = (torch.sum(yy) - torch.sum(torch.diag(yy))) / (n * (n - 1))
 
-    return xx_sum - xy_sum + yy_sum
+    res = xx_sum - xy_sum + yy_sum
+
+    if data.type_ == "numpy":
+        return res.numpy()
+    return res
