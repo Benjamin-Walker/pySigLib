@@ -81,22 +81,22 @@ This method corresponds to ``methods="x"`` in the ``iisignature`` package and
 -------------------
 
 This option computes the log signature as in the ``method=0`` case, and then extracts
-those coefficients which are indexed by `Lyndon words`. Whilst the result is not
-strictly the log signature, it is equivalent to the log signature up to a linear
-transformation. This makes it a faster alternative to ``method=2``, suitable
-for machine learning applications where the missing linear transformation
-can be learnt implicitly.
+those coefficients which are indexed by `Lyndon words`. Whilst this does not represent 
+the log signature using a canonical Hall basis of the free Lie algebra, it is 
+equivalent up to a linear transformation. This makes it a faster alternative to 
+``method=2``, suitable for machine learning applications where the missing linear 
+transformation can be learnt implicitly.
 
 This method corresponds to ``mode="words"`` in the ``signatory`` package.
 
 ``method = 2``
 -------------------
 
-This option computes the log signature as in the ``method=2`` case, but
-projecting the result to the `Lyndon basis`. The result is the compressed
-log signature. This method is required for use cases outside of machine
-learning, where the Lyndon basis projection cannot be omitted as in the
-``method=1`` case.
+This option computes the log signature as in the ``method=0`` case and projects the 
+result to the `Lyndon basis`, yielding the canonical compressed log-signature. This 
+method is required whenever canonical coordinates are important, such as for 
+interpretability, applying the Log-ODE method to solve a controlled differential 
+equation, or consistent comparison across implementations.
 
 This method corresponds to ``methods="s"`` in the ``iisignature`` package and
 ``mode="brackets"`` in the ``signatory`` package.
